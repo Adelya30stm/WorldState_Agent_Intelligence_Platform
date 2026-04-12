@@ -1,5 +1,5 @@
 # Pentest Automation Platform
-
+Secure Autonomous Pentest Agent with Policy-Aware Reasoning
 AI-powered platform for automated security testing workflows.
 
 This project provides an orchestrated multi-agent system for penetration testing, with:
