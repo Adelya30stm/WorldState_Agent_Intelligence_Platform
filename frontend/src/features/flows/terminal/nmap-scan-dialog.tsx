@@ -1,4 +1,4 @@
-import { ScanSearch } from 'lucide-react';
+import { ShieldAlert, ShieldCheck } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -12,38 +12,40 @@ import {
 
 interface NmapScanDialogProps {
     command: string;
-    onClose: () => void;
+    onConfirm: () => void;
+    onDeny: () => void;
     open: boolean;
 }
 
-const NmapScanDialog = ({ command, onClose, open }: NmapScanDialogProps) => {
+const NmapScanDialog = ({ command, onConfirm, onDeny, open }: NmapScanDialogProps) => {
     return (
-        <Dialog
-            onOpenChange={(isOpen) => {
-                if (!isOpen) {
-                    onClose();
-                }
-            }}
-            open={open}
-        >
+        <Dialog open={open}>
             <DialogContent className="max-w-lg">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
-                        <ScanSearch className="size-5 shrink-0" />
-                        Nmap Scan in Progress
+                        <ShieldAlert className="size-5 shrink-0 text-yellow-500" />
+                        Nmap Scan Authorization Required
                     </DialogTitle>
                     <DialogDescription>
-                        The system is running an nmap scan. This may take a few minutes depending on the target and scan
-                        options.
+                        The AI agent is about to run an nmap scan. Please confirm that you are authorized to perform
+                        network scanning on the target and that this activity is legitimate.
                     </DialogDescription>
                 </DialogHeader>
                 <div className="rounded-md bg-muted p-3 font-mono text-sm break-all">{command}</div>
-                <DialogFooter>
+                <DialogFooter className="gap-2 sm:gap-0">
                     <Button
-                        onClick={onClose}
+                        onClick={onDeny}
+                        variant="destructive"
+                    >
+                        <ShieldAlert className="mr-2 size-4" />
+                        Stop — not authorized
+                    </Button>
+                    <Button
+                        onClick={onConfirm}
                         variant="default"
                     >
-                        Got it
+                        <ShieldCheck className="mr-2 size-4" />
+                        Yes, it&apos;s legitimate
                     </Button>
                 </DialogFooter>
             </DialogContent>

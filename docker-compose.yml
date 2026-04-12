@@ -23,7 +23,7 @@ networks:
 
 services:
   pentagi:
-    image: ${PENTAGI_IMAGE:-ghcr.io/adelya30stm/pentest_solution:latest}
+    image: ${PENTAGI_IMAGE:-local/pentagi:latest}
     restart: unless-stopped
     container_name: pentagi
     hostname: pentagi
@@ -184,7 +184,7 @@ services:
       - langfuse-network
 
   pgvector:
-    image: pgvector/pgvector:pg17
+    image: vxcontrol/pgvector:latest
     restart: unless-stopped
     container_name: pgvector
     hostname: pgvector
@@ -226,7 +226,7 @@ services:
       - pentagi-network
 
   scraper:
-    image: ghcr.io/adelya30stm/scraper:latest
+    image: vxcontrol/scraper:latest
     restart: unless-stopped
     container_name: scraper
     hostname: scraper

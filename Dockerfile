@@ -24,10 +24,15 @@ RUN apt-get update && apt-get install -y \
 # GraphQL schema for code generation
 COPY ./backend/pkg/graph/schema.graphqls ../backend/pkg/graph/
 
-# Application source code
+# Cache bust token — pass --build-arg FRONTEND_CACHE_BUST=$(date +%s) to force
+# rebuilding only the frontend stage without touching the slow Go backend.
+# Default value keeps normal cache behaviour when the arg is not provided.
+ARG FRONTEND_CACHE_BUST=0
+
+# Application source code (invalidated by FRONTEND_CACHE_BUST or real file changes)
 COPY frontend/ .
 
-# Install dependencies with package manager detection for SBOM
+# Install dependencies
 RUN --mount=type=cache,target=/root/.npm \
     npm ci --include=dev
 
@@ -37,7 +42,7 @@ RUN npm install -g license-checker && \
     license-checker --production --json > /licenses/frontend/licenses.json && \
     license-checker --production --csv > /licenses/frontend/licenses.csv
 
-# Build frontend with optimizations and parallel processing
+# Build frontend
 RUN npm run build -- \
     --mode production \
     --minify esbuild \
@@ -184,8 +189,8 @@ USER pentagi
 
 ENTRYPOINT ["/opt/pentagi/bin/entrypoint.sh", "/opt/pentagi/bin/pentagi"]
 
-# Image Metadata
-LABEL org.opencontainers.image.source="https://github.com/Adelya30stm/Pentest_solution"
+# Local build — image is not pushed to any registry
+LABEL org.opencontainers.image.title="pentagi-local"
 LABEL org.opencontainers.image.description="Fully autonomous AI Agents system capable of performing complex penetration testing tasks"
 LABEL org.opencontainers.image.authors="Adelya30stm"
 LABEL org.opencontainers.image.licenses="MIT License"

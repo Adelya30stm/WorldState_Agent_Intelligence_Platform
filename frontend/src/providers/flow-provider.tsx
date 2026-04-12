@@ -441,7 +441,11 @@ export const FlowProvider = ({ children }: FlowProviderProps) => {
             {children}
             <NmapScanDialog
                 command={nmapDialog.command}
-                onClose={() => setNmapDialog((prev: { command: string; open: boolean }) => ({ ...prev, open: false }))}
+                onConfirm={() => setNmapDialog((prev: { command: string; open: boolean }) => ({ ...prev, open: false }))}
+                onDeny={async () => {
+                    setNmapDialog((prev: { command: string; open: boolean }) => ({ ...prev, open: false }));
+                    await stopAutomation();
+                }}
                 open={nmapDialog.open}
             />
         </FlowContext.Provider>
