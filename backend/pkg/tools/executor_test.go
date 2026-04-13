@@ -63,6 +63,85 @@ func TestGetMessage(t *testing.T) {
 	}
 }
 
+func TestRewriteToolCallForTerminalApproval(t *testing.T) {
+	t.Parallel()
+
+	t.Run("nmap command is rewritten to ask", func(t *testing.T) {
+		t.Parallel()
+
+		ce := &customExecutor{
+			handlers: map[string]ExecutorHandler{
+				AskUserToolName: func(ctx context.Context, name string, args json.RawMessage) (string, error) {
+					return "asked", nil
+				},
+			},
+		}
+
+		name, args, err := ce.rewriteToolCallForTerminalApproval(
+			TerminalToolName,
+			json.RawMessage(`{"input":"nmap -sV 127.0.0.1","cwd":"/work","detach":false,"timeout":60,"message":"run scan"}`),
+		)
+		if err != nil {
+			t.Fatalf("rewriteToolCallForTerminalApproval() unexpected error: %v", err)
+		}
+		if name != AskUserToolName {
+			t.Fatalf("rewriteToolCallForTerminalApproval() name = %q, want %q", name, AskUserToolName)
+		}
+
+		var ask AskUser
+		if err := json.Unmarshal(args, &ask); err != nil {
+			t.Fatalf("failed to unmarshal ask args: %v", err)
+		}
+		if !strings.Contains(ask.Message, "nmap -sV 127.0.0.1") {
+			t.Fatalf("ask message %q does not include command", ask.Message)
+		}
+	})
+
+	t.Run("non nmap command is unchanged", func(t *testing.T) {
+		t.Parallel()
+
+		ce := &customExecutor{
+			handlers: map[string]ExecutorHandler{
+				AskUserToolName: func(ctx context.Context, name string, args json.RawMessage) (string, error) {
+					return "asked", nil
+				},
+			},
+		}
+
+		origArgs := json.RawMessage(`{"input":"ls -la","cwd":"/work","detach":false,"timeout":60,"message":"list files"}`)
+		name, args, err := ce.rewriteToolCallForTerminalApproval(TerminalToolName, origArgs)
+		if err != nil {
+			t.Fatalf("rewriteToolCallForTerminalApproval() unexpected error: %v", err)
+		}
+		if name != TerminalToolName {
+			t.Fatalf("rewriteToolCallForTerminalApproval() name = %q, want %q", name, TerminalToolName)
+		}
+		if string(args) != string(origArgs) {
+			t.Fatalf("rewriteToolCallForTerminalApproval() args changed unexpectedly: got %s want %s", string(args), string(origArgs))
+		}
+	})
+
+	t.Run("nmap command stays terminal when ask handler is unavailable", func(t *testing.T) {
+		t.Parallel()
+
+		ce := &customExecutor{
+			handlers: map[string]ExecutorHandler{},
+		}
+
+		origArgs := json.RawMessage(`{"input":"nmap -Pn 127.0.0.1","cwd":"/work","detach":false,"timeout":60,"message":"run scan"}`)
+		name, args, err := ce.rewriteToolCallForTerminalApproval(TerminalToolName, origArgs)
+		if err != nil {
+			t.Fatalf("rewriteToolCallForTerminalApproval() unexpected error: %v", err)
+		}
+		if name != TerminalToolName {
+			t.Fatalf("rewriteToolCallForTerminalApproval() name = %q, want %q", name, TerminalToolName)
+		}
+		if string(args) != string(origArgs) {
+			t.Fatalf("rewriteToolCallForTerminalApproval() args changed unexpectedly: got %s want %s", string(args), string(origArgs))
+		}
+	})
+}
+
 func TestArgsToMarkdown(t *testing.T) {
 	t.Parallel()
 

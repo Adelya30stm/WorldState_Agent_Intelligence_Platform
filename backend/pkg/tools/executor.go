@@ -15,6 +15,7 @@ import (
 	"pentagi/pkg/observability/langfuse"
 	"pentagi/pkg/schema"
 
+	"github.com/sirupsen/logrus"
 	"github.com/vxcontrol/langchaingo/documentloaders"
 	"github.com/vxcontrol/langchaingo/llms"
 	"github.com/vxcontrol/langchaingo/textsplitter"
@@ -145,6 +146,67 @@ type customExecutor struct {
 	summarizer  SummarizeHandler
 }
 
+func (ce *customExecutor) rewriteToolCallForTerminalApproval(name string, args json.RawMessage) (string, json.RawMessage, error) {
+	logger := logrus.WithFields(enrichLogrusFields(ce.flowID, ce.taskID, ce.subtaskID, logrus.Fields{
+		"tool": name,
+	}))
+
+	if name != TerminalToolName {
+		logger.Trace("terminal approval check skipped: tool is not terminal")
+		return name, args, nil
+	}
+
+	if _, ok := ce.handlers[AskUserToolName]; !ok {
+		logger.WithField("ask_user_handler_available", false).Warn("terminal approval check skipped: ask user handler is not available")
+		return name, args, nil
+	}
+
+	var action TerminalAction
+	if err := json.Unmarshal(args, &action); err != nil {
+		logger.WithError(err).Warn("terminal approval check skipped: failed to parse terminal action")
+		return name, args, nil
+	}
+
+	logger = logger.WithFields(logrus.Fields{
+		"terminal_command": action.Input,
+		"detach":           action.Detach.Bool(),
+		"cwd":              action.Cwd,
+	})
+
+	if !requiresTerminalUserApproval(action.Input) {
+		logger.Debug("terminal approval check passed without user confirmation")
+		return name, args, nil
+	}
+
+	logger.Info("terminal command matched approval rule and will be rewritten to ask user")
+
+	askArgs, err := json.Marshal(AskUser{
+		Message: fmt.Sprintf(
+			"The requested terminal command uses nmap and requires your confirmation before execution.\n\nCommand: %s\n\nReply with approval or denial.",
+			action.Input,
+		),
+	})
+	if err != nil {
+		logger.WithError(err).Error("terminal approval rewrite failed: could not marshal ask user arguments")
+		return "", nil, fmt.Errorf("failed to marshal ask user arguments: %w", err)
+	}
+
+	logger.WithField("rewritten_tool", AskUserToolName).Info("terminal command successfully rewritten to ask user")
+
+	return AskUserToolName, askArgs, nil
+}
+
+func requiresTerminalUserApproval(command string) bool {
+	normalizedCommand := strings.ToLower(command)
+	matched := strings.Contains(normalizedCommand, "nmap")
+	logrus.WithFields(logrus.Fields{
+		"terminal_command":            command,
+		"terminal_command_normalized": normalizedCommand,
+		"requires_approval":           matched,
+	}).Debug("evaluated terminal approval rule")
+	return matched
+}
+
 func (ce *customExecutor) Tools() []llms.Tool {
 	tools := make([]llms.Tool, 0, len(ce.definitions))
 	for idx := range ce.definitions {
@@ -245,15 +307,35 @@ func (ce *customExecutor) Execute(
 	args json.RawMessage,
 ) (string, error) {
 	startTime := time.Now()
-
-	handler, ok := ce.handlers[name]
-	if !ok {
-		return fmt.Sprintf("function '%s' not found in available tools list", name), nil
-	}
+	logger := logrus.WithContext(ctx).WithFields(enrichLogrusFields(ce.flowID, ce.taskID, ce.subtaskID, logrus.Fields{
+		"tool_call_id": id,
+		"tool":         name,
+	}))
 
 	var raw any
 	if err := json.Unmarshal(args, &raw); err != nil {
+		logger.WithError(err).Warn("tool execution aborted: invalid tool call arguments")
 		return fmt.Sprintf("failed to unmarshal '%s' tool call arguments: %v: fix it", name, err), nil
+	}
+
+	effectiveName, effectiveArgs, rewriteErr := ce.rewriteToolCallForTerminalApproval(name, args)
+	if rewriteErr != nil {
+		logger.WithError(rewriteErr).Error("tool call rewrite failed")
+		return "", rewriteErr
+	}
+	if effectiveName != name {
+		logger.WithField("rewritten_tool", effectiveName).Info("tool call was rewritten before execution")
+	}
+	if obsName == "" || obsName == name {
+		obsName = effectiveName
+	}
+	name = effectiveName
+	args = effectiveArgs
+
+	handler, ok := ce.handlers[name]
+	if !ok {
+		logger.WithField("effective_tool", name).Warn("tool execution aborted: effective tool handler not found")
+		return fmt.Sprintf("function '%s' not found in available tools list", name), nil
 	}
 
 	// Create observation based on tool type

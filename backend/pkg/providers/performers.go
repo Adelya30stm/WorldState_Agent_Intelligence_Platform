@@ -482,6 +482,20 @@ func (fp *flowProvider) performInstaller(
 	cfg := tools.InstallerExecutorConfig{
 		TaskID:    taskID,
 		SubtaskID: subtaskID,
+		Barrier: func(ctx context.Context, name string, args json.RawMessage) (string, error) {
+			switch name {
+			case tools.AskUserToolName:
+				var askUser tools.AskUser
+				if err := json.Unmarshal(args, &askUser); err != nil {
+					return "", fmt.Errorf("failed to unmarshal ask user result: %w", err)
+				}
+				maintenanceResult.Result = askUser.Message
+				maintenanceResult.Message = askUser.Message
+				return "ask user successfully processed", nil
+			default:
+				return "", fmt.Errorf("unsupported barrier tool: %s", name)
+			}
+		},
 		Adviser:   adviser,
 		Memorist:  memorist,
 		Searcher:  searcher,
@@ -633,6 +647,20 @@ func (fp *flowProvider) performPentester(
 	cfg := tools.PentesterExecutorConfig{
 		TaskID:    taskID,
 		SubtaskID: subtaskID,
+		Barrier: func(ctx context.Context, name string, args json.RawMessage) (string, error) {
+			switch name {
+			case tools.AskUserToolName:
+				var askUser tools.AskUser
+				if err := json.Unmarshal(args, &askUser); err != nil {
+					return "", fmt.Errorf("failed to unmarshal ask user result: %w", err)
+				}
+				hackResult.Result = askUser.Message
+				hackResult.Message = askUser.Message
+				return "ask user successfully processed", nil
+			default:
+				return "", fmt.Errorf("unsupported barrier tool: %s", name)
+			}
+		},
 		Adviser:   adviser,
 		Coder:     coder,
 		Installer: installer,

@@ -202,6 +202,7 @@ type PrimaryExecutorConfig struct {
 type InstallerExecutorConfig struct {
 	TaskID            *int64
 	SubtaskID         *int64
+	Barrier           ExecutorHandler
 	Adviser           ExecutorHandler
 	Memorist          ExecutorHandler
 	Searcher          ExecutorHandler
@@ -223,6 +224,7 @@ type CoderExecutorConfig struct {
 type PentesterExecutorConfig struct {
 	TaskID     *int64
 	SubtaskID  *int64
+	Barrier    ExecutorHandler
 	Adviser    ExecutorHandler
 	Coder      ExecutorHandler
 	Installer  ExecutorHandler
@@ -774,6 +776,10 @@ func (fte *flowToolsExecutor) GetInstallerExecutor(cfg InstallerExecutorConfig) 
 		return nil, fmt.Errorf("maintenance result handler is required")
 	}
 
+	if cfg.Barrier == nil {
+		return nil, fmt.Errorf("barrier handler is required")
+	}
+
 	if cfg.Adviser == nil {
 		return nil, fmt.Errorf("adviser handler is required")
 	}
@@ -829,6 +835,12 @@ func (fte *flowToolsExecutor) GetInstallerExecutor(cfg InstallerExecutorConfig) 
 			MaintenanceResultToolName: {},
 		},
 		summarizer: cfg.Summarizer,
+	}
+
+	if fte.cfg.AskUser {
+		ce.definitions = append(ce.definitions, registryDefinitions[AskUserToolName])
+		ce.handlers[AskUserToolName] = cfg.Barrier
+		ce.barriers[AskUserToolName] = struct{}{}
 	}
 
 	browser := NewBrowserTool(
@@ -960,6 +972,10 @@ func (fte *flowToolsExecutor) GetPentesterExecutor(cfg PentesterExecutorConfig) 
 		return nil, fmt.Errorf("hack result handler is required")
 	}
 
+	if cfg.Barrier == nil {
+		return nil, fmt.Errorf("barrier handler is required")
+	}
+
 	if cfg.Adviser == nil {
 		return nil, fmt.Errorf("adviser handler is required")
 	}
@@ -1027,6 +1043,12 @@ func (fte *flowToolsExecutor) GetPentesterExecutor(cfg PentesterExecutorConfig) 
 			HackResultToolName: {},
 		},
 		summarizer: cfg.Summarizer,
+	}
+
+	if fte.cfg.AskUser {
+		ce.definitions = append(ce.definitions, registryDefinitions[AskUserToolName])
+		ce.handlers[AskUserToolName] = cfg.Barrier
+		ce.barriers[AskUserToolName] = struct{}{}
 	}
 
 	browser := NewBrowserTool(
