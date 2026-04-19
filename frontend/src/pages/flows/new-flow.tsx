@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage } from '@/components/ui/breadcrumb';
 import { Card, CardContent } from '@/components/ui/card';
@@ -13,6 +13,7 @@ import { useSystemSettings } from '@/providers/system-settings-provider';
 
 const NewFlow = () => {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
 
     const { selectedProvider } = useProviders();
     const { createFlow, createFlowWithAssistant } = useFlows();
@@ -20,6 +21,10 @@ const NewFlow = () => {
 
     const [isLoading, setIsLoading] = useState(false);
     const [flowType, setFlowType] = useState<'assistant' | 'automation'>('automation');
+
+    // Auto-submit when ?prompt= is provided (e.g. from Projects page)
+    const autoPrompt = searchParams.get('prompt');
+    const autoSubmittedRef = useRef(false);
 
     // Calculate default useAgents value (only for assistant type)
     const shouldUseAgents = useMemo(() => {
@@ -37,13 +42,24 @@ const NewFlow = () => {
             const flowId = flowType === 'automation' ? await createFlow(values) : await createFlowWithAssistant(values);
 
             if (flowId) {
-                // Navigate to the new flow page with tab parameter
                 navigate(`/flows/${flowId}?tab=${flowType}`);
             }
         } finally {
             setIsLoading(false);
         }
     };
+
+    // Auto-submit if ?prompt= is in the URL (launched from Projects page)
+    useEffect(() => {
+        if (!autoPrompt || autoSubmittedRef.current || isLoading || !selectedProvider) return;
+        autoSubmittedRef.current = true;
+        handleSubmit({
+            message: autoPrompt,
+            providerName: selectedProvider.name,
+            useAgents: shouldUseAgents,
+        });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [autoPrompt, selectedProvider, shouldUseAgents]);
 
     return (
         <>

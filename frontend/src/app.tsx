@@ -88,7 +88,7 @@ const App = () => {
                                             {/* Other pages can be added here without FlowsProvider */}
                                             <Route
                                                 element={<Projects />}
-                                                path="projects"
+                                                path="web-pentest"
                                             />
                                         </Route>
 

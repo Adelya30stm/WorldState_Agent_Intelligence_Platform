@@ -20,7 +20,6 @@ import { Link, useLocation, useMatch, useParams } from 'react-router-dom';
 
 import type { Theme } from '@/providers/theme-provider';
 
-import Logo from '@/components/icons/logo';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
     DropdownMenu,
@@ -131,18 +130,6 @@ const MainSidebar = () => {
 
     return (
         <Sidebar collapsible="icon">
-            <SidebarHeader>
-                <SidebarMenu>
-                    <SidebarMenuItem className="flex items-center gap-2">
-                        <div className="flex aspect-square size-8 items-center justify-center">
-                            <Logo className="hover:animate-logo-spin size-6" />
-                        </div>
-                        <div className="grid flex-1 text-left leading-tight">
-                            <span className="truncate font-semibold">Platform</span>
-                        </div>
-                    </SidebarMenuItem>
-                </SidebarMenu>
-            </SidebarHeader>
             <SidebarContent>
                 <SidebarGroup className="bg-sidebar sticky top-0 z-10">
                     <SidebarGroupContent>
@@ -419,7 +406,7 @@ const MainSidebar = () => {
                             </Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
-                    <SidebarMenuItem>
+                    <SidebarMenuItem className="hidden">
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <SidebarMenuButton

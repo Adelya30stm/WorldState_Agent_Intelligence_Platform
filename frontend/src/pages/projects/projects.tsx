@@ -1,26 +1,28 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import {
     AlertTriangle,
     CheckCircle2,
     ChevronRight,
     Clock,
+    Cookie,
     FileText,
     GitFork,
     Globe,
     Map,
-    RefreshCw,
+    Play,
     Route,
     Search,
     ShieldAlert,
     Target,
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 import { Badge } from '@/components/ui/badge';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 
@@ -34,22 +36,18 @@ interface PentestPhase {
     icon: React.ReactNode;
     status: PhaseStatus;
     tasks: string[];
-    msgCount?: number;
+    prompt: (target: string) => string;
 }
 
-// Backend phase IDs → map to our status string
-const backendStatusMap: Record<string, PhaseStatus> = {
-    pending: 'pending',
-    'in-progress': 'active',
-    completed: 'done',
-};
-
-const PHASE_METADATA: Omit<PentestPhase, 'status' | 'msgCount'>[] = [
+const PHASE_METADATA: PentestPhase[] = [
     {
         description: 'Define scope, objectives, rules of engagement, and threat model.',
         icon: <Target className="size-5" />,
         id: 'planning',
         number: 1,
+        prompt: (t) =>
+            `Perform the planning phase for a web application pentest of ${t}. Define the scope, objectives, rules of engagement, identify assets, and create a threat model. Document what is in/out of scope.`,
+        status: 'pending',
         tasks: ['Scope definition', 'Rules of engagement', 'Threat modeling', 'Asset inventory'],
         title: 'Planning',
     },
@@ -58,6 +56,9 @@ const PHASE_METADATA: Omit<PentestPhase, 'status' | 'msgCount'>[] = [
         icon: <Search className="size-5" />,
         id: 'recon',
         number: 2,
+        prompt: (t) =>
+            `Perform passive and active reconnaissance on ${t}. Enumerate DNS records, discover subdomains, perform WHOIS/ASN lookup, fingerprint technologies, and identify the attack surface. Compile all findings.`,
+        status: 'pending',
         tasks: ['DNS enumeration', 'Subdomain discovery', 'WHOIS / ASN lookup', 'Technology fingerprinting'],
         title: 'Recon',
     },
@@ -66,14 +67,20 @@ const PHASE_METADATA: Omit<PentestPhase, 'status' | 'msgCount'>[] = [
         icon: <Map className="size-5" />,
         id: 'mapping',
         number: 3,
+        prompt: (t) =>
+            `Map the application structure of ${t}. Crawl endpoints, analyze authentication flows, map the API surface, and document data flows. Identify all entry points and functional areas.`,
+        status: 'pending',
         tasks: ['Endpoint crawling', 'Auth flow analysis', 'API surface mapping', 'Data flow diagram'],
-        title: 'Mapping 🔥',
+        title: 'Mapping',
     },
     {
         description: 'Test for OWASP Top 10, business logic flaws, and injection vulnerabilities.',
         icon: <ShieldAlert className="size-5" />,
         id: 'testing',
         number: 4,
+        prompt: (t) =>
+            `Perform security testing on ${t} targeting the OWASP Top 10: test for SQL injection, XSS, SSTI, authentication bypass, broken access control, security misconfigurations, and business logic flaws. Document all vulnerabilities found with evidence.`,
+        status: 'pending',
         tasks: ['OWASP Top 10', 'Auth bypass', 'Injection (SQLi, XSS, SSTI)', 'Business logic'],
         title: 'Testing',
     },
@@ -82,6 +89,9 @@ const PHASE_METADATA: Omit<PentestPhase, 'status' | 'msgCount'>[] = [
         icon: <CheckCircle2 className="size-5" />,
         id: 'validation',
         number: 5,
+        prompt: (t) =>
+            `Validate all security findings for ${t}. Create proof-of-concept exploits, triage false positives, rate severity using CVSS, and assess business impact for each confirmed vulnerability.`,
+        status: 'pending',
         tasks: ['PoC creation', 'False positive triage', 'Severity rating (CVSS)', 'Impact assessment'],
         title: 'Validation',
     },
@@ -90,7 +100,15 @@ const PHASE_METADATA: Omit<PentestPhase, 'status' | 'msgCount'>[] = [
         icon: <Route className="size-5" />,
         id: 'attack-paths',
         number: 6,
-        tasks: ['Lateral movement chains', 'Privilege escalation paths', 'Kill chain mapping', 'MITRE ATT&CK mapping'],
+        prompt: (t) =>
+            `Analyze all confirmed vulnerabilities for ${t} and build end-to-end attack paths. Map lateral movement opportunities, privilege escalation paths, and create a kill chain. Map findings to MITRE ATT&CK framework.`,
+        status: 'pending',
+        tasks: [
+            'Lateral movement chains',
+            'Privilege escalation paths',
+            'Kill chain mapping',
+            'MITRE ATT&CK mapping',
+        ],
         title: 'Attack Paths',
     },
     {
@@ -98,7 +116,15 @@ const PHASE_METADATA: Omit<PentestPhase, 'status' | 'msgCount'>[] = [
         icon: <FileText className="size-5" />,
         id: 'reporting',
         number: 7,
-        tasks: ['Executive summary', 'Technical findings', 'Evidence (screenshots/logs)', 'Remediation recommendations'],
+        prompt: (t) =>
+            `Generate a comprehensive penetration test report for ${t}. Include an executive summary, detailed technical findings with evidence, CVSS scores, attack paths, and prioritized remediation recommendations for each vulnerability.`,
+        status: 'pending',
+        tasks: [
+            'Executive summary',
+            'Technical findings',
+            'Evidence (screenshots/logs)',
+            'Remediation recommendations',
+        ],
         title: 'Reporting',
     },
 ];
@@ -115,97 +141,26 @@ const statusBadge: Record<PhaseStatus, { label: string; variant: 'default' | 'se
     pending: { label: 'Pending', variant: 'outline' },
 };
 
-interface BackendPhase {
-    id: string;
-    status: string;
-    msg_count: number;
-}
-
-interface BackendStats {
-    total_findings: number;
-    critical_findings: number;
-    endpoints: number;
-    attack_paths: number;
-}
-
-interface PhasesResponse {
-    flow_id: number;
-    phases: BackendPhase[];
-    stats: BackendStats;
-}
-
-interface FlowOption {
-    id: number;
-    title: string;
-}
-
 const WebPentest = () => {
-    const [phases, setPhases] = useState<PentestPhase[]>(
-        PHASE_METADATA.map((p) => ({ ...p, status: 'pending' as PhaseStatus })),
-    );
-    const [stats, setStats] = useState<BackendStats | null>(null);
-    const [flows, setFlows] = useState<FlowOption[]>([]);
-    const [selectedFlowId, setSelectedFlowId] = useState<number | null>(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const navigate = useNavigate();
+    const [target, setTarget] = useState('');
+    const [cookies, setCookies] = useState('');
 
-    // Load available flows on mount
-    useEffect(() => {
-        fetch('/api/v1/flows/')
-            .then((r) => r.json())
-            .then((data) => {
-                const list: FlowOption[] = (data?.flows ?? []).map((f: { id: number; title?: string }) => ({
-                    id: f.id,
-                    title: f.title || `Flow #${f.id}`,
-                }));
-                setFlows(list);
-                if (list.length > 0) {
-                    setSelectedFlowId(list[0].id);
-                }
-            })
-            .catch(() => {
-                /* no flows or not authenticated — silent */
-            });
-    }, []);
-
-    // Load phase data when flow is selected
-    useEffect(() => {
-        if (selectedFlowId == null) return;
-        setLoading(true);
-        setError(null);
-        fetch(`/api/v1/web-pentest/phases/${selectedFlowId}`)
-            .then((r) => {
-                if (!r.ok) throw new Error(`HTTP ${r.status}`);
-                return r.json() as Promise<{ data: PhasesResponse }>;
-            })
-            .then(({ data }) => {
-                const phaseMap = new Map(data.phases.map((p) => [p.id, p]));
-                setPhases(
-                    PHASE_METADATA.map((meta) => {
-                        const bp = phaseMap.get(meta.id);
-                        return {
-                            ...meta,
-                            msgCount: bp?.msg_count ?? 0,
-                            status: bp ? (backendStatusMap[bp.status] ?? 'pending') : 'pending',
-                        };
-                    }),
-                );
-                setStats(data.stats);
-            })
-            .catch((e) => setError(e.message))
-            .finally(() => setLoading(false));
-    }, [selectedFlowId]);
-
-    const doneCount = phases.filter((p) => p.status === 'done').length;
+    const handleLaunch = (phase: PentestPhase) => {
+        const t = target.trim();
+        if (!t) return;
+        let promptText = phase.prompt(t);
+        if (phase.id === 'recon' && cookies.trim()) {
+            promptText += ` Use the following session cookies for authenticated reconnaissance: ${cookies.trim()}`;
+        }
+        navigate(`/flows/new?prompt=${encodeURIComponent(promptText)}`);
+    };
 
     return (
         <>
             <header className="sticky top-0 z-10 flex h-12 shrink-0 items-center gap-2 border-b bg-background px-4">
                 <SidebarTrigger className="-ml-1" />
-                <Separator
-                    className="mr-2 h-4"
-                    orientation="vertical"
-                />
+                <Separator className="mr-2 h-4" orientation="vertical" />
                 <Breadcrumb>
                     <BreadcrumbList>
                         <BreadcrumbItem>
@@ -227,80 +182,33 @@ const WebPentest = () => {
                             <p className="text-sm text-muted-foreground">7-phase methodology · OWASP-aligned</p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                        {flows.length > 0 && (
-                            <select
-                                className="rounded-md border bg-background px-3 py-1.5 text-sm"
-                                value={selectedFlowId ?? ''}
-                                onChange={(e) => setSelectedFlowId(Number(e.target.value))}
-                            >
-                                {flows.map((f) => (
-                                    <option
-                                        key={f.id}
-                                        value={f.id}
-                                    >
-                                        {f.title}
-                                    </option>
-                                ))}
-                            </select>
-                        )}
-                        {selectedFlowId != null && (
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                disabled={loading}
-                                onClick={() => setSelectedFlowId((id) => id)} // re-trigger effect
-                            >
-                                <RefreshCw className={`size-3.5 ${loading ? 'animate-spin' : ''}`} />
-                            </Button>
-                        )}
-                        <Button
-                            asChild
-                            className="gap-2"
-                            size="sm"
-                        >
-                            <Link to="/flows/new">
-                                <GitFork className="size-4" />
-                                New flow
-                            </Link>
-                        </Button>
-                    </div>
+                    <Button asChild className="gap-2" size="sm">
+                        <a href="/flows/new">
+                            <GitFork className="size-4" />
+                            New flow
+                        </a>
+                    </Button>
                 </div>
 
-                {error && (
-                    <div className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-2 text-sm text-destructive">
-                        {error}
-                    </div>
-                )}
-
-                {/* Phase progress bar */}
-                <div>
-                    <div className="mb-1 flex justify-between text-xs text-muted-foreground">
-                        <span>Progress</span>
-                        <span>
-                            {doneCount}/{phases.length} phases
-                        </span>
-                    </div>
-                    <div className="flex h-2 w-full overflow-hidden rounded-full bg-muted">
-                        {phases.map((phase) => (
-                            <div
-                                className={`flex-1 transition-colors ${
-                                    phase.status === 'done'
-                                        ? 'bg-green-500'
-                                        : phase.status === 'active'
-                                          ? 'bg-blue-500'
-                                          : 'bg-transparent'
-                                } ${phase.number < phases.length ? 'border-r border-background' : ''}`}
-                                key={phase.id}
-                                title={phase.title}
-                            />
-                        ))}
-                    </div>
+                {/* Target input */}
+                <div className="flex items-center gap-3 rounded-lg border bg-muted/30 px-4 py-3">
+                    <Globe className="size-4 shrink-0 text-muted-foreground" />
+                    <Input
+                        className="h-8 border-0 bg-transparent p-0 text-sm shadow-none focus-visible:ring-0"
+                        placeholder="Target: e.g. partner-app.mokka.ru or 10.0.0.1"
+                        value={target}
+                        onChange={(e) => setTarget(e.target.value)}
+                    />
+                    {target && (
+                        <Badge className="shrink-0" variant="secondary">
+                            {target}
+                        </Badge>
+                    )}
                 </div>
 
                 {/* Phase cards */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-                    {phases.map((phase) => (
+                    {PHASE_METADATA.map((phase) => (
                         <Card
                             className={`border transition-shadow hover:shadow-md ${statusColors[phase.status]}`}
                             key={phase.id}
@@ -320,11 +228,8 @@ const WebPentest = () => {
                                 </div>
                                 <CardTitle className="mt-2 text-base">{phase.title}</CardTitle>
                                 <p className="text-xs text-muted-foreground">{phase.description}</p>
-                                {phase.msgCount != null && phase.msgCount > 0 && (
-                                    <p className="text-xs text-muted-foreground/70">{phase.msgCount} messages</p>
-                                )}
                             </CardHeader>
-                            <CardContent className="pt-0">
+                            <CardContent className="pt-0 flex flex-col gap-3">
                                 <ul className="space-y-1">
                                     {phase.tasks.map((task) => (
                                         <li
@@ -336,34 +241,38 @@ const WebPentest = () => {
                                         </li>
                                     ))}
                                 </ul>
+                                {phase.id === 'recon' && (
+                                    <div className="flex items-center gap-2 rounded-md border bg-muted/30 px-2 py-1.5">
+                                        <Cookie className="size-3.5 shrink-0 text-muted-foreground" />
+                                        <Input
+                                            className="h-6 border-0 bg-transparent p-0 text-xs shadow-none focus-visible:ring-0"
+                                            placeholder="Session cookies (optional)"
+                                            value={cookies}
+                                            onChange={(e) => setCookies(e.target.value)}
+                                        />
+                                    </div>
+                                )}
+                                <Button
+                                    className="w-full gap-2 mt-1"
+                                    disabled={!target.trim()}
+                                    size="sm"
+                                    onClick={() => handleLaunch(phase)}
+                                >
+                                    <Play className="size-3.5" />
+                                    Launch
+                                </Button>
                             </CardContent>
                         </Card>
                     ))}
                 </div>
 
-                {/* Stats row */}
+                {/* Stats placeholders */}
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
                     {[
-                        {
-                            icon: <AlertTriangle className="size-4" />,
-                            label: 'Critical Findings',
-                            value: stats ? String(stats.critical_findings) : '—',
-                        },
-                        {
-                            icon: <ShieldAlert className="size-4" />,
-                            label: 'Total Findings',
-                            value: stats ? String(stats.total_findings) : '—',
-                        },
-                        {
-                            icon: <Globe className="size-4" />,
-                            label: 'Endpoints Mapped',
-                            value: stats ? String(stats.endpoints) : '—',
-                        },
-                        {
-                            icon: <Route className="size-4" />,
-                            label: 'Attack Paths',
-                            value: stats ? String(stats.attack_paths) : '—',
-                        },
+                        { icon: <AlertTriangle className="size-4" />, label: 'Critical Findings', value: '—' },
+                        { icon: <ShieldAlert className="size-4" />, label: 'Total Findings', value: '—' },
+                        { icon: <Globe className="size-4" />, label: 'Endpoints Mapped', value: '—' },
+                        { icon: <Route className="size-4" />, label: 'Attack Paths', value: '—' },
                     ].map((stat) => (
                         <Card key={stat.label}>
                             <CardContent className="flex items-center gap-3 pt-4">
