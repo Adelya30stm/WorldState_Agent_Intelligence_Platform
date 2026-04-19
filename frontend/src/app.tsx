@@ -24,6 +24,7 @@ const Flow = lazy(() => import('@/pages/flows/flow'));
 const FlowReport = lazy(() => import('@/pages/flows/flow-report'));
 const Flows = lazy(() => import('@/pages/flows/flows'));
 const NewFlow = lazy(() => import('@/pages/flows/new-flow'));
+const Projects = lazy(() => import('@/pages/projects/projects'));
 const Login = lazy(() => import('@/pages/login'));
 const OAuthResult = lazy(() => import('@/pages/oauth-result'));
 const SettingsAPITokens = lazy(() => import('@/pages/settings/settings-api-tokens'));
@@ -85,6 +86,10 @@ const App = () => {
                                             </Route>
 
                                             {/* Other pages can be added here without FlowsProvider */}
+                                            <Route
+                                                element={<Projects />}
+                                                path="projects"
+                                            />
                                         </Route>
 
                                         {/* Settings with nested routes */}

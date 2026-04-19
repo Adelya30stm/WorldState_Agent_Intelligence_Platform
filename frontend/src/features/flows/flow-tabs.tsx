@@ -115,6 +115,7 @@ const FlowTabs = ({ activeTab, onTabChange }: FlowTabsProps) => {
             >
                 <FlowScreenshots />
             </TabsContent>
+
         </Tabs>
     );
 };

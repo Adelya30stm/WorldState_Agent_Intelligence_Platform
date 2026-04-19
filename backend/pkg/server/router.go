@@ -48,6 +48,7 @@ var frontendRoutes = []string{
 	"/login",
 	"/flows",
 	"/settings",
+	"/projects",
 }
 
 // @title PentAGI Swagger API
@@ -141,6 +142,7 @@ func NewRouter(
 	screenshotService := services.NewScreenshotService(orm, cfg.DataDir)
 	promptService := services.NewPromptService(orm)
 	analyticsService := services.NewAnalyticsService(orm)
+	worldStateService := services.NewWorldStateService(orm)
 	tokenService := services.NewTokenService(orm, cfg.CookieSigningSalt, tokenCache, subscriptions)
 	graphqlService := services.NewGraphqlService(
 		db, cfg, baseURL, cfg.CorsOrigins, tokenCache, providers, controller, subscriptions,
@@ -221,6 +223,7 @@ func NewRouter(
 
 		setProvidersGroup(privateGroup, providerService)
 		setFlowsGroup(privateGroup, flowService)
+		setWorldStateGroup(privateGroup, worldStateService)
 		setTasksGroup(privateGroup, taskService)
 		setSubtasksGroup(privateGroup, subtaskService)
 		setContainersGroup(privateGroup, containerService)
@@ -561,5 +564,12 @@ func setTokensGroup(parent *gin.RouterGroup, svc *services.TokenService) {
 		tokensGroup.GET("/:tokenID", svc.GetToken)
 		tokensGroup.PUT("/:tokenID", svc.UpdateToken)
 		tokensGroup.DELETE("/:tokenID", svc.DeleteToken)
+	}
+}
+
+func setWorldStateGroup(parent *gin.RouterGroup, svc *services.WorldStateService) {
+	worldStateGroup := parent.Group("/flows/:flowID/worldstate")
+	{
+		worldStateGroup.GET("/", svc.GetWorldState)
 	}
 }

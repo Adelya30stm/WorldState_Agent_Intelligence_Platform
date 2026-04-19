@@ -5,11 +5,9 @@ import { toast } from 'sonner';
 import type { FlowFormValues } from '@/features/flows/flow-form';
 import type { AssistantFragmentFragment, AssistantLogFragmentFragment, FlowQuery } from '@/graphql/types';
 
-import NmapScanDialog from '@/features/flows/terminal/nmap-scan-dialog';
 import {
     ResultType,
     StatusType,
-    TerminalLogType,
     useAgentLogAddedSubscription,
     useAssistantCreatedSubscription,
     useAssistantDeletedSubscription,
@@ -67,9 +65,6 @@ export const FlowProvider = ({ children }: FlowProviderProps) => {
     const { flowId } = useParams();
 
     const [selectedAssistantIds, setSelectedAssistantIds] = useState<Record<string, null | string>>({});
-    const [nmapDialog, setNmapDialog] = useState<{ command: string; open: boolean }>({ command: '', open: false });
-    const [lastHandledNmapLogId, setLastHandledNmapLogId] = useState<null | string>(null);
-
     const {
         data: flowData,
         error: flowError,
@@ -141,25 +136,6 @@ export const FlowProvider = ({ children }: FlowProviderProps) => {
         variables: subscriptionVariables,
     });
 
-    useEffect(() => {
-        const log = terminalLogData?.terminalLogAdded;
-
-        if (log && log.id !== lastHandledNmapLogId && log.type === TerminalLogType.Stdin && log.text.toLowerCase().includes('nmap')) {
-            setLastHandledNmapLogId(log.id);
-            setNmapDialog({ command: log.text, open: true });
-        }
-    }, [lastHandledNmapLogId, terminalLogData]);
-
-    useEffect(() => {
-        const latestNmapLog = [...terminalLogs]
-            .reverse()
-            .find((log) => log.type === TerminalLogType.Stdin && log.text.toLowerCase().includes('nmap'));
-
-        if (latestNmapLog && latestNmapLog.id !== lastHandledNmapLogId) {
-            setLastHandledNmapLogId(latestNmapLog.id);
-            setNmapDialog({ command: latestNmapLog.text, open: true });
-        }
-    }, [lastHandledNmapLogId, terminalLogs]);
     useMessageLogUpdatedSubscription({ skip: subscriptionSkip, variables: subscriptionVariables });
     useMessageLogAddedSubscription({ skip: subscriptionSkip, variables: subscriptionVariables });
     useAgentLogAddedSubscription({ skip: subscriptionSkip, variables: subscriptionVariables });
@@ -439,15 +415,6 @@ export const FlowProvider = ({ children }: FlowProviderProps) => {
     return (
         <FlowContext.Provider value={value}>
             {children}
-            <NmapScanDialog
-                command={nmapDialog.command}
-                onConfirm={() => setNmapDialog((prev: { command: string; open: boolean }) => ({ ...prev, open: false }))}
-                onDeny={async () => {
-                    setNmapDialog((prev: { command: string; open: boolean }) => ({ ...prev, open: false }));
-                    await stopAutomation();
-                }}
-                open={nmapDialog.open}
-            />
         </FlowContext.Provider>
     );
 };

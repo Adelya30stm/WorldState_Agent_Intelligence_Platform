@@ -7,37 +7,35 @@ import FlowAssistantMessages from '@/features/flows/messages/flow-assistant-mess
 import FlowAutomationMessages from '@/features/flows/messages/flow-automation-messages';
 import { useFlow } from '@/providers/flow-provider';
 
-const FlowCentralTabs = () => {
+interface FlowCentralTabsProps {
+    /** Called when the active tab changes — parent can react to world-state selection */
+    onTabChange?: (tab: string) => void;
+    /** Controlled active tab value from parent */
+    value?: string;
+}
+
+const FlowCentralTabs = ({ onTabChange, value: controlledValue }: FlowCentralTabsProps) => {
     const { flowData, isLoading } = useFlow();
     const [searchParams, setSearchParams] = useSearchParams();
     const [activeTab, setActiveTab] = useState<null | string>(null);
 
-    // Determine default tab based on priority: manual selection > URL parameter > auto-detection
     const defaultTab = useMemo(() => {
-        // If user manually selected a tab, use it
-        if (activeTab) {
-            return activeTab;
-        }
+        // Controlled mode takes precedence
+        if (controlledValue) return controlledValue;
+        if (activeTab) return activeTab;
 
-        // Check URL parameter
         const tabParam = searchParams.get('tab');
-
-        if (tabParam === 'automation' || tabParam === 'assistant') {
+        if (tabParam === 'automation' || tabParam === 'assistant' || tabParam === 'world-state') {
             return tabParam;
         }
-
-        // Auto-detect: switch to assistant tab if flow is loaded and messageLogs are empty
-        if (!isLoading && !flowData?.messageLogs?.length) {
-            return 'assistant';
-        }
-
+        if (!isLoading && !flowData?.messageLogs?.length) return 'assistant';
         return 'automation';
-    }, [activeTab, searchParams, isLoading, flowData?.messageLogs]);
+    }, [controlledValue, activeTab, searchParams, isLoading, flowData?.messageLogs]);
 
-    // Handle tab change - update both state and URL parameter
     const handleTabChange = (tab: string) => {
         setActiveTab(tab);
         setSearchParams({ tab });
+        onTabChange?.(tab);
     };
 
     return (
@@ -51,6 +49,7 @@ const FlowCentralTabs = () => {
                     <TabsList className="flex w-fit">
                         <TabsTrigger value="automation">Automation</TabsTrigger>
                         <TabsTrigger value="assistant">Assistant</TabsTrigger>
+                        <TabsTrigger value="world-state">World State</TabsTrigger>
                     </TabsList>
                     <ScrollBar orientation="horizontal" />
                 </ScrollArea>
@@ -67,6 +66,14 @@ const FlowCentralTabs = () => {
                 value="assistant"
             >
                 <FlowAssistantMessages />
+            </TabsContent>
+
+            {/* World State has no TabsContent here — handled full-width in flow.tsx */}
+            <TabsContent
+                className="mt-2 flex-1"
+                value="world-state"
+            >
+                {/* Rendered full-width by flow.tsx when this tab is active */}
             </TabsContent>
         </Tabs>
     );
