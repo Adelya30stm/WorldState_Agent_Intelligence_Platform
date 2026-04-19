@@ -143,6 +143,7 @@ func NewRouter(
 	promptService := services.NewPromptService(orm)
 	analyticsService := services.NewAnalyticsService(orm)
 	worldStateService := services.NewWorldStateService(orm)
+	webPentestService := services.NewWebPentestService(orm)
 	tokenService := services.NewTokenService(orm, cfg.CookieSigningSalt, tokenCache, subscriptions)
 	graphqlService := services.NewGraphqlService(
 		db, cfg, baseURL, cfg.CorsOrigins, tokenCache, providers, controller, subscriptions,
@@ -237,6 +238,7 @@ func NewRouter(
 		setScreenshotsGroup(privateGroup, screenshotService)
 		setPromptsGroup(privateGroup, promptService)
 		setAnalyticsGroup(privateGroup, analyticsService)
+		setWebPentestGroup(privateGroup, webPentestService)
 	}
 
 	privateUserGroup := api.Group("/")
@@ -571,5 +573,12 @@ func setWorldStateGroup(parent *gin.RouterGroup, svc *services.WorldStateService
 	worldStateGroup := parent.Group("/flows/:flowID/worldstate")
 	{
 		worldStateGroup.GET("/", svc.GetWorldState)
+	}
+}
+
+func setWebPentestGroup(parent *gin.RouterGroup, svc *services.WebPentestService) {
+	webPentestGroup := parent.Group("/web-pentest/phases")
+	{
+		webPentestGroup.GET("/:flowID", svc.GetFlowPhases)
 	}
 }
