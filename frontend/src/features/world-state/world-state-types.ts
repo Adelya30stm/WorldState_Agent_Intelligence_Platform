@@ -119,13 +119,12 @@ export const RISK_BADGE: Record<RiskLevel, { label: string; cls: string }> = {
     critical: { label: 'Critical', cls: 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300' },
 };
 
-export const GRAPH_MODES = ['execution', 'target', 'compliance', 'threat-model'] as const;
+export const GRAPH_MODES = ['execution', 'target', 'threat-model'] as const;
 export type GraphMode = (typeof GRAPH_MODES)[number];
 
 export const GRAPH_MODE_LABELS: Record<GraphMode, string> = {
     execution: 'Execution',
     target: 'Target',
-    compliance: 'Compliance',
     'threat-model': 'Threat Model',
 };
 
@@ -133,6 +132,5 @@ export const GRAPH_MODE_LABELS: Record<GraphMode, string> = {
 export const GRAPH_MODE_ENTITIES: Record<GraphMode, EntityType[]> = {
     execution: ['flow', 'task', 'subtask', 'tool', 'command'],
     target: ['domain', 'endpoint', 'tool', 'finding'],
-    compliance: ['flow', 'task', 'domain', 'endpoint', 'finding'],
     'threat-model': ['domain', 'endpoint', 'finding', 'tool'],
 };

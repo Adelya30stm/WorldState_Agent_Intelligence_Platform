@@ -70,6 +70,44 @@ var noiseDomains = map[string]bool{
 	"pkg.go.dev": true, "ubuntu.com": true, "debian.org": true,
 }
 
+// Code method/attribute names that match the domain regex but are not real TLDs
+var codeSuffixes = map[string]bool{
+	"get": true, "set": true, "put": true, "delete": true, "post": true, "patch": true,
+	"now": true, "utc": true, "parse": true, "format": true, "encode": true, "decode": true,
+	"resolve": true, "resolver": true, "lookup": true, "query": true, "fetch": true,
+	"insert": true, "append": true, "extend": true, "update": true, "remove": true,
+	"open": true, "close": true, "read": true, "write": true, "load": true, "dump": true,
+	"url": true, "path": true, "text": true, "json": true, "xml": true, "data": true,
+	"status": true, "headers": true, "content": true, "body": true, "params": true,
+	"error": true, "result": true, "response": true, "request": true, "handler": true,
+	"method": true, "fields": true, "values": true, "items": true,
+	"preference": true, "exchange": true, "gethostbyaddr": true, "getaddrinfo": true,
+	"tool": true, "utils": true, "helper": true, "base": true, "core": true,
+	"stdout": true, "stderr": true, "stdin": true,
+}
+
+func isLikelyCodeRef(candidate string) bool {
+	parts := strings.Split(candidate, ".")
+	tld := strings.ToLower(parts[len(parts)-1])
+	// TLDs > 8 chars are almost certainly code identifiers
+	if len(tld) > 8 {
+		return true
+	}
+	// Known code method/attribute names
+	if codeSuffixes[tld] {
+		return true
+	}
+	// More than 3 dot-separated segments is usually code (e.g. dns.resolver.resolve)
+	if len(parts) > 3 {
+		return true
+	}
+	// Underscores never appear in valid hostnames
+	if strings.Contains(candidate, "_") {
+		return true
+	}
+	return false
+}
+
 var toolPatterns = []struct {
 	name string
 	re   *regexp.Regexp
@@ -109,7 +147,7 @@ func extractDomains(text string) []string {
 
 	for _, m := range domainRE.FindAllStringSubmatch(text, -1) {
 		v := strings.ToLower(m[1])
-		if !noiseDomains[v] && strings.Contains(v, ".") && !seen[v] {
+		if !noiseDomains[v] && strings.Contains(v, ".") && !isLikelyCodeRef(v) && !seen[v] {
 			seen[v] = true
 			out = append(out, v)
 		}

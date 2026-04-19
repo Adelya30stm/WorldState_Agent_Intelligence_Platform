@@ -50,6 +50,37 @@ const NOISE_DOMAINS = new Set([
     'ubuntu.com', 'debian.org', 'kali.org',
 ]);
 
+// Code method/attribute names that look like TLDs but aren't
+const CODE_SUFFIXES = new Set([
+    'get', 'set', 'put', 'delete', 'post', 'patch', 'head', 'options',
+    'now', 'utc', 'parse', 'format', 'encode', 'decode', 'split', 'join',
+    'resolve', 'resolver', 'lookup', 'query', 'fetch', 'send', 'recv',
+    'insert', 'append', 'extend', 'update', 'remove', 'pop', 'push',
+    'open', 'close', 'read', 'write', 'seek', 'flush', 'load', 'dump',
+    'url', 'path', 'text', 'json', 'xml', 'csv', 'html', 'data',
+    'status', 'headers', 'content', 'body', 'params', 'args', 'kwargs',
+    'error', 'errors', 'result', 'response', 'request', 'handler',
+    'manager', 'client', 'server', 'config', 'settings', 'options',
+    'method', 'methods', 'fields', 'attrs', 'props', 'values', 'items',
+    'preference', 'exchange', 'gethostbyaddr', 'getaddrinfo',
+    'tool', 'utils', 'helper', 'helpers', 'base', 'core', 'main',
+    'stdout', 'stderr', 'stdin', 'argv', 'environ',
+]);
+
+function isLikelyCodeRef(candidate: string): boolean {
+    const parts = candidate.split('.');
+    const tld = (parts[parts.length - 1] ?? '').toLowerCase();
+    // TLDs longer than 8 chars are almost certainly code (e.g. .preference, .gethostbyaddr)
+    if (tld.length > 8) return true;
+    // Known code method/attribute names used as fake TLDs
+    if (CODE_SUFFIXES.has(tld)) return true;
+    // Python-style dotted names: more than 3 segments usually means code (e.g. dns.resolver.resolve)
+    if (parts.length > 3) return true;
+    // Contains underscores (code identifiers, not hostnames)
+    if (candidate.includes('_')) return true;
+    return false;
+}
+
 function slugify(s: string): string {
     return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 64);
 }
@@ -61,7 +92,7 @@ function extractDomains(text: string): string[] {
     const d = new RegExp(DOMAIN_RE.source, 'g');
     while ((m = d.exec(text)) !== null) {
         const v = m[1].toLowerCase();
-        if (!NOISE_DOMAINS.has(v) && v.includes('.')) out.add(v);
+        if (!NOISE_DOMAINS.has(v) && v.includes('.') && !isLikelyCodeRef(v)) out.add(v);
     }
 
     const ip = new RegExp(IPV4_RE.source, 'g');

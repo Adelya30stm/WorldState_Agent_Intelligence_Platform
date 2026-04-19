@@ -1,4 +1,4 @@
-import { Globe, Layers, RefreshCw, Shield, Workflow, Zap } from 'lucide-react';
+import { Globe, Layers, RefreshCw, Workflow, Zap } from 'lucide-react';
 import { useCallback, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,6 @@ import WorldStateSidebar from './world-state-sidebar';
 const MODE_ICONS: Record<GraphMode, React.ReactNode> = {
     execution: <Workflow className="size-3.5" />,
     target: <Globe className="size-3.5" />,
-    compliance: <Shield className="size-3.5" />,
     'threat-model': <Zap className="size-3.5" />,
 };
 
