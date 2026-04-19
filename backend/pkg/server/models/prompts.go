@@ -39,7 +39,14 @@ func (s PromptType) Valid() error {
 		templates.PromptTypeLanguageChooser, templates.PromptTypeFlowDescriptor,
 		templates.PromptTypeTaskDescriptor, templates.PromptTypeExecutionLogs,
 		templates.PromptTypeFullExecutionContext, templates.PromptTypeShortExecutionContext,
-		templates.PromptTypeToolCallIDCollector, templates.PromptTypeToolCallIDDetector:
+		templates.PromptTypeToolCallIDCollector, templates.PromptTypeToolCallIDDetector,
+		templates.PromptTypeWebPlanner, templates.PromptTypeQuestionWebPlanner,
+		templates.PromptTypeWebRecon, templates.PromptTypeQuestionWebRecon,
+		templates.PromptTypeWebMapper, templates.PromptTypeQuestionWebMapper,
+		templates.PromptTypeWebTester, templates.PromptTypeQuestionWebTester,
+		templates.PromptTypeWebValidator, templates.PromptTypeQuestionWebValidator,
+		templates.PromptTypeWebAttackPaths, templates.PromptTypeQuestionWebAttackPaths,
+		templates.PromptTypeWebReporter, templates.PromptTypeQuestionWebReporter:
 		return nil
 	default:
 		return fmt.Errorf("invalid PromptType: %s", s)

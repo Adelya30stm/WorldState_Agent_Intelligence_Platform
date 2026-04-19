@@ -65,6 +65,20 @@ const (
 	PromptTypeQuestionExecutionMonitor PromptType = "question_execution_monitor" // question for adviser to monitor agent execution progress
 	PromptTypeQuestionTaskPlanner      PromptType = "question_task_planner"      // question for adviser to create execution plan for agent
 	PromptTypeTaskAssignmentWrapper    PromptType = "task_assignment_wrapper"    // wraps original request with execution plan for specialist agents
+	PromptTypeWebPlanner               PromptType = "web_planner"               // plans scope, RoE, and threat model for web pentest
+	PromptTypeQuestionWebPlanner       PromptType = "question_web_planner"      // human input for planning phase
+	PromptTypeWebRecon                 PromptType = "web_recon"                 // performs passive and active reconnaissance
+	PromptTypeQuestionWebRecon         PromptType = "question_web_recon"        // human input for recon phase
+	PromptTypeWebMapper                PromptType = "web_mapper"                // crawls and maps the full attack surface
+	PromptTypeQuestionWebMapper        PromptType = "question_web_mapper"       // human input for mapping phase
+	PromptTypeWebTester                PromptType = "web_tester"                // tests discovered surfaces for vulnerabilities
+	PromptTypeQuestionWebTester        PromptType = "question_web_tester"       // human input for testing phase
+	PromptTypeWebValidator             PromptType = "web_validator"             // validates and calibrates severity of findings
+	PromptTypeQuestionWebValidator     PromptType = "question_web_validator"    // human input for validation phase
+	PromptTypeWebAttackPaths           PromptType = "web_attack_paths"          // constructs multi-step attack chains and MITRE mapping
+	PromptTypeQuestionWebAttackPaths   PromptType = "question_web_attack_paths" // human input for attack paths phase
+	PromptTypeWebReporter              PromptType = "web_reporter"              // produces executive + technical pentest report
+	PromptTypeQuestionWebReporter      PromptType = "question_web_reporter"     // human input for reporting phase
 )
 
 var PromptVariables = map[PromptType][]string{
@@ -410,6 +424,62 @@ var PromptVariables = map[PromptType][]string{
 		"OriginalRequest",
 		"ExecutionPlan",
 	},
+	PromptTypeWebPlanner: {
+		"GraphitiEnabled",
+		"SearchGuideToolName",
+		"StoreGuideToolName",
+	},
+	PromptTypeQuestionWebPlanner: {
+		"Question",
+	},
+	PromptTypeWebRecon: {
+		"GraphitiEnabled",
+		"SearchGuideToolName",
+		"StoreGuideToolName",
+	},
+	PromptTypeQuestionWebRecon: {
+		"Question",
+	},
+	PromptTypeWebMapper: {
+		"GraphitiEnabled",
+		"SearchGuideToolName",
+		"StoreGuideToolName",
+	},
+	PromptTypeQuestionWebMapper: {
+		"Question",
+	},
+	PromptTypeWebTester: {
+		"GraphitiEnabled",
+		"SearchGuideToolName",
+		"StoreGuideToolName",
+	},
+	PromptTypeQuestionWebTester: {
+		"Question",
+	},
+	PromptTypeWebValidator: {
+		"GraphitiEnabled",
+		"SearchGuideToolName",
+		"StoreGuideToolName",
+	},
+	PromptTypeQuestionWebValidator: {
+		"Question",
+	},
+	PromptTypeWebAttackPaths: {
+		"GraphitiEnabled",
+		"SearchGuideToolName",
+		"StoreGuideToolName",
+	},
+	PromptTypeQuestionWebAttackPaths: {
+		"Question",
+	},
+	PromptTypeWebReporter: {
+		"GraphitiEnabled",
+		"SearchGuideToolName",
+		"StoreGuideToolName",
+	},
+	PromptTypeQuestionWebReporter: {
+		"Question",
+	},
 }
 
 type Prompt struct {
@@ -441,8 +511,15 @@ type AgentsPrompts struct {
 	Reporter      AgentPrompts
 	Reflector     AgentPrompts
 	Enricher      AgentPrompts
-	ToolCallFixer AgentPrompts
-	Summarizer    AgentPrompt
+	ToolCallFixer  AgentPrompts
+	Summarizer     AgentPrompt
+	WebPlanner     AgentPrompts
+	WebRecon       AgentPrompts
+	WebMapper      AgentPrompts
+	WebTester      AgentPrompts
+	WebValidator   AgentPrompts
+	WebAttackPaths AgentPrompts
+	WebReporter    AgentPrompts
 }
 
 type ToolsPrompts struct {
@@ -548,6 +625,34 @@ func GetDefaultPrompts() (*DefaultPrompts, error) {
 			},
 			Summarizer: AgentPrompt{
 				System: getPrompt(PromptTypeSummarizer),
+			},
+			WebPlanner: AgentPrompts{
+				System: getPrompt(PromptTypeWebPlanner),
+				Human:  getPrompt(PromptTypeQuestionWebPlanner),
+			},
+			WebRecon: AgentPrompts{
+				System: getPrompt(PromptTypeWebRecon),
+				Human:  getPrompt(PromptTypeQuestionWebRecon),
+			},
+			WebMapper: AgentPrompts{
+				System: getPrompt(PromptTypeWebMapper),
+				Human:  getPrompt(PromptTypeQuestionWebMapper),
+			},
+			WebTester: AgentPrompts{
+				System: getPrompt(PromptTypeWebTester),
+				Human:  getPrompt(PromptTypeQuestionWebTester),
+			},
+			WebValidator: AgentPrompts{
+				System: getPrompt(PromptTypeWebValidator),
+				Human:  getPrompt(PromptTypeQuestionWebValidator),
+			},
+			WebAttackPaths: AgentPrompts{
+				System: getPrompt(PromptTypeWebAttackPaths),
+				Human:  getPrompt(PromptTypeQuestionWebAttackPaths),
+			},
+			WebReporter: AgentPrompts{
+				System: getPrompt(PromptTypeWebReporter),
+				Human:  getPrompt(PromptTypeQuestionWebReporter),
 			},
 		},
 		ToolsPrompts: ToolsPrompts{
