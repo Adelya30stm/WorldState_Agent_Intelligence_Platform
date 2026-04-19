@@ -178,11 +178,11 @@ const MainSidebar = () => {
                             <SidebarMenuItem>
                                 <SidebarMenuButton
                                     asChild
-                                    isActive={location.pathname === '/projects'}
+                                    isActive={location.pathname === '/web-pentest'}
                                 >
-                                    <Link to="/projects">
+                                    <Link to="/web-pentest">
                                         <Network />
-                                        Projects
+                                        Web Pentest
                                     </Link>
                                 </SidebarMenuButton>
                             </SidebarMenuItem>

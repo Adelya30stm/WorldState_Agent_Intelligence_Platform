@@ -205,7 +205,14 @@ const (
 	MsgchainTypePentester     MsgchainType = "pentester"
 	MsgchainTypeSummarizer    MsgchainType = "summarizer"
 	MsgchainTypeToolCallFixer MsgchainType = "tool_call_fixer"
-	MsgchainTypeAssistant     MsgchainType = "assistant"
+	MsgchainTypeAssistant        MsgchainType = "assistant"
+	MsgchainTypeWebPlanner      MsgchainType = "web_planner"
+	MsgchainTypeWebRecon        MsgchainType = "web_recon"
+	MsgchainTypeWebMapper       MsgchainType = "web_mapper"
+	MsgchainTypeWebTester       MsgchainType = "web_tester"
+	MsgchainTypeWebValidator    MsgchainType = "web_validator"
+	MsgchainTypeWebAttackPaths  MsgchainType = "web_attack_paths"
+	MsgchainTypeWebReporter     MsgchainType = "web_reporter"
 )
 
 func (e *MsgchainType) Scan(src interface{}) error {
@@ -379,6 +386,20 @@ const (
 	PromptTypeQuestionExecutionMonitor PromptType = "question_execution_monitor"
 	PromptTypeQuestionTaskPlanner      PromptType = "question_task_planner"
 	PromptTypeTaskAssignmentWrapper    PromptType = "task_assignment_wrapper"
+	PromptTypeWebPlanner               PromptType = "web_planner"
+	PromptTypeQuestionWebPlanner       PromptType = "question_web_planner"
+	PromptTypeWebRecon                 PromptType = "web_recon"
+	PromptTypeQuestionWebRecon         PromptType = "question_web_recon"
+	PromptTypeWebMapper                PromptType = "web_mapper"
+	PromptTypeQuestionWebMapper        PromptType = "question_web_mapper"
+	PromptTypeWebTester                PromptType = "web_tester"
+	PromptTypeQuestionWebTester        PromptType = "question_web_tester"
+	PromptTypeWebValidator             PromptType = "web_validator"
+	PromptTypeQuestionWebValidator     PromptType = "question_web_validator"
+	PromptTypeWebAttackPaths           PromptType = "web_attack_paths"
+	PromptTypeQuestionWebAttackPaths   PromptType = "question_web_attack_paths"
+	PromptTypeWebReporter              PromptType = "web_reporter"
+	PromptTypeQuestionWebReporter      PromptType = "question_web_reporter"
 )
 
 func (e *PromptType) Scan(src interface{}) error {

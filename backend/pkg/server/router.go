@@ -48,7 +48,7 @@ var frontendRoutes = []string{
 	"/login",
 	"/flows",
 	"/settings",
-	"/projects",
+	"/web-pentest",
 }
 
 // @title PentAGI Swagger API
