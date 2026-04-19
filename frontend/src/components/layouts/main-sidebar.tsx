@@ -4,6 +4,7 @@ import {
     Clock,
     GitFork,
     KeyRound,
+    Network,
     LogOut,
     Monitor,
     Moon,
@@ -173,6 +174,17 @@ const MainSidebar = () => {
                                         <Plus />
                                     </Link>
                                 </SidebarMenuAction>
+                            </SidebarMenuItem>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton
+                                    asChild
+                                    isActive={location.pathname === '/projects'}
+                                >
+                                    <Link to="/projects">
+                                        <Network />
+                                        Projects
+                                    </Link>
+                                </SidebarMenuButton>
                             </SidebarMenuItem>
                         </SidebarMenu>
                     </SidebarGroupContent>
