@@ -105,6 +105,7 @@ const NewFlow = () => {
                         </Tabs>
                         <FlowForm
                             defaultValues={{
+                                message: autoPrompt ?? '',
                                 providerName: selectedProvider?.name ?? '',
                                 useAgents: shouldUseAgents,
                             }}
