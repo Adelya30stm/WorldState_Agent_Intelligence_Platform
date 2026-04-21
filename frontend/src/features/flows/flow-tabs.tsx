@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react';
 
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import FlowAuthorizations from '@/features/flows/authorizations/flow-authorizations';
 import FlowAgents from '@/features/flows/agents/flow-agents';
 import FlowAssistantMessages from '@/features/flows/messages/flow-assistant-messages';
 import FlowAutomationMessages from '@/features/flows/messages/flow-automation-messages';
@@ -50,6 +51,7 @@ const FlowTabs = ({ activeTab, onTabChange }: FlowTabsProps) => {
                         <TabsTrigger value="tools">Searches</TabsTrigger>
                         <TabsTrigger value="vectorStores">Vector Store</TabsTrigger>
                         <TabsTrigger value="screenshots">Screenshots</TabsTrigger>
+                        <TabsTrigger value="authorizations">Authorizations</TabsTrigger>
                     </TabsList>
                     <ScrollBar orientation="horizontal" />
                 </ScrollArea>
@@ -114,6 +116,13 @@ const FlowTabs = ({ activeTab, onTabChange }: FlowTabsProps) => {
                 value="screenshots"
             >
                 <FlowScreenshots />
+            </TabsContent>
+
+            <TabsContent
+                className="mt-2 flex-1 overflow-auto pr-4"
+                value="authorizations"
+            >
+                <FlowAuthorizations />
             </TabsContent>
 
         </Tabs>
