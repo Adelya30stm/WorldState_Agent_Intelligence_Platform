@@ -15,6 +15,32 @@ import {
     Sun,
     UserIcon,
 } from 'lucide-react';
+
+const SecureDevLogo = () => (
+    <svg
+        fill="none"
+        height="24"
+        viewBox="0 0 24 24"
+        width="24"
+        xmlns="http://www.w3.org/2000/svg"
+    >
+        <path
+            d="M12 2L4 5.5V11C4 15.42 7.5 19.57 12 21C16.5 19.57 20 15.42 20 11V5.5L12 2Z"
+            fill="#2563EB"
+        />
+        <text
+            dominantBaseline="middle"
+            fill="white"
+            fontSize="6.5"
+            fontWeight="bold"
+            textAnchor="middle"
+            x="12"
+            y="12"
+        >
+            {'</>'}
+        </text>
+    </svg>
+);
 import { useMemo, useState } from 'react';
 import { Link, useLocation, useMatch, useParams } from 'react-router-dom';
 
@@ -43,6 +69,7 @@ import {
     SidebarMenuItem,
     SidebarRail,
 } from '@/components/ui/sidebar';
+
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PasswordChangeForm } from '@/features/authentication/password-change-form';
 import { useTheme } from '@/hooks/use-theme';
@@ -130,6 +157,21 @@ const MainSidebar = () => {
 
     return (
         <Sidebar collapsible="icon">
+            <SidebarHeader>
+                <SidebarMenu>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton
+                            asChild
+                            size="lg"
+                        >
+                            <Link to="/flows">
+                                <SecureDevLogo />
+                                <span className="truncate font-semibold">Безопасная Разработка</span>
+                            </Link>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                </SidebarMenu>
+            </SidebarHeader>
             <SidebarContent>
                 <SidebarGroup className="bg-sidebar sticky top-0 z-10">
                     <SidebarGroupContent>
