@@ -1,13 +1,13 @@
-# PentAGI Worker Node Setup
+# RedScope Worker Node Setup
 
-This guide configures a distributed PentAGI deployment where worker node operations are isolated on a separate server for enhanced security. The worker node runs both host Docker and Docker-in-Docker (dind) to provide secure container execution environments.
+This guide configures a distributed RedScope deployment where worker node operations are isolated on a separate server for enhanced security. The worker node runs both host Docker and Docker-in-Docker (dind) to provide secure container execution environments.
 
 ## Architecture Overview
 
 ```mermaid
 graph TB
     subgraph "Main Node"
-        PA[PentAGI Container]
+        PA[RedScope Container]
     end
 
     subgraph "Worker Node"
@@ -38,8 +38,8 @@ graph TB
 ```
 
 **Connection Modes:**
-- **Standard**: PentAGI → Host Docker (creates workers) → Workers use dind via socket mapping
-- **Direct**: PentAGI → dind (creates workers directly, socket mapping disabled)
+- **Standard**: RedScope → Host Docker (creates workers) → Workers use dind via socket mapping
+- **Direct**: RedScope → dind (creates workers directly, socket mapping disabled)
 
 ## Prerequisites
 
@@ -379,20 +379,20 @@ The worker node exposes the following services on the private IP address:
 | 9323 | Host Docker Metrics | Prometheus metrics endpoint for host Docker |
 | 9324 | dind Metrics | Prometheus metrics endpoint for dind |
 
-**Metrics Integration:** The metrics ports (9323, 9324) can be configured in PentAGI's `observability/otel/config.yml` under the `docker-engine-collector` job name for monitoring integration.
+**Metrics Integration:** The metrics ports (9323, 9324) can be configured in RedScope's `observability/otel/config.yml` under the `docker-engine-collector` job name for monitoring integration.
 
 ### OOB Attack Port Range
 
 Each worker container (`pentagi-terminal-N`) dynamically allocates **2 ports** from the range `28000-30000` on all network interfaces to facilitate Out-of-Band (OOB) attack techniques during penetration testing.
 
 **Firewall Requirements:**
-- **Inbound**: Allow access to ports 2376, 3376, 9323, 9324 on `${PRIVATE_IP}` from the main PentAGI node
+- **Inbound**: Allow access to ports 2376, 3376, 9323, 9324 on `${PRIVATE_IP}` from the main RedScope node
 - **Inbound**: Allow access to port range 28000-30000 from target networks being tested
 - Configure perimeter firewall to permit OOB traffic from target networks to worker node
 
 ## Transfer Certificates to Main Node
 
-Copy the client certificates from the worker node to the main PentAGI node for secure Docker API access. The certificates need to be transferred to specific directories that the PentAGI installer will recognize.
+Copy the client certificates from the worker node to the main RedScope node for secure Docker API access. The certificates need to be transferred to specific directories that the RedScope installer will recognize.
 
 ### Copy Host Docker Client Certificates
 
@@ -403,7 +403,7 @@ Transfer the host Docker client certificates to the main node:
 sudo tar czf docker-host-ssl.tar.gz -C /etc/docker/certs client/
 
 # Transfer to main node (replace <MAIN_NODE_IP> with actual IP)
-scp docker-host-ssl.tar.gz root@<MAIN_NODE_IP>:/opt/pentagi/
+scp docker-host-ssl.tar.gz root@<MAIN_NODE_IP>:/opt/redscope/
 
 # On the main node - extract certificates
 cd /opt/pentagi
@@ -421,7 +421,7 @@ Transfer the dind client certificates to the main node:
 sudo tar czf docker-dind-ssl.tar.gz -C /etc/docker/certs/dind client/
 
 # Transfer to main node (replace <MAIN_NODE_IP> with actual IP)
-scp docker-dind-ssl.tar.gz root@<MAIN_NODE_IP>:/opt/pentagi/
+scp docker-dind-ssl.tar.gz root@<MAIN_NODE_IP>:/opt/redscope/
 
 # On the main node - extract certificates
 cd /opt/pentagi
@@ -436,8 +436,8 @@ After transfer, verify the certificate directory structure on the main node:
 
 ```bash
 # Check certificate directories
-ls -la /opt/pentagi/docker-host-ssl/
-ls -la /opt/pentagi/docker-dind-ssl/
+ls -la /opt/redscope/docker-host-ssl/
+ls -la /opt/redscope/docker-dind-ssl/
 
 # Expected files in each directory:
 # ca.pem (Certificate Authority)
@@ -445,22 +445,22 @@ ls -la /opt/pentagi/docker-dind-ssl/
 # key.pem (Client private key)
 ```
 
-These certificate directories will be used by the PentAGI installer to configure secure connections to the worker node Docker services.
+These certificate directories will be used by the RedScope installer to configure secure connections to the worker node Docker services.
 
-## Install PentAGI on Main Node
+## Install RedScope on Main Node
 
-After completing the worker node setup and transferring certificates, install PentAGI on the main node using the official installer.
+After completing the worker node setup and transferring certificates, install RedScope on the main node using the official installer.
 
 ### Download and Run Installer
 
-Execute the following commands on the main node to download and run the PentAGI installer:
+Execute the following commands on the main node to download and run the RedScope installer:
 
 ```bash
 # Create installation directory and navigate to it
 mkdir -p /opt/pentagi && cd /opt/pentagi
 
 # Download the latest installer
-wget -O installer.zip https://pentagi.com/downloads/linux/amd64/installer-latest.zip
+wget -O installer.zip https://redscope.io/downloads/linux/amd64/installer-latest.zip
 
 # Extract the installer
 unzip installer.zip
@@ -494,9 +494,9 @@ The installer requires appropriate privileges to interact with the Docker API fo
 
 ### Configure Docker Environment
 
-After the installer completes and PentAGI is running, manually configure the Docker environment through the web interface:
+After the installer completes and RedScope is running, manually configure the Docker environment through the web interface:
 
-1. **Access PentAGI Installer** via `./installer`
+1. **Access RedScope Installer** via `./installer`
 2. **Navigate to Tools → Docker Environment**
 3. **Fill in the Docker Environment Configuration fields:**
 
@@ -511,12 +511,12 @@ After the installer completes and PentAGI is running, manually configure the Doc
 - **Pentesting Image**: `vxcontrol/kali-linux` (or leave empty)
 - **Docker Host**: `tcp://${PRIVATE_IP}:2376` (TLS connection to host Docker)
 - **TLS Verification**: `1` (enable TLS verification)
-- **TLS Certificates**: `/opt/pentagi/docker-host-ssl` (path to client certificates)
+- **TLS Certificates**: `/opt/redscope/docker-host-ssl` (path to client certificates)
 
 **For Direct Mode (dind only):**
 - Use the same configuration but change:
 - **Docker Host**: `tcp://${PRIVATE_IP}:3376` (TLS connection to dind)
-- **TLS Certificates**: `/opt/pentagi/docker-dind-ssl` (path to dind client certificates)
+- **TLS Certificates**: `/opt/redscope/docker-dind-ssl` (path to dind client certificates)
 - **Docker Socket**: Leave empty (no socket mapping needed)
 
-The certificate directories `/opt/pentagi/docker-host-ssl/` and `/opt/pentagi/docker-dind-ssl/` will be automatically mounted into the PentAGI container for secure TLS authentication.
+The certificate directories `/opt/redscope/docker-host-ssl/` and `/opt/redscope/docker-dind-ssl/` will be automatically mounted into the RedScope container for secure TLS authentication.

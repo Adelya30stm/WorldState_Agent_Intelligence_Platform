@@ -213,6 +213,41 @@ func (fp *flowProvider) getSubtasksInfo(taskID int64, subtasks []database.Subtas
 	return &info
 }
 
+// collectAllUserFlowTasks gathers finished tasks from every flow owned by the same
+// user, excluding the current reporting flow and tasks with empty results.
+// This gives the web reporter agent the full picture of all pentest phases.
+func (fp *flowProvider) collectAllUserFlowTasks(ctx context.Context, reportingTaskID int64) []database.Task {
+	flow, err := fp.db.GetFlow(ctx, fp.flowID)
+	if err != nil {
+		logrus.WithContext(ctx).WithError(err).Warn("web reporter: failed to get current flow, skipping multi-flow context")
+		return nil
+	}
+
+	userFlows, err := fp.db.GetUserFlows(ctx, flow.UserID)
+	if err != nil {
+		logrus.WithContext(ctx).WithError(err).Warn("web reporter: failed to get user flows, skipping multi-flow context")
+		return nil
+	}
+
+	var out []database.Task
+	for _, uf := range userFlows {
+		if uf.ID == fp.flowID {
+			continue // skip the current reporting flow itself
+		}
+		tasks, err := fp.db.GetFlowTasks(ctx, uf.ID)
+		if err != nil {
+			continue
+		}
+		for _, t := range tasks {
+			if t.Status == database.TaskStatusFinished && strings.TrimSpace(t.Result) != "" {
+				out = append(out, t)
+			}
+		}
+	}
+
+	return out
+}
+
 func (fp *flowProvider) updateMsgChainResult(chain []llms.MessageContent, name, result string) ([]llms.MessageContent, error) {
 	if len(chain) == 0 {
 		return []llms.MessageContent{llms.TextParts(llms.ChatMessageTypeHuman, result)}, nil

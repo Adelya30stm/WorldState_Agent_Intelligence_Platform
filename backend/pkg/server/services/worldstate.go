@@ -1,6 +1,8 @@
 package services
 
 import (
+	"context"
+	"fmt"
 	"net/http"
 	"regexp"
 	"slices"
@@ -8,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"pentagi/pkg/graphiti"
 	"pentagi/pkg/server/logger"
 	"pentagi/pkg/server/models"
 	"pentagi/pkg/server/response"
@@ -15,6 +18,14 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 )
+
+// graphitiSearcher is the subset of graphiti.Client used by WorldStateService and AttackPathService.
+type graphitiSearcher interface {
+	IsEnabled() bool
+	DiverseResultsSearch(ctx context.Context, req graphiti.DiverseSearchRequest) (*graphiti.DiverseSearchResponse, error)
+	EntityByLabelSearch(ctx context.Context, req graphiti.EntityByLabelSearchRequest) (*graphiti.EntityByLabelSearchResponse, error)
+	EntityRelationshipsSearch(ctx context.Context, req graphiti.EntityRelationshipSearchRequest) (*graphiti.EntityRelationshipSearchResponse, error)
+}
 
 // ─── Response types ───────────────────────────────────────────────────────────
 
@@ -47,13 +58,16 @@ type worldStateResponse struct {
 // ─── Entity action definitions ────────────────────────────────────────────────
 
 var entityActions = map[string][]string{
-	"flow":     {"add-note"},
-	"task":     {"add-note", "create-subflow"},
-	"subtask":  {"add-note"},
-	"tool":     {"add-note"},
-	"domain":   {"safe-probe", "deep-scan", "enumerate-endpoints", "mark-high-priority", "add-note", "create-subflow"},
-	"endpoint": {"safe-probe", "deep-scan", "mark-high-priority", "add-note", "create-subflow"},
-	"finding":  {"mark-high-priority", "add-note", "create-subflow"},
+	"flow":          {"add-note"},
+	"task":          {"add-note", "create-subflow"},
+	"subtask":       {"add-note"},
+	"tool":          {"add-note"},
+	"domain":        {"safe-probe", "deep-scan", "enumerate-endpoints", "mark-high-priority", "add-note", "create-subflow"},
+	"endpoint":      {"safe-probe", "deep-scan", "mark-high-priority", "add-note", "create-subflow"},
+	"finding":       {"mark-high-priority", "add-note", "create-subflow"},
+	"target":        {"safe-probe", "deep-scan", "enumerate-endpoints", "mark-high-priority", "add-note", "create-subflow"},
+	"vulnerability": {"mark-high-priority", "add-note", "create-subflow"},
+	"threat":        {"add-note", "create-subflow"},
 }
 
 // ─── Extraction helpers ───────────────────────────────────────────────────────
@@ -187,11 +201,12 @@ func detectTool(cmd string) (name, risk string) {
 // ─── Service ──────────────────────────────────────────────────────────────────
 
 type WorldStateService struct {
-	db *gorm.DB
+	db      *gorm.DB
+	graphiti graphitiSearcher
 }
 
-func NewWorldStateService(db *gorm.DB) *WorldStateService {
-	return &WorldStateService{db: db}
+func NewWorldStateService(db *gorm.DB, graphitiClient graphitiSearcher) *WorldStateService {
+	return &WorldStateService{db: db, graphiti: graphitiClient}
 }
 
 // GetWorldState aggregates flow data into a normalized World State
@@ -402,6 +417,69 @@ func (s *WorldStateService) GetWorldState(c *gin.Context) {
 		}
 	}
 
+	// ── Neo4j/Graphiti entities ───────────────────────────────────────────────
+	if s.graphiti != nil && s.graphiti.IsEnabled() {
+		groupID := fmt.Sprintf("flow-%d", flowID)
+		log := logger.FromContext(c)
+
+		// Search for pentest-relevant labeled nodes only.
+		// We run separate searches per label family and merge by UUID.
+		labelFamilies := [][]string{
+			{"Target"},
+			{"Vulnerability"},
+			{"AttackTechnique"},
+			{"TechnicalFinding"},
+		}
+		for _, labels := range labelFamilies {
+			resp, err := s.graphiti.EntityByLabelSearch(c.Request.Context(), graphiti.EntityByLabelSearchRequest{
+				Query:      "target host endpoint vulnerability attack threat finding",
+				GroupID:    &groupID,
+				NodeLabels: labels,
+				MaxResults: 40,
+			})
+			if err != nil {
+				log.WithError(err).Warnf("graphiti label search failed for %v", labels)
+				continue
+			}
+			for _, node := range resp.Nodes {
+				entityID := "neo4j-" + node.UUID
+				if seenIDs[entityID] {
+					continue
+				}
+				// Skip agent artifacts and tool/file noise.
+				if isNoisyNeo4jNode(node.Name, node.Labels) {
+					continue
+				}
+				seenIDs[entityID] = true
+				etype := neo4jLabelToType(node.Labels)
+				entities = append(entities, worldStateEntity{
+					ID:    entityID,
+					Type:  etype,
+					Label: node.Name,
+					Metadata: map[string]string{
+						"uuid":    node.UUID,
+						"summary": node.Summary,
+						"labels":  strings.Join(node.Labels, ","),
+						"source":  "neo4j",
+					},
+					RiskLevel:        riskFromNeo4jLabels(node.Labels, node.Name),
+					AvailableActions: entityActions[etype],
+				})
+			}
+			for _, edge := range resp.Edges {
+				srcID := "neo4j-" + edge.SourceNodeUUID
+				tgtID := "neo4j-" + edge.TargetNodeUUID
+				links = append(links, worldStateLink{
+					ID:     "neo4j-edge-" + edge.UUID,
+					Source: srcID,
+					Target: tgtID,
+					Label:  edge.Name,
+					Type:   "references",
+				})
+			}
+		}
+	}
+
 	resp := worldStateResponse{
 		Version:   1,
 		FlowID:    flowID,
@@ -411,4 +489,124 @@ func (s *WorldStateService) GetWorldState(c *gin.Context) {
 	}
 
 	response.Success(c, http.StatusOK, resp)
+}
+
+// ─── Neo4j classification helpers ─────────────────────────────────────────────
+
+var (
+	neo4jFindingKW  = []string{"vulnerability", "vuln", "cve-", "sqli", "xss", "rce", "injection", "exploit", "leak", "exposed", "finding"}
+	neo4jDomainKW   = []string{"domain", "host", "target", "ip", "server", "network", "dns", "cdn", "subdomain"}
+	neo4jEndpointKW = []string{"/api/", "/v1/", "/v2/", "https://", "http://", "endpoint", "url", "path", "route"}
+	neo4jToolKW     = []string{"tool", "framework", "stride", "mitre", "owasp", "scanner", "nmap", "nuclei", "burp"}
+
+	// Agent/planning artifacts to filter out from the pentest view.
+	agentArtifactKW = []string{
+		"subtask", "sub_task", " agent", "pen-test team", "pen test team",
+		"it ops", "planner", "refiner", "coder", "executor",
+		"primary_agent", "simple agent", "generator agent",
+		"business/context summary",
+	}
+
+	// File/tool paths that indicate internal agent artifacts, not real targets.
+	noisyPathPrefixes = []string{
+		"/usr/share/", "/root/", "/work/", "/tmp/", "/home/",
+		"tech_fingerprint", "inventory.csv", "wordlist",
+	}
+)
+
+func containsAny(s string, keywords []string) bool {
+	lower := strings.ToLower(s)
+	for _, kw := range keywords {
+		if strings.Contains(lower, kw) {
+			return true
+		}
+	}
+	return false
+}
+
+// neo4jLabelToType maps real Neo4j labels (set by Graphiti) to our entity type taxonomy.
+func neo4jLabelToType(labels []string) string {
+	for _, l := range labels {
+		switch l {
+		case "Vulnerability":
+			return "vulnerability"
+		case "AttackTechnique":
+			return "threat"
+		case "TechnicalFinding":
+			return "finding"
+		case "Target":
+			return "target"
+		}
+	}
+	return "domain"
+}
+
+// isNoisyNeo4jNode returns true for agent-internal nodes that should not appear
+// in the pentest-facing World State view.
+func isNoisyNeo4jNode(name string, labels []string) bool {
+	lower := strings.ToLower(name)
+	// Skip internal tool/test-phase labels.
+	for _, l := range labels {
+		if l == "Tool" || l == "TestPhase" || l == "DatabaseMetadata" {
+			return true
+		}
+	}
+	// Skip agent artifact names.
+	if containsAny(lower, agentArtifactKW) {
+		return true
+	}
+	// Skip file paths, tool scripts, byte-count artifacts.
+	for _, p := range noisyPathPrefixes {
+		if strings.HasPrefix(lower, strings.ToLower(p)) {
+			return true
+		}
+	}
+	// Skip pure numeric / size artifacts (e.g. "6037 remote objects", "666.00 MiB transferred").
+	if len(name) > 0 && (name[0] >= '0' && name[0] <= '9') {
+		return true
+	}
+	// Skip very long names that are clearly not human-readable entity names.
+	if len(name) > 120 {
+		return true
+	}
+	return false
+}
+
+func riskFromNeo4jLabels(labels []string, name string) string {
+	// Label-based risk first.
+	for _, l := range labels {
+		switch l {
+		case "Vulnerability":
+			// Check name for severity hints.
+			combined := strings.ToLower(name)
+			if containsAny(combined, []string{"rce", "remote code", "account takeover", "critical"}) {
+				return "critical"
+			}
+			if containsAny(combined, []string{"sqli", "sql injection", "xss", "ssrf", "idor", "high"}) {
+				return "high"
+			}
+			return "medium"
+		case "AttackTechnique":
+			combined := strings.ToLower(name)
+			if containsAny(combined, []string{"credential stuffing", "brute", "injection", "rce"}) {
+				return "high"
+			}
+			return "medium"
+		case "TechnicalFinding":
+			return "low"
+		case "Target":
+			return "none"
+		}
+	}
+	combined := strings.ToLower(name)
+	if containsAny(combined, []string{"critical", "rce", "remote code"}) {
+		return "critical"
+	}
+	if containsAny(combined, []string{"high", "sqli", "xss", "ssrf", "idor"}) {
+		return "high"
+	}
+	if containsAny(combined, []string{"medium", "vulnerability", "vuln", "cve-"}) {
+		return "medium"
+	}
+	return "none"
 }

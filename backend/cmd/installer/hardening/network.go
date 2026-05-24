@@ -27,7 +27,7 @@ func DoSyncNetworkSettings(s state.State) error {
 		"DOCKER_HOST",
 		"DOCKER_TLS_VERIFY",
 		"DOCKER_CERT_PATH",
-		"PENTAGI_DOCKER_CERT_PATH",
+		"REDSCOPE_DOCKER_CERT_PATH",
 	}
 
 	vars, exists := s.GetVars(dockerEnvVarsNames)
@@ -53,11 +53,11 @@ func DoSyncNetworkSettings(s state.State) error {
 		return nil
 	}
 
-	// sync DOCKER_CERT_PATH to PENTAGI_DOCKER_CERT_PATH if it is set in the OS
+	// sync DOCKER_CERT_PATH to REDSCOPE_DOCKER_CERT_PATH if it is set in the OS
 	dockerCertPath := osDockerEnvVars["DOCKER_CERT_PATH"]
 	if dockerCertPath != "" && checkPathInHostFS(dockerCertPath, directory) {
 		osDockerEnvVars["DOCKER_CERT_PATH"] = controller.DefaultDockerCertPath
-		osDockerEnvVars["PENTAGI_DOCKER_CERT_PATH"] = dockerCertPath
+		osDockerEnvVars["REDSCOPE_DOCKER_CERT_PATH"] = dockerCertPath
 	}
 
 	// sync all variables in the state at the same time to avoid inconsistencies

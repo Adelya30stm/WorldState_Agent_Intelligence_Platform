@@ -53,11 +53,11 @@ const StatsBar = ({ worldState }: { worldState: WorldState }) => {
     }, {});
 
     const stats = [
-        { key: 'domain', icon: '🌐', label: 'Domains' },
-        { key: 'endpoint', icon: '🔗', label: 'Endpoints' },
-        { key: 'tool', icon: '🛠', label: 'Tools' },
-        { key: 'finding', icon: '🚨', label: 'Findings' },
-        { key: 'task', icon: '📋', label: 'Tasks' },
+        { key: 'domain', label: 'Domains' },
+        { key: 'endpoint', label: 'Endpoints' },
+        { key: 'tool', label: 'Tools' },
+        { key: 'finding', label: 'Findings' },
+        { key: 'task', label: 'Tasks' },
     ].filter((s) => (byType[s.key] ?? 0) > 0);
 
     return (
@@ -67,7 +67,7 @@ const StatsBar = ({ worldState }: { worldState: WorldState }) => {
             </span>
             {stats.map((s) => (
                 <span className="shrink-0" key={s.key}>
-                    {s.icon} {byType[s.key]} {s.label}
+                    {byType[s.key]} {s.label}
                 </span>
             ))}
             <span className="ml-auto shrink-0 opacity-50">

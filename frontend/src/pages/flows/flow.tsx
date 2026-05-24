@@ -1,7 +1,8 @@
 import { ChevronDown, Copy, Download, ExternalLink, GripVertical, Loader2, NotepadText } from 'lucide-react';
 import WorldStateView from '@/features/world-state/world-state-view';
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { usePutUserInputMutation } from '@/graphql/types';
 import { toast } from 'sonner';
 
 import { FlowStatusIcon } from '@/components/icons/flow-status-icon';
@@ -15,8 +16,6 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
-import { Separator } from '@/components/ui/separator';
-import { SidebarTrigger } from '@/components/ui/sidebar';
 import FlowCentralTabs from '@/features/flows/flow-central-tabs';
 import FlowTabs from '@/features/flows/flow-tabs';
 import { useBreakpoint } from '@/hooks/use-breakpoint';
@@ -144,9 +143,10 @@ const FlowReportDropdown = () => {
 const Flow = () => {
     const { isDesktop } = useBreakpoint();
     const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
 
     // Get flow data from FlowProvider
-    const { flowData, flowError, isLoading: isFlowLoading } = useFlow();
+    const { flowData, flowError, isLoading: isFlowLoading, flowId } = useFlow();
 
     // Redirect to flows list if there's an error loading flow data or flow not found
     useEffect(() => {
@@ -154,6 +154,17 @@ const Flow = () => {
             navigate('/flows', { replace: true });
         }
     }, [flowError, flowData, isFlowLoading, navigate]);
+
+    // Auto-send phase prompt when navigated from web-pentest with ?prompt=
+    const [putUserInput] = usePutUserInputMutation();
+    const autoPromptRef = useRef(false);
+    useEffect(() => {
+        const prompt = searchParams.get('prompt');
+        if (!prompt || !flowId || autoPromptRef.current) return;
+        autoPromptRef.current = true;
+        putUserInput({ variables: { flowId, input: prompt } });
+        setSearchParams({}, { replace: true });
+    }, [flowId, searchParams, setSearchParams, putUserInput]);
 
     const [activeTabsTab, setActiveTabsTab] = useState<string>(!isDesktop ? 'automation' : 'terminal');
     const [leftTab, setLeftTab] = useState<string>('automation');
@@ -175,8 +186,6 @@ const Flow = () => {
         <header className="sticky top-0 z-10 flex h-12 w-full shrink-0 items-center gap-2 border-b bg-background transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
             <div className="flex w-full items-center justify-between gap-2 px-4">
                 <div className="flex items-center gap-2">
-                    <SidebarTrigger className="-ml-1" />
-                    <Separator className="mr-2 h-4" orientation="vertical" />
                     <Breadcrumb>
                         <BreadcrumbList>
                             <BreadcrumbItem className="gap-2">

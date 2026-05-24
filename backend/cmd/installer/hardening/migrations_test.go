@@ -23,7 +23,7 @@ func TestDoMigrateSettings_SuccessfulMigrations(t *testing.T) {
 		expectMigration bool
 	}{
 		{
-			name: "migrate DOCKER_CERT_PATH to PENTAGI_DOCKER_CERT_PATH",
+			name: "migrate DOCKER_CERT_PATH to REDSCOPE_DOCKER_CERT_PATH",
 			setupFunc: func(t *testing.T) (string, func()) {
 				tmpDir, err := os.MkdirTemp("", "docker-certs-*")
 				if err != nil {
@@ -32,13 +32,13 @@ func TestDoMigrateSettings_SuccessfulMigrations(t *testing.T) {
 				return tmpDir, func() { os.RemoveAll(tmpDir) }
 			},
 			varName:         "DOCKER_CERT_PATH",
-			pentagiVarName:  "PENTAGI_DOCKER_CERT_PATH",
+			pentagiVarName:  "REDSCOPE_DOCKER_CERT_PATH",
 			defaultPath:     controller.DefaultDockerCertPath,
 			pathType:        directory,
 			expectMigration: true,
 		},
 		{
-			name: "migrate LLM_SERVER_CONFIG_PATH to PENTAGI_LLM_SERVER_CONFIG_PATH",
+			name: "migrate LLM_SERVER_CONFIG_PATH to REDSCOPE_LLM_SERVER_CONFIG_PATH",
 			setupFunc: func(t *testing.T) (string, func()) {
 				tmpFile, err := os.CreateTemp("", "custom-*.yml")
 				if err != nil {
@@ -48,13 +48,13 @@ func TestDoMigrateSettings_SuccessfulMigrations(t *testing.T) {
 				return tmpFile.Name(), func() { os.Remove(tmpFile.Name()) }
 			},
 			varName:         "LLM_SERVER_CONFIG_PATH",
-			pentagiVarName:  "PENTAGI_LLM_SERVER_CONFIG_PATH",
+			pentagiVarName:  "REDSCOPE_LLM_SERVER_CONFIG_PATH",
 			defaultPath:     controller.DefaultCustomConfigsPath,
 			pathType:        file,
 			expectMigration: true,
 		},
 		{
-			name: "migrate OLLAMA_SERVER_CONFIG_PATH to PENTAGI_OLLAMA_SERVER_CONFIG_PATH",
+			name: "migrate OLLAMA_SERVER_CONFIG_PATH to REDSCOPE_OLLAMA_SERVER_CONFIG_PATH",
 			setupFunc: func(t *testing.T) (string, func()) {
 				tmpFile, err := os.CreateTemp("", "ollama-*.yml")
 				if err != nil {
@@ -64,7 +64,7 @@ func TestDoMigrateSettings_SuccessfulMigrations(t *testing.T) {
 				return tmpFile.Name(), func() { os.Remove(tmpFile.Name()) }
 			},
 			varName:         "OLLAMA_SERVER_CONFIG_PATH",
-			pentagiVarName:  "PENTAGI_OLLAMA_SERVER_CONFIG_PATH",
+			pentagiVarName:  "REDSCOPE_OLLAMA_SERVER_CONFIG_PATH",
 			defaultPath:     controller.DefaultOllamaConfigsPath,
 			pathType:        file,
 			expectMigration: true,
@@ -97,7 +97,7 @@ func TestDoMigrateSettings_SuccessfulMigrations(t *testing.T) {
 
 			// verify migration occurred
 			if tt.expectMigration {
-				// check that PENTAGI_* variable was set to custom path
+				// check that REDSCOPE_* variable was set to custom path
 				pentagiVar, exists := mockSt.GetVar(tt.pentagiVarName)
 				if !exists {
 					t.Errorf("Expected %s to be set", tt.pentagiVarName)
@@ -125,15 +125,15 @@ func TestDoMigrateSettings_VariableNotSet(t *testing.T) {
 	}{
 		{
 			name:           "DOCKER_CERT_PATH not set",
-			pentagiVarName: "PENTAGI_DOCKER_CERT_PATH",
+			pentagiVarName: "REDSCOPE_DOCKER_CERT_PATH",
 		},
 		{
 			name:           "LLM_SERVER_CONFIG_PATH not set",
-			pentagiVarName: "PENTAGI_LLM_SERVER_CONFIG_PATH",
+			pentagiVarName: "REDSCOPE_LLM_SERVER_CONFIG_PATH",
 		},
 		{
 			name:           "OLLAMA_SERVER_CONFIG_PATH not set",
-			pentagiVarName: "PENTAGI_OLLAMA_SERVER_CONFIG_PATH",
+			pentagiVarName: "REDSCOPE_OLLAMA_SERVER_CONFIG_PATH",
 		},
 	}
 
@@ -169,17 +169,17 @@ func TestDoMigrateSettings_EmptyVariable(t *testing.T) {
 		{
 			name:           "DOCKER_CERT_PATH is empty",
 			varName:        "DOCKER_CERT_PATH",
-			pentagiVarName: "PENTAGI_DOCKER_CERT_PATH",
+			pentagiVarName: "REDSCOPE_DOCKER_CERT_PATH",
 		},
 		{
 			name:           "LLM_SERVER_CONFIG_PATH is empty",
 			varName:        "LLM_SERVER_CONFIG_PATH",
-			pentagiVarName: "PENTAGI_LLM_SERVER_CONFIG_PATH",
+			pentagiVarName: "REDSCOPE_LLM_SERVER_CONFIG_PATH",
 		},
 		{
 			name:           "OLLAMA_SERVER_CONFIG_PATH is empty",
 			varName:        "OLLAMA_SERVER_CONFIG_PATH",
-			pentagiVarName: "PENTAGI_OLLAMA_SERVER_CONFIG_PATH",
+			pentagiVarName: "REDSCOPE_OLLAMA_SERVER_CONFIG_PATH",
 		},
 	}
 
@@ -223,19 +223,19 @@ func TestDoMigrateSettings_PathNotExist(t *testing.T) {
 		{
 			name:           "DOCKER_CERT_PATH points to non-existing directory",
 			varName:        "DOCKER_CERT_PATH",
-			pentagiVarName: "PENTAGI_DOCKER_CERT_PATH",
+			pentagiVarName: "REDSCOPE_DOCKER_CERT_PATH",
 			nonExistPath:   "/nonexistent/docker/certs",
 		},
 		{
 			name:           "LLM_SERVER_CONFIG_PATH points to non-existing file",
 			varName:        "LLM_SERVER_CONFIG_PATH",
-			pentagiVarName: "PENTAGI_LLM_SERVER_CONFIG_PATH",
+			pentagiVarName: "REDSCOPE_LLM_SERVER_CONFIG_PATH",
 			nonExistPath:   "/nonexistent/custom.provider.yml",
 		},
 		{
 			name:           "OLLAMA_SERVER_CONFIG_PATH points to non-existing file",
 			varName:        "OLLAMA_SERVER_CONFIG_PATH",
-			pentagiVarName: "PENTAGI_OLLAMA_SERVER_CONFIG_PATH",
+			pentagiVarName: "REDSCOPE_OLLAMA_SERVER_CONFIG_PATH",
 			nonExistPath:   "/nonexistent/ollama.provider.yml",
 		},
 	}
@@ -281,21 +281,21 @@ func TestDoMigrateSettings_AlreadyDefaultValue(t *testing.T) {
 		{
 			name:           "DOCKER_CERT_PATH already has default container path",
 			varName:        "DOCKER_CERT_PATH",
-			pentagiVarName: "PENTAGI_DOCKER_CERT_PATH",
+			pentagiVarName: "REDSCOPE_DOCKER_CERT_PATH",
 			defaultPath:    controller.DefaultDockerCertPath,
 			description:    "Default container path should not be migrated",
 		},
 		{
 			name:           "LLM_SERVER_CONFIG_PATH already has default container path",
 			varName:        "LLM_SERVER_CONFIG_PATH",
-			pentagiVarName: "PENTAGI_LLM_SERVER_CONFIG_PATH",
+			pentagiVarName: "REDSCOPE_LLM_SERVER_CONFIG_PATH",
 			defaultPath:    controller.DefaultCustomConfigsPath,
 			description:    "Default container path should not be migrated",
 		},
 		{
 			name:           "OLLAMA_SERVER_CONFIG_PATH already has default container path",
 			varName:        "OLLAMA_SERVER_CONFIG_PATH",
-			pentagiVarName: "PENTAGI_OLLAMA_SERVER_CONFIG_PATH",
+			pentagiVarName: "REDSCOPE_OLLAMA_SERVER_CONFIG_PATH",
 			defaultPath:    controller.DefaultOllamaConfigsPath,
 			description:    "Default container path should not be migrated",
 		},
@@ -350,14 +350,14 @@ func TestDoMigrateSettings_EmbeddedConfigs(t *testing.T) {
 		{
 			name:           "LLM_SERVER_CONFIG_PATH with embedded config should not migrate",
 			varName:        "LLM_SERVER_CONFIG_PATH",
-			pentagiVarName: "PENTAGI_LLM_SERVER_CONFIG_PATH",
+			pentagiVarName: "REDSCOPE_LLM_SERVER_CONFIG_PATH",
 			embeddedPath:   "/opt/pentagi/conf/llms/openai.yml",
 			description:    "Embedded configs are inside docker image, no migration needed",
 		},
 		{
 			name:           "OLLAMA_SERVER_CONFIG_PATH with embedded config should not migrate",
 			varName:        "OLLAMA_SERVER_CONFIG_PATH",
-			pentagiVarName: "PENTAGI_OLLAMA_SERVER_CONFIG_PATH",
+			pentagiVarName: "REDSCOPE_OLLAMA_SERVER_CONFIG_PATH",
 			embeddedPath:   "/opt/pentagi/conf/llms/llama3.yml",
 			description:    "Embedded configs are inside docker image, no migration needed",
 		},
@@ -420,7 +420,7 @@ func TestDoMigrateSettings_WrongPathType(t *testing.T) {
 				return tmpFile.Name(), func() { os.Remove(tmpFile.Name()) }
 			},
 			varName:        "DOCKER_CERT_PATH",
-			pentagiVarName: "PENTAGI_DOCKER_CERT_PATH",
+			pentagiVarName: "REDSCOPE_DOCKER_CERT_PATH",
 			description:    "File provided when directory expected",
 		},
 		{
@@ -433,7 +433,7 @@ func TestDoMigrateSettings_WrongPathType(t *testing.T) {
 				return tmpDir, func() { os.RemoveAll(tmpDir) }
 			},
 			varName:        "LLM_SERVER_CONFIG_PATH",
-			pentagiVarName: "PENTAGI_LLM_SERVER_CONFIG_PATH",
+			pentagiVarName: "REDSCOPE_LLM_SERVER_CONFIG_PATH",
 			description:    "Directory provided when file expected",
 		},
 		{
@@ -446,7 +446,7 @@ func TestDoMigrateSettings_WrongPathType(t *testing.T) {
 				return tmpDir, func() { os.RemoveAll(tmpDir) }
 			},
 			varName:        "OLLAMA_SERVER_CONFIG_PATH",
-			pentagiVarName: "PENTAGI_OLLAMA_SERVER_CONFIG_PATH",
+			pentagiVarName: "REDSCOPE_OLLAMA_SERVER_CONFIG_PATH",
 			description:    "Directory provided when file expected",
 		},
 	}
@@ -492,7 +492,7 @@ func TestDoMigrateSettings_ErrorHandling(t *testing.T) {
 		expectedError string
 	}{
 		{
-			name: "SetVar error for PENTAGI_DOCKER_CERT_PATH",
+			name: "SetVar error for REDSCOPE_DOCKER_CERT_PATH",
 			setupFunc: func(t *testing.T) (*mockStateWithErrors, string, func()) {
 				tmpDir, err := os.MkdirTemp("", "docker-certs-*")
 				if err != nil {
@@ -507,7 +507,7 @@ func TestDoMigrateSettings_ErrorHandling(t *testing.T) {
 						},
 					},
 					setVarError: map[string]error{
-						"PENTAGI_DOCKER_CERT_PATH": mockError,
+						"REDSCOPE_DOCKER_CERT_PATH": mockError,
 					},
 				}
 				return mockSt, tmpDir, func() { os.RemoveAll(tmpDir) }
@@ -538,7 +538,7 @@ func TestDoMigrateSettings_ErrorHandling(t *testing.T) {
 			expectedError: "mocked error",
 		},
 		{
-			name: "SetVar error for PENTAGI_LLM_SERVER_CONFIG_PATH",
+			name: "SetVar error for REDSCOPE_LLM_SERVER_CONFIG_PATH",
 			setupFunc: func(t *testing.T) (*mockStateWithErrors, string, func()) {
 				tmpFile, err := os.CreateTemp("", "custom-*.yml")
 				if err != nil {
@@ -554,7 +554,7 @@ func TestDoMigrateSettings_ErrorHandling(t *testing.T) {
 						},
 					},
 					setVarError: map[string]error{
-						"PENTAGI_LLM_SERVER_CONFIG_PATH": mockError,
+						"REDSCOPE_LLM_SERVER_CONFIG_PATH": mockError,
 					},
 				}
 				return mockSt, tmpFile.Name(), func() { os.Remove(tmpFile.Name()) }
@@ -562,7 +562,7 @@ func TestDoMigrateSettings_ErrorHandling(t *testing.T) {
 			expectedError: "mocked error",
 		},
 		{
-			name: "SetVar error for PENTAGI_OLLAMA_SERVER_CONFIG_PATH",
+			name: "SetVar error for REDSCOPE_OLLAMA_SERVER_CONFIG_PATH",
 			setupFunc: func(t *testing.T) (*mockStateWithErrors, string, func()) {
 				tmpFile, err := os.CreateTemp("", "ollama-*.yml")
 				if err != nil {
@@ -578,7 +578,7 @@ func TestDoMigrateSettings_ErrorHandling(t *testing.T) {
 						},
 					},
 					setVarError: map[string]error{
-						"PENTAGI_OLLAMA_SERVER_CONFIG_PATH": mockError,
+						"REDSCOPE_OLLAMA_SERVER_CONFIG_PATH": mockError,
 					},
 				}
 				return mockSt, tmpFile.Name(), func() { os.Remove(tmpFile.Name()) }
@@ -658,7 +658,7 @@ func TestDoMigrateSettings_CombinedMigrations(t *testing.T) {
 				"DOCKER_CERT_PATH":          controller.DefaultDockerCertPath,
 				"LLM_SERVER_CONFIG_PATH":    controller.DefaultCustomConfigsPath,
 				"OLLAMA_SERVER_CONFIG_PATH": controller.DefaultOllamaConfigsPath,
-				// PENTAGI_* vars will be checked separately as they contain dynamic temp paths
+				// REDSCOPE_* vars will be checked separately as they contain dynamic temp paths
 			},
 			description: "All three migrations should complete successfully",
 		},
@@ -793,7 +793,7 @@ func TestDoMigrateSettings_CombinedMigrations(t *testing.T) {
 				}
 			}
 
-			// verify PENTAGI_* variables were set correctly for non-default and non-embedded values
+			// verify REDSCOPE_* variables were set correctly for non-default and non-embedded values
 			for varName, originalValue := range paths {
 				pentagiVarName := ""
 				defaultValue := ""
@@ -801,15 +801,15 @@ func TestDoMigrateSettings_CombinedMigrations(t *testing.T) {
 
 				switch varName {
 				case "DOCKER_CERT_PATH":
-					pentagiVarName = "PENTAGI_DOCKER_CERT_PATH"
+					pentagiVarName = "REDSCOPE_DOCKER_CERT_PATH"
 					defaultValue = controller.DefaultDockerCertPath
 				case "LLM_SERVER_CONFIG_PATH":
-					pentagiVarName = "PENTAGI_LLM_SERVER_CONFIG_PATH"
+					pentagiVarName = "REDSCOPE_LLM_SERVER_CONFIG_PATH"
 					defaultValue = controller.DefaultCustomConfigsPath
 					// check if it's an embedded config path
 					isEmbedded = strings.HasPrefix(originalValue, "/opt/pentagi/conf/llms/")
 				case "OLLAMA_SERVER_CONFIG_PATH":
-					pentagiVarName = "PENTAGI_OLLAMA_SERVER_CONFIG_PATH"
+					pentagiVarName = "REDSCOPE_OLLAMA_SERVER_CONFIG_PATH"
 					defaultValue = controller.DefaultOllamaConfigsPath
 					// check if it's an embedded config path
 					isEmbedded = strings.HasPrefix(originalValue, "/opt/pentagi/conf/llms/")

@@ -48,6 +48,17 @@ Produce a complete, professional penetration test report with two audiences:
 <anonymization>Replace client details with {client_name}, {domain}, {contact_name} when storing templates</anonymization>
 </memory_protocol>
 
+## DELIVERY
+
+Once the complete report is assembled, submit it using the **"{{.ReportResultToolName}}"** tool:
+- `success`: `true`
+- `result`: the **complete Markdown report** — no length limit, include every section
+- `message`: one-line executive summary (target, overall risk, critical finding count)
+
+{{.ToolPlaceholder}}
+
+---
+
 ## OUTPUT FORMAT
 
 Produce a **Penetration Test Report**:

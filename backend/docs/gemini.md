@@ -1,6 +1,6 @@
 # Google AI (Gemini) Provider
 
-The Google AI provider enables PentAGI to use Google's Gemini language models through the Generative AI API. This provider supports advanced features like function calling, streaming responses, and competitive pricing.
+The Google AI provider enables RedScope to use Google's Gemini language models through the Generative AI API. This provider supports advanced features like function calling, streaming responses, and competitive pricing.
 
 ## Features
 
@@ -70,8 +70,8 @@ export GEMINI_SERVER_URL="https://generativelanguage.googleapis.com"
 
 # Test the provider
 docker run --rm \
-  -v $(pwd)/.env:/opt/pentagi/.env \
-  vxcontrol/pentagi /opt/pentagi/bin/ctester -type gemini
+  -v $(pwd)/.env:/opt/redscope/.env \
+  vxcontrol/redscope /opt/redscope/bin/ctester -type gemini
 ```
 
 ### Custom Configuration
@@ -102,20 +102,20 @@ coder:
 ```bash
 # Using pre-configured Gemini provider
 docker run --rm \
-  -v $(pwd)/.env:/opt/pentagi/.env \
-  vxcontrol/pentagi /opt/pentagi/bin/ctester \
-  -config /opt/pentagi/conf/gemini.provider.yml
+  -v $(pwd)/.env:/opt/redscope/.env \
+  vxcontrol/redscope /opt/redscope/bin/ctester \
+  -config /opt/redscope/conf/gemini.provider.yml
 
 # Using custom configuration
 docker run --rm \
-  -v $(pwd)/.env:/opt/pentagi/.env \
-  -v $(pwd)/gemini-custom.yml:/opt/pentagi/gemini-custom.yml \
-  vxcontrol/pentagi /opt/pentagi/bin/ctester \
+  -v $(pwd)/.env:/opt/redscope/.env \
+  -v $(pwd)/gemini-custom.yml:/opt/redscope/gemini-custom.yml \
+  vxcontrol/redscope /opt/redscope/bin/ctester \
   -type gemini \
-  -config /opt/pentagi/gemini-custom.yml
+  -config /opt/redscope/gemini-custom.yml
 ```
 
-## Integration with PentAGI
+## Integration with RedScope
 
 ### Environment File (.env)
 
@@ -150,7 +150,7 @@ The Google AI provider is automatically available when `GEMINI_API_KEY` is set. 
 - Configure `top_p` to balance creativity and consistency
 
 ### Cost Management
-- Monitor token usage through PentAGI's cost tracking
+- Monitor token usage through RedScope's cost tracking
 - Use cheaper models for simple tasks
 - Implement request batching where possible
 
@@ -201,24 +201,24 @@ The Google AI provider is automatically available when `GEMINI_API_KEY` is set. 
 ```bash
 # Test basic functionality
 docker run --rm \
-  -v $(pwd)/.env:/opt/pentagi/.env \
-  vxcontrol/pentagi /opt/pentagi/bin/ctester \
+  -v $(pwd)/.env:/opt/redscope/.env \
+  vxcontrol/redscope /opt/redscope/bin/ctester \
   -type gemini \
   -agent simple \
   -prompt "Hello, world!"
 
 # Test JSON functionality
 docker run --rm \
-  -v $(pwd)/.env:/opt/pentagi/.env \
-  vxcontrol/pentagi /opt/pentagi/bin/ctester \
+  -v $(pwd)/.env:/opt/redscope/.env \
+  vxcontrol/redscope /opt/redscope/bin/ctester \
   -type gemini \
   -agent simple_json \
   -prompt "Generate a JSON object with name and age fields"
 
 # Test all agents
 docker run --rm \
-  -v $(pwd)/.env:/opt/pentagi/.env \
-  vxcontrol/pentagi /opt/pentagi/bin/ctester \
+  -v $(pwd)/.env:/opt/redscope/.env \
+  vxcontrol/redscope /opt/redscope/bin/ctester \
   -type gemini
 ```
 
@@ -226,8 +226,8 @@ docker run --rm \
 
 - [Google AI Documentation](https://ai.google.dev/docs)
 - [Gemini API Reference](https://ai.google.dev/api)
-- [PentAGI Documentation](https://docs.pentagi.com)
-- [Issue Tracker](https://github.com/vxcontrol/pentagi/issues)
+- [RedScope Documentation](https://docs.redscope.com)
+- [Issue Tracker](https://github.com/vxcontrol/redscope/issues)
 
 For provider-specific issues, include:
 - Provider type: `gemini`

@@ -22,7 +22,7 @@ API_PORT=8080`
 
 	os.WriteFile(envPath, []byte(initialContent), 0644)
 
-	fmt.Println("=== PentAGI Configuration Manager ===")
+	fmt.Println("=== RedScope Configuration Manager ===")
 	fmt.Println("Starting configuration process...")
 
 	// Step 1: Initialize state management
@@ -36,7 +36,7 @@ API_PORT=8080`
 	state.SetStack([]string{"configure_database"})
 
 	// User makes changes gradually
-	state.SetVar("DATABASE_URL", "postgres://prod-server:5432/pentagidb")
+	state.SetVar("DATABASE_URL", "postgres://prod-server:5432/redscopedb")
 	state.SetVar("DATABASE_PASSWORD", "secure_prod_password")
 	state.SetVar("DATABASE_POOL_SIZE", "20")
 
@@ -71,7 +71,7 @@ API_PORT=8080`
 	fmt.Printf("State file exists: %v\n", state.Exists())
 
 	// Output:
-	// === PentAGI Configuration Manager ===
+	// === RedScope Configuration Manager ===
 	// Starting configuration process...
 	//
 	// --- Step 1: Database Configuration ---
@@ -83,7 +83,7 @@ API_PORT=8080`
 	// Total modified variables: 6
 	//
 	// --- Current Configuration ---
-	// DATABASE_URL: postgres://prod-server:5432/pentagidb [CHANGED]
+	// DATABASE_URL: postgres://prod-server:5432/redscopedb [CHANGED]
 	// DATABASE_PASSWORD: secure_prod_password [CHANGED]
 	// DATABASE_POOL_SIZE: 20 [NEW]
 	// API_HOST: 0.0.0.0 [CHANGED]

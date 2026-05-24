@@ -15,7 +15,7 @@ import (
 	"pentagi/pkg/version"
 )
 
-const updateServerURL = "https://update.pentagi.com"
+const updateServerURL = "https://update.redscope.io"
 
 type updateOperationsImpl struct {
 	processor *processor
@@ -104,7 +104,7 @@ func (u *updateOperationsImpl) removeInstaller(ctx context.Context, state *opera
 
 func (u *updateOperationsImpl) buildUpdateCheckRequest() checker.CheckUpdatesRequest {
 	currentVersion := version.GetBinaryVersion()
-	if versionVar, exists := u.processor.state.GetVar("PENTAGI_VERSION"); exists {
+	if versionVar, exists := u.processor.state.GetVar("REDSCOPE_VERSION"); exists {
 		currentVersion = versionVar.Value
 	}
 
@@ -154,7 +154,7 @@ func (u *updateOperationsImpl) getInstallerDownloadURL(ctx context.Context) (str
 		return "", fmt.Errorf("no update available")
 	}
 
-	return "https://update.pentagi.com/installer", nil
+	return "https://update.redscope.io/installer", nil
 }
 
 func (u *updateOperationsImpl) downloadBinaryToTemp(ctx context.Context, downloadURL string) (string, error) {
@@ -230,7 +230,7 @@ func (u *updateOperationsImpl) getUpdateServerURL() string {
 		return serverVar.Value
 	}
 
-	return "https://update.pentagi.com"
+	return "https://update.redscope.io"
 }
 
 func (u *updateOperationsImpl) getProxyURL() string {

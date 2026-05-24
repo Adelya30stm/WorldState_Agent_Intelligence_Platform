@@ -274,6 +274,12 @@ type ReporterExecutorConfig struct {
 	ReportResult ExecutorHandler
 }
 
+type WebReporterExecutorConfig struct {
+	TaskID       *int64
+	SubtaskID    *int64
+	ReportResult ExecutorHandler
+}
+
 type FlowToolsExecutor interface {
 	SetFlowID(flowID int64)
 	SetImage(image string)
@@ -301,6 +307,7 @@ type FlowToolsExecutor interface {
 	GetMemoristExecutor(cfg MemoristExecutorConfig) (ContextToolsExecutor, error)
 	GetEnricherExecutor(cfg EnricherExecutorConfig) (ContextToolsExecutor, error)
 	GetReporterExecutor(cfg ReporterExecutorConfig) (ContextToolsExecutor, error)
+	GetWebReporterExecutor(cfg WebReporterExecutorConfig) (ContextToolsExecutor, error)
 }
 
 func NewFlowToolsExecutor(
@@ -1531,6 +1538,50 @@ func (fte *flowToolsExecutor) GetReporterExecutor(cfg ReporterExecutorConfig) (C
 		handlers:    map[string]ExecutorHandler{ReportResultToolName: cfg.ReportResult},
 		barriers:    map[string]struct{}{ReportResultToolName: {}},
 	}, nil
+}
+
+func (fte *flowToolsExecutor) GetWebReporterExecutor(cfg WebReporterExecutorConfig) (ContextToolsExecutor, error) {
+	if cfg.ReportResult == nil {
+		return nil, fmt.Errorf("report result handler is required")
+	}
+
+	ce := &customExecutor{
+		flowID:    fte.flowID,
+		taskID:    cfg.TaskID,
+		subtaskID: cfg.SubtaskID,
+		mlp:       fte.mlp,
+		vslp:      fte.vslp,
+		db:        fte.db,
+		store:     fte.store,
+		definitions: []llms.FunctionDefinition{
+			registryDefinitions[ReportResultToolName],
+		},
+		handlers: map[string]ExecutorHandler{
+			ReportResultToolName: cfg.ReportResult,
+		},
+		barriers: map[string]struct{}{
+			ReportResultToolName: {},
+		},
+	}
+
+	// guide tools let the reporter search for remediation templates and
+	// store reusable executive framing for future engagements
+	guide := NewGuideTool(
+		fte.flowID,
+		cfg.TaskID,
+		cfg.SubtaskID,
+		fte.replacer,
+		fte.store,
+		fte.vslp,
+	)
+	if guide.IsAvailable() {
+		ce.definitions = append(ce.definitions, registryDefinitions[SearchGuideToolName])
+		ce.definitions = append(ce.definitions, registryDefinitions[StoreGuideToolName])
+		ce.handlers[SearchGuideToolName] = guide.Handle
+		ce.handlers[StoreGuideToolName] = guide.Handle
+	}
+
+	return ce, nil
 }
 
 func enrichLogrusFields(flowID int64, taskID, subtaskID *int64, fields logrus.Fields) logrus.Fields {

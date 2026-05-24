@@ -81,7 +81,7 @@ func (h *MainMenuHandler) GetOverview() string {
 		Value bool
 	}{
 		{"Docker", checker.DockerApiAccessible},
-		{"PentAGI", checker.PentagiRunning},
+		{"RedScope", checker.PentagiRunning},
 		{"Langfuse", checker.LangfuseRunning},
 		{"Observability", checker.ObservabilityRunning},
 	}

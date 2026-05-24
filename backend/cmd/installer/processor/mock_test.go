@@ -26,7 +26,7 @@ type mockState struct {
 }
 
 func newMockState() *mockState {
-	dir, err := os.MkdirTemp("", "pentagi-test")
+	dir, err := os.MkdirTemp("", "redscope-test")
 	if err != nil {
 		panic(err)
 	}
@@ -610,7 +610,7 @@ func testState(t *testing.T) *mockState {
 	envPath := mockState.GetEnvPath()
 	_ = os.MkdirAll(filepath.Dir(envPath), 0o755)
 	if _, err := os.Stat(envPath); os.IsNotExist(err) {
-		if err := os.WriteFile(envPath, []byte("PENTAGI_VERSION=1.0.0\n"), 0o644); err != nil {
+		if err := os.WriteFile(envPath, []byte("REDSCOPE_VERSION=1.0.0\n"), 0o644); err != nil {
 			t.Fatalf("failed to create env file: %v", err)
 		}
 	}
@@ -883,7 +883,7 @@ type mockCheckConfig struct {
 	DockerVersion          string
 	DockerComposeVersion   string
 
-	// PentAGI states
+	// RedScope states
 	PentagiScriptInstalled bool
 	PentagiExtracted       bool
 	PentagiInstalled       bool
@@ -1379,12 +1379,12 @@ func TestMockOperations_ErrorIsolation(t *testing.T) {
 		state := testOperationState(t)
 
 		// set error for specific stack+method combination
-		mock.errOn["ensureStackIntegrity_"+string(ProductStackPentagi)] = fmt.Errorf("pentagi-specific error")
+		mock.errOn["ensureStackIntegrity_"+string(ProductStackPentagi)] = fmt.Errorf("redscope-specific error")
 
 		// pentagi should fail
 		err := mock.ensureStackIntegrity(t.Context(), ProductStackPentagi, state)
-		if err == nil || err.Error() != "pentagi-specific error" {
-			t.Errorf("expected pentagi-specific error, got %v", err)
+		if err == nil || err.Error() != "redscope-specific error" {
+			t.Errorf("expected redscope-specific error, got %v", err)
 		}
 
 		// langfuse should succeed
@@ -1804,7 +1804,7 @@ func TestMockCheckHandler_CompleteScenarios(t *testing.T) {
 			t.Error("expected Docker API to be accessible")
 		}
 		if result.PentagiInstalled {
-			t.Error("expected PentAGI not to be installed")
+			t.Error("expected RedScope not to be installed")
 		}
 		if !result.LangfuseRunning {
 			t.Error("expected Langfuse to be running")

@@ -17,15 +17,15 @@ const (
 	// Default values for PostgreSQL configuration
 	DefaultPostgreSQLUser     = "postgres"
 	DefaultPostgreSQLPassword = "postgres"
-	DefaultPostgreSQLDatabase = "pentagidb"
+	DefaultPostgreSQLDatabase = "redscopedb"
 
 	// Admin user email
-	AdminEmail = "admin@pentagi.com"
+	AdminEmail = "admin@admin.com"
 
 	// Environment variable names
-	EnvPostgreSQLUser     = "PENTAGI_POSTGRES_USER"
-	EnvPostgreSQLPassword = "PENTAGI_POSTGRES_PASSWORD"
-	EnvPostgreSQLDatabase = "PENTAGI_POSTGRES_DB"
+	EnvPostgreSQLUser     = "REDSCOPE_POSTGRES_USER"
+	EnvPostgreSQLPassword = "REDSCOPE_POSTGRES_PASSWORD"
+	EnvPostgreSQLDatabase = "REDSCOPE_POSTGRES_DB"
 )
 
 // performPasswordReset updates the admin password in PostgreSQL

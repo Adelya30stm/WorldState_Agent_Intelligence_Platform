@@ -64,7 +64,7 @@ func (d *dockerOperationsImpl) removeWorkerContainers(ctx context.Context, state
 	var containers []container.Summary
 	for _, c := range allContainers {
 		for _, name := range c.Names {
-			if strings.HasPrefix(name, "pentagi-") {
+			if strings.HasPrefix(name, "redscope-") {
 				containers = append(containers, c)
 				break
 			}
@@ -311,7 +311,7 @@ func (d *dockerOperationsImpl) removeMainImages(ctx context.Context, state *oper
 	return nil
 }
 
-// removeWorkerVolumes removes worker volumes (pentagi-terminal-*-data) in worker environment
+// removeWorkerVolumes removes worker volumes (redscope-terminal-*-data) in worker environment
 func (d *dockerOperationsImpl) removeWorkerVolumes(ctx context.Context, state *operationState) error {
 	cli, err := d.createWorkerDockerClient()
 	if err != nil {
@@ -324,7 +324,7 @@ func (d *dockerOperationsImpl) removeWorkerVolumes(ctx context.Context, state *o
 		return err
 	}
 	for _, v := range vols.Volumes {
-		if strings.HasPrefix(v.Name, "pentagi-terminal-") && strings.HasSuffix(v.Name, "-data") {
+		if strings.HasPrefix(v.Name, "redscope-terminal-") && strings.HasSuffix(v.Name, "-data") {
 			_ = cli.VolumeRemove(ctx, v.Name, true)
 		}
 	}
@@ -360,7 +360,7 @@ func (d *dockerOperationsImpl) createWorkerDockerClient() (*client.Client, error
 		}
 	}
 
-	envVar, exists = d.processor.state.GetVar("PENTAGI_" + client.EnvOverrideCertPath)
+	envVar, exists = d.processor.state.GetVar("REDSCOPE_" + client.EnvOverrideCertPath)
 	if exists && (envVar.Value != "" || envVar.IsChanged) {
 		cfg := getTLSConfig(envVar.Value)
 		opts = append(opts, client.WithTLSClientConfig(cfg.certPath, cfg.keyPath, cfg.caPath))
@@ -386,7 +386,7 @@ func (d *dockerOperationsImpl) getWorkerDockerEnv() []string {
 		env = append(env, fmt.Sprintf("%s=%s", client.EnvOverrideHost, envVar))
 	}
 
-	envVar, exists = d.processor.state.GetVar("PENTAGI_" + client.EnvOverrideCertPath)
+	envVar, exists = d.processor.state.GetVar("REDSCOPE_" + client.EnvOverrideCertPath)
 	if exists && (envVar.Value != "" || envVar.IsChanged) {
 		env = append(env, fmt.Sprintf("%s=%s", client.EnvOverrideCertPath, envVar.Value))
 	} else if envVar.Default != "" {

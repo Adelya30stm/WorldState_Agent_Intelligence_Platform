@@ -109,7 +109,7 @@ const WorldStateSidebar = ({ worldState, selectedId, onSelect }: WorldStateSideb
                                     </p>
                                 </div>
                                 {entity.highPriority && (
-                                    <span className="text-[10px] shrink-0">🚨</span>
+                                    <span className="text-[10px] shrink-0 font-semibold text-red-500">!</span>
                                 )}
                             </button>
                         );

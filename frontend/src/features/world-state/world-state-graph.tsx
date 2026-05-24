@@ -61,7 +61,7 @@ const EntityNode = memo(({ data }: NodeProps) => {
                     {ENTITY_TYPE_LABELS[entity.type]}
                 </span>
                 {entity.highPriority && (
-                    <span className="ml-auto text-[10px]">🚨</span>
+                    <span className="ml-auto text-[10px] font-bold text-red-500">!</span>
                 )}
             </div>
 

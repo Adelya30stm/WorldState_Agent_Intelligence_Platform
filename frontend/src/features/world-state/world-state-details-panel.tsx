@@ -80,7 +80,7 @@ const WorldStateDetailsPanel = ({
         return (
             <div className="flex h-full flex-col items-center justify-center gap-3 text-muted-foreground p-6">
                 <div className="size-12 rounded-full bg-muted flex items-center justify-center">
-                    <span className="text-2xl">🎯</span>
+                    <svg className="size-6 text-muted-foreground" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><line x1="12" x2="12" y1="3" y2="7"/><line x1="12" x2="12" y1="17" y2="21"/><line x1="3" x2="7" y1="12" y2="12"/><line x1="17" x2="21" y1="12" y2="12"/></svg>
                 </div>
                 <p className="text-sm text-center">Click any node in the graph to inspect it and trigger actions</p>
             </div>
@@ -119,7 +119,7 @@ const WorldStateDetailsPanel = ({
                     )}
                     {entity.highPriority && (
                         <span className="ml-1 mt-1 inline-block rounded-full bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-300 px-2 py-0.5 text-[10px]">
-                            🚨 High Priority
+                            High Priority
                         </span>
                     )}
                 </div>

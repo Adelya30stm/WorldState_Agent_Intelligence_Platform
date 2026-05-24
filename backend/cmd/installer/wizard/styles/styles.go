@@ -276,7 +276,7 @@ func (s *Styles) RenderMenuItem(text string, selected bool, disabled bool, highl
 	return s.ListItem.Render("  " + text)
 }
 
-// RenderASCIILogo returns the PentAGI ASCII art logo
+// RenderASCIILogo returns the RedScope ASCII art logo
 func (s *Styles) RenderASCIILogo(width int) string {
 	logo := `
  ██████╗ ███████╗███╗   ██╗████████╗ █████╗  ██████╗ ██╗

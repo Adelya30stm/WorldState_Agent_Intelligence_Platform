@@ -26,7 +26,7 @@ const (
 	defaultExtraExecTimeout   = 5 * time.Second
 	defaultQuickCheckTimeout  = 500 * time.Millisecond
 
-	// ANSI terminal color codes (aligned with PentAGI UI palette)
+	// ANSI terminal color codes (aligned with RedScope UI palette)
 	ansiColorInputCmd  = "\033[96m" // Bright Cyan - matches UI blue accents
 	ansiColorSystemMsg = "\033[92m" // Bright Green - universal success/info
 	ansiColorReset     = "\033[0m"  // Reset to default

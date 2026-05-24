@@ -1,6 +1,6 @@
-# Running PentAGI with vLLM and Qwen3.5-27B-FP8
+# Running RedScope with vLLM and Qwen3.5-27B-FP8
 
-This guide explains how to deploy PentAGI with a fully local LLM setup using vLLM and Qwen3.5-27B-FP8. This configuration enables complete independence from cloud API providers while maintaining high performance for autonomous penetration testing workflows.
+This guide explains how to deploy RedScope with a fully local LLM setup using vLLM and Qwen3.5-27B-FP8. This configuration enables complete independence from cloud API providers while maintaining high performance for autonomous penetration testing workflows.
 
 ## Table of Contents
 
@@ -10,7 +10,7 @@ This guide explains how to deploy PentAGI with a fully local LLM setup using vLL
 - [vLLM Installation](#vllm-installation)
 - [Server Configuration](#server-configuration)
 - [Testing the Deployment](#testing-the-deployment)
-- [PentAGI Integration](#pentagi-integration)
+- [RedScope Integration](#redscope-integration)
 - [Performance Benchmarks](#performance-benchmarks)
 - [Troubleshooting](#troubleshooting)
 
@@ -25,7 +25,7 @@ This guide explains how to deploy PentAGI with a fully local LLM setup using vLL
 - **Extended context**: Up to 1,010,000 tokens via YaRN
 - **Quantization**: FP8 W8A8 with block size 128 (performance nearly identical to BF16)
 
-This model is particularly well-suited for PentAGI's multi-agent workflows due to its:
+This model is particularly well-suited for RedScope's multi-agent workflows due to its:
 - Strong reasoning capabilities with native thinking mode
 - Excellent function calling support
 - Large context window for complex security analysis
@@ -252,7 +252,7 @@ curl "http://127.0.0.1:8000/v1/chat/completions" \
 
 **Expected**: Creative/diverse responses without thinking tags.
 
-If all tests return valid JSON responses with appropriate content, your vLLM server is ready for PentAGI integration.
+If all tests return valid JSON responses with appropriate content, your vLLM server is ready for RedScope integration.
 
 ---
 
@@ -272,15 +272,15 @@ The Qwen team provides official recommendations for sampling parameters optimize
 - `max_tokens=32768` for most tasks
 - `max_tokens=81920` for complex math/coding tasks
 
-These parameters are already applied in the PentAGI provider configuration files referenced below.
+These parameters are already applied in the RedScope provider configuration files referenced below.
 
 ---
 
-## PentAGI Integration
+## RedScope Integration
 
-### Step 1: Configure Custom Provider in PentAGI
+### Step 1: Configure Custom Provider in RedScope
 
-PentAGI includes pre-configured provider files for Qwen3.5-27B-FP8 with optimized sampling parameters for different agent roles.
+RedScope includes pre-configured provider files for Qwen3.5-27B-FP8 with optimized sampling parameters for different agent roles.
 
 **Two provider configurations are available:**
 
@@ -294,9 +294,9 @@ PentAGI includes pre-configured provider files for Qwen3.5-27B-FP8 with optimize
    - Uses `temp=0.7` for general tasks, `temp=1.0` for reasoning
    - Recommended for faster responses
 
-### Step 2: Add Provider via PentAGI UI
+### Step 2: Add Provider via RedScope UI
 
-1. Start PentAGI (see [Quick Start](../../README.md#-quick-start))
+1. Start RedScope (see [Quick Start](../../README.md#-quick-start))
 2. Navigate to **Settings → Providers**
 3. Click **Add Provider**
 4. Fill in the form:
@@ -331,7 +331,7 @@ Based on internal testing with 4× RTX 5090 GPUs and 10 concurrent requests:
 | **VRAM Usage** | ~30 GB per GPU (at 0.75 utilization) |
 | **Context Window** | Full 262K tokens supported |
 
-These benchmarks demonstrate that Qwen3.5-27B-FP8 provides excellent throughput for running multiple PentAGI flows in parallel, making it suitable for production deployments.
+These benchmarks demonstrate that Qwen3.5-27B-FP8 provides excellent throughput for running multiple RedScope flows in parallel, making it suitable for production deployments.
 
 ---
 
@@ -429,7 +429,7 @@ VLLM_ALLOW_LONG_MAX_MODEL_LEN=1 vllm serve Qwen/Qwen3.5-27B-FP8 \
 - YaRN uses a **static scaling factor** regardless of input length, which may impact performance on shorter texts
 - Only enable YaRN when processing long contexts is required
 - Adjust `factor` based on typical context length (e.g., `factor=2.0` for 524K tokens)
-- For most PentAGI workflows, the native 262K context is sufficient
+- For most RedScope workflows, the native 262K context is sufficient
 
 ---
 
@@ -438,5 +438,5 @@ VLLM_ALLOW_LONG_MAX_MODEL_LEN=1 vllm serve Qwen/Qwen3.5-27B-FP8 \
 - **Official Qwen3.5 Documentation**: [HuggingFace Model Card](https://huggingface.co/Qwen/Qwen3.5-27B-FP8)
 - **vLLM Documentation**: [docs.vllm.ai](https://docs.vllm.ai/)
 - **vLLM Qwen3.5 Recipe**: [Official vLLM Guide](https://docs.vllm.ai/en/latest/models/supported_models/)
-- **PentAGI Main Documentation**: [README.md](../../README.md)
+- **RedScope Main Documentation**: [README.md](../../README.md)
 - **Provider Configuration Reference**: See example configs in [`examples/configs/`](../configs/)

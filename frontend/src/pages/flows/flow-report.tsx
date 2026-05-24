@@ -48,8 +48,16 @@ const FlowReport = () => {
             return;
         }
 
-        // Generate report content using flow and tasks from GraphQL response
-        const content = generateReport(data.tasks || [], data.flow);
+        // If any finished task has the web pentest report marker in its input,
+        // use that task's result directly (it is already the Mokka-style Markdown report).
+        const WEB_REPORT_MARKER = 'penetration tester writing the final report';
+        const reportingTask = (data.tasks ?? []).find(
+            (t) => t.input?.toLowerCase().includes(WEB_REPORT_MARKER) && t.result?.trim(),
+        );
+
+        const content = reportingTask
+            ? reportingTask.result
+            : generateReport(data.tasks || [], data.flow);
         setReportContent(content);
 
         if (download) {

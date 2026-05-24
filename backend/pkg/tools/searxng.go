@@ -152,7 +152,7 @@ func (s *searxng) search(ctx context.Context, query string, maxResults int) (str
 		return "", fmt.Errorf("failed to create request: %w", err)
 	}
 
-	req.Header.Set("User-Agent", "PentAGI/1.0")
+	req.Header.Set("User-Agent", "RedScope/1.0")
 
 	resp, err := client.Do(req)
 	if err != nil {

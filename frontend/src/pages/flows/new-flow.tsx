@@ -3,8 +3,6 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage } from '@/components/ui/breadcrumb';
 import { Card, CardContent } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FlowForm, type FlowFormValues } from '@/features/flows/flow-form';
 import { useFlows } from '@/providers/flows-provider';
@@ -42,6 +40,10 @@ const NewFlow = () => {
             const flowId = flowType === 'automation' ? await createFlow(values) : await createFlowWithAssistant(values);
 
             if (flowId) {
+                const webPentestTarget = searchParams.get('webPentestTarget');
+                if (webPentestTarget) {
+                    localStorage.setItem('webPentestFlow', JSON.stringify({ flowId, target: webPentestTarget }));
+                }
                 navigate(`/flows/${flowId}?tab=${flowType}`);
             }
         } finally {
@@ -61,14 +63,22 @@ const NewFlow = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [autoPrompt, selectedProvider, shouldUseAgents]);
 
+    // When launched with ?prompt= (e.g. from Planning / Phases), skip the form UI entirely
+    if (autoPrompt) {
+        return (
+            <div className="flex min-h-dvh items-center justify-center gap-3 text-sm text-muted-foreground">
+                <svg className="size-5 animate-spin text-blue-600" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" fill="currentColor" />
+                </svg>
+                Preparing flow…
+            </div>
+        );
+    }
+
     return (
         <>
             <header className="sticky top-0 z-10 flex h-12 shrink-0 items-center gap-2 border-b bg-background px-4">
-                <SidebarTrigger className="-ml-1" />
-                <Separator
-                    className="mr-2 h-4"
-                    orientation="vertical"
-                />
                 <Breadcrumb>
                     <BreadcrumbList>
                         <BreadcrumbItem>
@@ -105,7 +115,7 @@ const NewFlow = () => {
                         </Tabs>
                         <FlowForm
                             defaultValues={{
-                                message: autoPrompt ?? '',
+                                message: '',
                                 providerName: selectedProvider?.name ?? '',
                                 useAgents: shouldUseAgents,
                             }}

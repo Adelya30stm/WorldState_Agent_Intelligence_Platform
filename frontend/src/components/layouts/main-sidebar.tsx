@@ -1,19 +1,11 @@
-import { Avatar, AvatarFallback } from '@radix-ui/react-avatar';
 import {
-    ChevronsUpDown,
     Clock,
     GitFork,
-    KeyRound,
     Network,
-    LogOut,
-    Monitor,
-    Moon,
+    Server,
     Plus,
     Settings,
-    Settings2,
     Star,
-    Sun,
-    UserIcon,
 } from 'lucide-react';
 
 const SecureDevLogo = () => (
@@ -44,17 +36,6 @@ const SecureDevLogo = () => (
 import { useMemo, useState } from 'react';
 import { Link, useLocation, useMatch, useParams } from 'react-router-dom';
 
-import type { Theme } from '@/providers/theme-provider';
-
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import {
     Sidebar,
     SidebarContent,
@@ -70,15 +51,10 @@ import {
     SidebarRail,
 } from '@/components/ui/sidebar';
 
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { PasswordChangeForm } from '@/features/authentication/password-change-form';
-import { useTheme } from '@/hooks/use-theme';
 import { useFavorites } from '@/providers/favorites-provider';
 import { useSidebarFlows } from '@/providers/sidebar-flows-provider';
-import { useUser } from '@/providers/user-provider';
 
 const MainSidebar = () => {
-    const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
     const [clickedButtons, setClickedButtons] = useState<Set<string>>(new Set());
 
     const isSettingsActive = useMatch('/settings/*');
@@ -90,9 +66,6 @@ const MainSidebar = () => {
         return location.pathname === '/flows' || location.pathname === '/flows/new';
     }, [location.pathname]);
 
-    const { authInfo, logout } = useUser();
-    const user = authInfo?.user;
-    const { setTheme, theme } = useTheme();
     const { addFavoriteFlow, favoriteFlowIds, removeFavoriteFlow } = useFavorites();
     const { flows } = useSidebarFlows();
 
@@ -151,10 +124,6 @@ const MainSidebar = () => {
         return found;
     }, [isOnFlowPage, flowId, flows, recentFlows, favoriteFlows]);
 
-    const handlePasswordChangeSuccess = () => {
-        setIsPasswordModalOpen(false);
-    };
-
     return (
         <Sidebar collapsible="icon">
             <SidebarHeader>
@@ -212,6 +181,17 @@ const MainSidebar = () => {
                                     <Link to="/web-pentest">
                                         <Network />
                                         Web Pentest
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton
+                                    asChild
+                                    isActive={location.pathname === '/infrastructure-pentest'}
+                                >
+                                    <Link to="/infrastructure-pentest">
+                                        <Server />
+                                        Infrastructure
                                     </Link>
                                 </SidebarMenuButton>
                             </SidebarMenuItem>
@@ -448,120 +428,9 @@ const MainSidebar = () => {
                             </Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
-                    <SidebarMenuItem className="hidden">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <SidebarMenuButton
-                                    className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-                                    size="lg"
-                                >
-                                    <Avatar className="bg-background dark:bg-muted size-8 rounded-lg">
-                                        {/* <AvatarImage
-                                            alt={user.name}
-                                            src={user.avatar}
-                                        /> */}
-                                        <AvatarFallback className="flex size-8 items-center justify-center">
-                                            <UserIcon className="size-4" />
-                                        </AvatarFallback>
-                                    </Avatar>
-                                    <div className="grid flex-1 text-left text-sm leading-tight">
-                                        <span className="truncate font-semibold">{user?.name}</span>
-                                        <span className="truncate text-xs">{user?.mail}</span>
-                                    </div>
-                                    <ChevronsUpDown className="ml-auto size-4" />
-                                </SidebarMenuButton>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent
-                                align="end"
-                                className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
-                                side="bottom"
-                                sideOffset={4}
-                            >
-                                <DropdownMenuLabel className="p-0 font-normal">
-                                    <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                                        <Avatar className="bg-muted flex size-8 items-center justify-center rounded-lg">
-                                            <AvatarFallback className="flex items-center justify-center rounded-lg">
-                                                <UserIcon className="size-4" />
-                                            </AvatarFallback>
-                                        </Avatar>
-                                        <div className="grid flex-1 text-left text-sm leading-tight">
-                                            <span className="truncate font-semibold">{user?.name}</span>
-                                            <span className="truncate text-xs">{user?.mail}</span>
-                                            <span className="text-muted-foreground truncate text-xs">
-                                                {user?.type === 'local' ? 'local' : 'oauth'}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem
-                                    className="cursor-default hover:bg-transparent focus:bg-transparent"
-                                    onSelect={(event) => event.preventDefault()}
-                                >
-                                    <Settings2 />
-                                    Theme
-                                    <Tabs
-                                        className="-my-1.5 -mr-2 ml-auto"
-                                        onValueChange={(value) => setTheme(value as Theme)}
-                                        value={theme || 'system'}
-                                    >
-                                        <TabsList className="h-7 p-0.5">
-                                            <TabsTrigger
-                                                className="h-6 px-2"
-                                                value="system"
-                                            >
-                                                <Monitor className="size-4" />
-                                            </TabsTrigger>
-                                            <TabsTrigger
-                                                className="h-6 px-2"
-                                                value="light"
-                                            >
-                                                <Sun className="size-4" />
-                                            </TabsTrigger>
-                                            <TabsTrigger
-                                                className="h-6 px-2"
-                                                value="dark"
-                                            >
-                                                <Moon className="size-4" />
-                                            </TabsTrigger>
-                                        </TabsList>
-                                    </Tabs>
-                                </DropdownMenuItem>
-                                {user?.type === 'local' && (
-                                    <>
-                                        <DropdownMenuSeparator />
-                                        <DropdownMenuItem onClick={() => setIsPasswordModalOpen(true)}>
-                                            <KeyRound className="mr-2 size-4" />
-                                            Change Password
-                                        </DropdownMenuItem>
-                                    </>
-                                )}
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={() => logout()}>
-                                    <LogOut className="mr-2 size-4" />
-                                    Log out
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </SidebarMenuItem>
                 </SidebarMenu>
             </SidebarFooter>
             <SidebarRail />
-
-            <Dialog
-                onOpenChange={(open) => setIsPasswordModalOpen(open)}
-                open={isPasswordModalOpen}
-            >
-                <DialogContent className="sm:max-w-[425px]">
-                    <DialogHeader>
-                        <DialogTitle>Change Password</DialogTitle>
-                    </DialogHeader>
-                    <PasswordChangeForm
-                        onCancel={() => setIsPasswordModalOpen(false)}
-                        onSuccess={handlePasswordChangeSuccess}
-                    />
-                </DialogContent>
-            </Dialog>
         </Sidebar>
     );
 };

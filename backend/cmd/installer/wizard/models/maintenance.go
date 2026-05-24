@@ -41,7 +41,7 @@ func (h *MaintenanceHandler) LoadItems() []ListItem {
 		})
 	}
 
-	// stop PentAGI - show if any stack is running
+	// stop RedScope - show if any stack is running
 	showStop := checker.CanStopAll()
 	if showStop {
 		items = append(items, ListItem{
@@ -49,7 +49,7 @@ func (h *MaintenanceHandler) LoadItems() []ListItem {
 		})
 	}
 
-	// restart PentAGI - show if any stack is running
+	// restart RedScope - show if any stack is running
 	if showStop {
 		items = append(items, ListItem{
 			ID: RestartPentagiScreen,
@@ -71,7 +71,7 @@ func (h *MaintenanceHandler) LoadItems() []ListItem {
 		})
 	}
 
-	// update PentAGI - show if updates are available for any stack
+	// update RedScope - show if updates are available for any stack
 	showUpdatePentagi := checker.CanUpdateAll()
 
 	if showUpdatePentagi {
@@ -96,21 +96,21 @@ func (h *MaintenanceHandler) LoadItems() []ListItem {
 		})
 	}
 
-	// remove PentAGI - show if any stack is installed
+	// remove RedScope - show if any stack is installed
 	if checker.CanRemoveAll() {
 		items = append(items, ListItem{
 			ID: RemovePentagiScreen,
 		})
 	}
 
-	// purge PentAGI - show if any stack is installed
+	// purge RedScope - show if any stack is installed
 	if checker.CanPurgeAll() {
 		items = append(items, ListItem{
 			ID: PurgePentagiScreen,
 		})
 	}
 
-	// reset admin password - show if PentAGI is running
+	// reset admin password - show if RedScope is running
 	if checker.CanResetPassword() {
 		items = append(items, ListItem{
 			ID: ResetPasswordScreen,

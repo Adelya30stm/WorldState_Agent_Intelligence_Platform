@@ -1,6 +1,6 @@
 # Processor-Wizard Integration Guide
 
-> Technical documentation for embedded terminal integration in PentAGI installer wizard using Bubble Tea and pseudoterminals.
+> Technical documentation for embedded terminal integration in RedScope installer wizard using Bubble Tea and pseudoterminals.
 
 ## Architecture Decision: Pseudoterminal vs Built-in Bubble Tea
 

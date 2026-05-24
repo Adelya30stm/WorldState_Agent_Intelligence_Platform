@@ -476,6 +476,8 @@ var PromptVariables = map[PromptType][]string{
 		"GraphitiEnabled",
 		"SearchGuideToolName",
 		"StoreGuideToolName",
+		"ReportResultToolName",
+		"ToolPlaceholder",
 	},
 	PromptTypeQuestionWebReporter: {
 		"Question",

@@ -278,11 +278,11 @@ func TestUpdateDefaultValues(t *testing.T) {
 		{
 			name: "mixed scenarios",
 			vars: map[string]loader.EnvVar{
-				"PENTAGI_POSTGRES_PASSWORD":  {Name: "PENTAGI_POSTGRES_PASSWORD", Default: ""},
+				"REDSCOPE_POSTGRES_PASSWORD":  {Name: "REDSCOPE_POSTGRES_PASSWORD", Default: ""},
 				"LANGFUSE_POSTGRES_PASSWORD": {Name: "LANGFUSE_POSTGRES_PASSWORD", Default: "custom"},
 			},
 			expected: map[string]string{
-				"PENTAGI_POSTGRES_PASSWORD":  "postgres",
+				"REDSCOPE_POSTGRES_PASSWORD":  "postgres",
 				"LANGFUSE_POSTGRES_PASSWORD": "custom",
 			},
 		},
@@ -639,7 +639,7 @@ func TestDoHardening(t *testing.T) {
 				PentagiVolumesExist:  true,  // but volumes remain!
 			},
 			setupVars: map[string]loader.EnvVar{
-				"PENTAGI_POSTGRES_PASSWORD": {Name: "PENTAGI_POSTGRES_PASSWORD", Value: "postgres", Default: "postgres"},
+				"REDSCOPE_POSTGRES_PASSWORD": {Name: "REDSCOPE_POSTGRES_PASSWORD", Value: "postgres", Default: "postgres"},
 			},
 			expectChanges: false, // should NOT change because volumes exist
 		},
@@ -671,7 +671,7 @@ func TestDoHardening(t *testing.T) {
 			setupVars: map[string]loader.EnvVar{
 				"LANGFUSE_SALT":             {Name: "LANGFUSE_SALT", Value: "salt", Default: "salt"},
 				"NEO4J_PASSWORD":            {Name: "NEO4J_PASSWORD", Value: "devpassword", Default: "devpassword"},
-				"PENTAGI_POSTGRES_PASSWORD": {Name: "PENTAGI_POSTGRES_PASSWORD", Value: "postgres", Default: "postgres"},
+				"REDSCOPE_POSTGRES_PASSWORD": {Name: "REDSCOPE_POSTGRES_PASSWORD", Value: "postgres", Default: "postgres"},
 			},
 			expectChanges: false, // should NOT change anything
 		},
@@ -1279,7 +1279,7 @@ func TestDoHardening_IntegrationWithRealEnvFile(t *testing.T) {
 			},
 			expectedUnchangedVars: []string{
 				"COOKIE_SIGNING_SALT",
-				"PENTAGI_POSTGRES_PASSWORD",
+				"REDSCOPE_POSTGRES_PASSWORD",
 				"NEO4J_PASSWORD", // Graphiti installed, should not harden
 				"LOCAL_SCRAPER_USERNAME",
 				"LOCAL_SCRAPER_PASSWORD",
@@ -1297,7 +1297,7 @@ func TestDoHardening_IntegrationWithRealEnvFile(t *testing.T) {
 			},
 			expectedHardenedVars: []string{
 				"COOKIE_SIGNING_SALT",
-				"PENTAGI_POSTGRES_PASSWORD",
+				"REDSCOPE_POSTGRES_PASSWORD",
 				"LOCAL_SCRAPER_USERNAME",
 				"LOCAL_SCRAPER_PASSWORD",
 				"SCRAPER_PRIVATE_URL", // Should be updated if credentials are hardened
@@ -1325,7 +1325,7 @@ func TestDoHardening_IntegrationWithRealEnvFile(t *testing.T) {
 			},
 			expectedUnchangedVars: []string{
 				"COOKIE_SIGNING_SALT",
-				"PENTAGI_POSTGRES_PASSWORD",
+				"REDSCOPE_POSTGRES_PASSWORD",
 				"LOCAL_SCRAPER_USERNAME",
 				"LOCAL_SCRAPER_PASSWORD",
 				"LANGFUSE_POSTGRES_PASSWORD",
@@ -1345,7 +1345,7 @@ func TestDoHardening_IntegrationWithRealEnvFile(t *testing.T) {
 			expectedHardenedVars: []string{
 				// Pentagi vars
 				"COOKIE_SIGNING_SALT",
-				"PENTAGI_POSTGRES_PASSWORD",
+				"REDSCOPE_POSTGRES_PASSWORD",
 				"LOCAL_SCRAPER_USERNAME",
 				"LOCAL_SCRAPER_PASSWORD",
 				"SCRAPER_PRIVATE_URL",

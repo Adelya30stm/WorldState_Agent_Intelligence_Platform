@@ -25,6 +25,12 @@ const FlowReport = lazy(() => import('@/pages/flows/flow-report'));
 const Flows = lazy(() => import('@/pages/flows/flows'));
 const NewFlow = lazy(() => import('@/pages/flows/new-flow'));
 const Projects = lazy(() => import('@/pages/projects/projects'));
+const ProjectsPhases = lazy(() =>
+    import('@/pages/projects/projects').then((m) => ({ default: m.WebPentestPhases })),
+);
+const WebPentestReports = lazy(() => import('@/pages/projects/web-pentest-reports'));
+const WebPentestFindings = lazy(() => import('@/pages/projects/web-pentest-findings'));
+const Infrastructure = lazy(() => import('@/pages/infrastructure/infrastructure'));
 const Login = lazy(() => import('@/pages/login'));
 const OAuthResult = lazy(() => import('@/pages/oauth-result'));
 const SettingsAPITokens = lazy(() => import('@/pages/settings/settings-api-tokens'));
@@ -89,6 +95,22 @@ const App = () => {
                                             <Route
                                                 element={<Projects />}
                                                 path="web-pentest"
+                                            />
+                                            <Route
+                                                element={<ProjectsPhases />}
+                                                path="web-pentest/phases"
+                                            />
+                                            <Route
+                                                element={<WebPentestFindings />}
+                                                path="web-pentest/findings"
+                                            />
+                                            <Route
+                                                element={<WebPentestReports />}
+                                                path="web-pentest/reports"
+                                            />
+                                            <Route
+                                                element={<Infrastructure />}
+                                                path="infrastructure-pentest"
                                             />
                                         </Route>
 

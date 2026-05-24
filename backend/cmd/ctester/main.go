@@ -43,7 +43,7 @@ func main() {
 	verbose := flag.Bool("verbose", false, "Enable verbose output")
 	flag.Parse()
 
-	logrus.Infof("Starting PentAGI Provider Configuration Tester %s", version.GetBinaryVersion())
+	logrus.Infof("Starting RedScope Provider Configuration Tester %s", version.GetBinaryVersion())
 
 	if err := godotenv.Load(*envFile); err != nil {
 		log.Println("Warning: Error loading .env file:", err)

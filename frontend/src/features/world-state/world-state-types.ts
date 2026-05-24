@@ -69,13 +69,13 @@ export const ACTION_RISKY: Record<EntityAction, boolean> = {
 };
 
 export const ACTION_ICONS: Record<EntityAction, string> = {
-    'safe-probe': '🔍',
-    'deep-scan': '⚡',
-    'enumerate-endpoints': '📡',
-    'compare': '⚖️',
-    'mark-high-priority': '🚨',
-    'add-note': '📝',
-    'create-subflow': '🔀',
+    'safe-probe': 'probe',
+    'deep-scan': 'scan',
+    'enumerate-endpoints': 'enum',
+    'compare': 'cmp',
+    'mark-high-priority': 'hi',
+    'add-note': 'note',
+    'create-subflow': 'sub',
 };
 
 export const ENTITY_ACTIONS: Record<EntityType, EntityAction[]> = {

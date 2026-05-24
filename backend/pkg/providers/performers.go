@@ -91,6 +91,78 @@ func (fp *flowProvider) performTaskResultReporter(
 	return &taskResult, nil
 }
 
+// performWebReportResult runs the web reporter agent to produce a full structured
+// penetration test report. Unlike performTaskResultReporter (capped at 4000 chars),
+// this function has no length constraint — the agent writes the complete Markdown
+// report and submits it via the report_result tool.
+func (fp *flowProvider) performWebReportResult(
+	ctx context.Context,
+	taskID *int64,
+	systemReporterTmpl, userReporterTmpl, input string,
+) (*tools.TaskResult, error) {
+	var (
+		taskResult   tools.TaskResult
+		optAgentType = pconfig.OptionsTypePrimaryAgent
+		msgChainType = database.MsgchainTypeWebReporter
+	)
+
+	chain := []llms.MessageContent{
+		llms.TextParts(llms.ChatMessageTypeSystem, systemReporterTmpl),
+		llms.TextParts(llms.ChatMessageTypeHuman, userReporterTmpl),
+	}
+
+	ctx = tools.PutAgentContext(ctx, msgChainType)
+	cfg := tools.WebReporterExecutorConfig{
+		TaskID: taskID,
+		ReportResult: func(ctx context.Context, name string, args json.RawMessage) (string, error) {
+			if err := json.Unmarshal(args, &taskResult); err != nil {
+				return "", fmt.Errorf("failed to unmarshal web reporter result: %w", err)
+			}
+			return "web pentest report successfully processed", nil
+		},
+	}
+
+	executor, err := fp.executor.GetWebReporterExecutor(cfg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get web reporter executor: %w", err)
+	}
+
+	chainBlob, err := json.Marshal(chain)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal web reporter msg chain: %w", err)
+	}
+
+	msgChain, err := fp.db.CreateMsgChain(ctx, database.CreateMsgChainParams{
+		Type:          msgChainType,
+		Model:         fp.Model(optAgentType),
+		ModelProvider: string(fp.Type()),
+		Chain:         chainBlob,
+		FlowID:        fp.flowID,
+		TaskID:        database.Int64ToNullInt64(taskID),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create web reporter msg chain: %w", err)
+	}
+
+	if err = fp.performAgentChain(ctx, optAgentType, msgChain.ID, taskID, nil, chain, executor, fp.summarizer); err != nil {
+		return nil, fmt.Errorf("failed to run web reporter agent chain: %w", err)
+	}
+
+	if agentCtx, ok := tools.GetAgentContext(ctx); ok {
+		fp.putAgentLog(
+			ctx,
+			agentCtx.ParentAgentType,
+			agentCtx.CurrentAgentType,
+			input,
+			taskResult.Result,
+			taskID,
+			nil,
+		)
+	}
+
+	return &taskResult, nil
+}
+
 func (fp *flowProvider) performSubtasksGenerator(
 	ctx context.Context,
 	taskID int64,

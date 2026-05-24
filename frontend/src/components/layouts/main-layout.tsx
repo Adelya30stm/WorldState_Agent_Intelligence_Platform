@@ -1,16 +1,18 @@
 import { Outlet } from 'react-router-dom';
 
-import MainSidebar from '@/components/layouts/main-sidebar';
-import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
+import TopNavbar from '@/components/layouts/top-navbar';
+import { TooltipProvider } from '@/components/ui/tooltip';
 
 const MainLayout = () => {
     return (
-        <SidebarProvider>
-            <MainSidebar />
-            <SidebarInset>
-                <Outlet />
-            </SidebarInset>
-        </SidebarProvider>
+        <TooltipProvider delayDuration={0}>
+            <div className="flex h-screen flex-col">
+                <TopNavbar />
+                <div className="flex-1 overflow-auto">
+                    <Outlet />
+                </div>
+            </div>
+        </TooltipProvider>
     );
 };
 

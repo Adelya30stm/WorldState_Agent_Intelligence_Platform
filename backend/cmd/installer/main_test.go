@@ -144,7 +144,7 @@ func TestCreateEmptyEnvFile(t *testing.T) {
 	}
 
 	contentStr := string(content)
-	if !containsString(contentStr, "PentAGI Environment Configuration") {
+	if !containsString(contentStr, "RedScope Environment Configuration") {
 		t.Error("Expected file to contain header comment")
 	}
 	if !containsString(contentStr, version.GetBinaryVersion()) {

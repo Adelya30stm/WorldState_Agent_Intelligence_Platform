@@ -22,6 +22,7 @@ import (
 	"pentagi/pkg/server/logger"
 	"pentagi/pkg/server/oauth"
 	"pentagi/pkg/server/services"
+	"pentagi/pkg/threatmodel/scanners"
 
 	_ "pentagi/pkg/server/docs" // swagger docs
 
@@ -51,14 +52,14 @@ var frontendRoutes = []string{
 	"/web-pentest",
 }
 
-// @title PentAGI Swagger API
+// @title RedScope Swagger API
 // @version 1.0
-// @description Swagger API for Penetration Testing Advanced General Intelligence PentAGI.
+// @description Swagger API for RedScope automated penetration testing platform.
 // @termsOfService http://swagger.io/terms/
 
-// @contact.url https://pentagi.com
-// @contact.name PentAGI Development Team
-// @contact.email team@pentagi.com
+// @contact.url https://redscope.io
+// @contact.name RedScope Development Team
+// @contact.email adelina.30stm666@gmail.com
 
 // @license.name MIT
 // @license.url https://opensource.org/license/mit
@@ -142,8 +143,11 @@ func NewRouter(
 	screenshotService := services.NewScreenshotService(orm, cfg.DataDir)
 	promptService := services.NewPromptService(orm)
 	analyticsService := services.NewAnalyticsService(orm)
-	worldStateService := services.NewWorldStateService(orm)
+	worldStateService := services.NewWorldStateService(orm, providers.GraphitiClient())
+	attackPathService := services.NewAttackPathService(orm, providers.GraphitiClient())
+	scannerImportService := scanners.NewScannerImportService(providers.GraphitiClient())
 	webPentestService := services.NewWebPentestService(orm)
+	findingsExtractService := services.NewFindingsExtractService(orm, providers)
 	tokenService := services.NewTokenService(orm, cfg.CookieSigningSalt, tokenCache, subscriptions)
 	graphqlService := services.NewGraphqlService(
 		db, cfg, baseURL, cfg.CorsOrigins, tokenCache, providers, controller, subscriptions,
@@ -225,6 +229,9 @@ func NewRouter(
 		setProvidersGroup(privateGroup, providerService)
 		setFlowsGroup(privateGroup, flowService)
 		setWorldStateGroup(privateGroup, worldStateService)
+		setAttackPathsGroup(privateGroup, attackPathService)
+		setScannerImportGroup(privateGroup, scannerImportService)
+		setFindingsExtractGroup(privateGroup, findingsExtractService)
 		setTasksGroup(privateGroup, taskService)
 		setSubtasksGroup(privateGroup, subtaskService)
 		setContainersGroup(privateGroup, containerService)
@@ -569,6 +576,20 @@ func setTokensGroup(parent *gin.RouterGroup, svc *services.TokenService) {
 	}
 }
 
+func setAttackPathsGroup(parent *gin.RouterGroup, svc *services.AttackPathService) {
+	g := parent.Group("/flows/:flowID/attackpaths")
+	{
+		g.GET("/", svc.GetAttackPaths)
+	}
+}
+
+func setScannerImportGroup(parent *gin.RouterGroup, svc *scanners.ScannerImportService) {
+	g := parent.Group("/flows/:flowID/import")
+	{
+		g.POST("/scanner", svc.ImportScan)
+	}
+}
+
 func setWorldStateGroup(parent *gin.RouterGroup, svc *services.WorldStateService) {
 	worldStateGroup := parent.Group("/flows/:flowID/worldstate")
 	{
@@ -580,5 +601,17 @@ func setWebPentestGroup(parent *gin.RouterGroup, svc *services.WebPentestService
 	webPentestGroup := parent.Group("/web-pentest/phases")
 	{
 		webPentestGroup.GET("/:flowID", svc.GetFlowPhases)
+	}
+
+	reportsGroup := parent.Group("/web-pentest")
+	{
+		reportsGroup.GET("/reports", svc.GetReports)
+	}
+}
+
+func setFindingsExtractGroup(parent *gin.RouterGroup, svc *services.FindingsExtractService) {
+	g := parent.Group("/flows/:flowID/extract-findings")
+	{
+		g.GET("/", svc.ExtractFindings)
 	}
 }
