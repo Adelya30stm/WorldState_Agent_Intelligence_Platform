@@ -2,36 +2,28 @@ import {
     Clock,
     GitFork,
     Network,
-    Server,
     Plus,
     Settings,
     Star,
+    Zap,
 } from 'lucide-react';
 
-const SecureDevLogo = () => (
-    <svg
-        fill="none"
-        height="24"
-        viewBox="0 0 24 24"
-        width="24"
-        xmlns="http://www.w3.org/2000/svg"
-    >
-        <path
-            d="M12 2L4 5.5V11C4 15.42 7.5 19.57 12 21C16.5 19.57 20 15.42 20 11V5.5L12 2Z"
-            fill="#2563EB"
-        />
-        <text
-            dominantBaseline="middle"
-            fill="white"
-            fontSize="6.5"
-            fontWeight="bold"
-            textAnchor="middle"
-            x="12"
-            y="12"
-        >
-            {'</>'}
-        </text>
-    </svg>
+const WSLogo = () => (
+    <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-700 to-indigo-800 flex items-center justify-center shadow-sm shadow-violet-900/50 shrink-0">
+        {/* Rabbit logo — sitting side profile */}
+        <svg width="20" height="20" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <g fill="white">
+                <ellipse cx="26" cy="45" rx="17" ry="14" />
+                <ellipse cx="43" cy="48" rx="9" ry="13" />
+                <ellipse cx="31" cy="60" rx="20" ry="4" />
+                <circle cx="45" cy="31" r="10.5" />
+                <path d="M50 28 C57 29 57 38 50 39 C47 39 46 30 50 28 Z" />
+                <path d="M38 24 C33 16 32 6 36 3 C39 1 42 3 43 8 C44 14 44 20 43 25 Z" />
+                <path d="M43 24 C41 15 42 6 46 4 C49 3 51 6 51 11 C51 17 49 22 47 25 Z" />
+            </g>
+            <circle cx="47" cy="29" r="1.6" fill="#3b0764" />
+        </svg>
+    </div>
 );
 import { useMemo, useState } from 'react';
 import { Link, useLocation, useMatch, useParams } from 'react-router-dom';
@@ -126,23 +118,23 @@ const MainSidebar = () => {
 
     return (
         <Sidebar collapsible="icon">
-            <SidebarHeader>
+            <SidebarHeader className="border-b border-sidebar-border/60 pb-3">
                 <SidebarMenu>
                     <SidebarMenuItem>
-                        <SidebarMenuButton
-                            asChild
-                            size="lg"
-                        >
+                        <SidebarMenuButton asChild size="lg" className="hover:bg-sidebar-accent/60">
                             <Link to="/flows">
-                                <SecureDevLogo />
-                                <span className="truncate font-semibold">Безопасная Разработка</span>
+                                <WSLogo />
+                                <div className="flex flex-col leading-none">
+                                    <span className="font-bold text-[13px] tracking-tight">WorldState<span className="text-violet-400">Security</span></span>
+                                    <span className="text-[10px] text-muted-foreground font-medium mt-0.5">AI Pentest Platform</span>
+                                </div>
                             </Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                 </SidebarMenu>
             </SidebarHeader>
             <SidebarContent>
-                <SidebarGroup className="bg-sidebar sticky top-0 z-10">
+                <SidebarGroup className="bg-sidebar sticky top-0 z-10 pt-3">
                     <SidebarGroupContent>
                         <SidebarMenu>
                             <SidebarMenuItem className="group-data-[state=expanded]:hidden">
@@ -153,45 +145,32 @@ const MainSidebar = () => {
                                     </Link>
                                 </SidebarMenuButton>
                             </SidebarMenuItem>
-                            <SidebarMenuItem>
-                                <SidebarMenuButton
-                                    asChild
-                                    isActive={!!isFlowsActive}
+                            {/* New Flow CTA */}
+                            <SidebarMenuItem className="group-data-[state=collapsed]:hidden mb-1">
+                                <Link
+                                    to="/flows/new"
+                                    className="flex items-center gap-2 w-full rounded-lg px-3 py-2 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm"
                                 >
+                                    <Zap className="size-4 shrink-0" />
+                                    <span>New Pentest</span>
+                                </Link>
+                            </SidebarMenuItem>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton asChild isActive={!!isFlowsActive}>
                                     <Link to="/flows">
                                         <GitFork />
-                                        Flows
+                                        All Flows
                                     </Link>
                                 </SidebarMenuButton>
-                                <SidebarMenuAction
-                                    asChild
-                                    className="data-[state=open]:bg-accent rounded-sm"
-                                    showOnHover
-                                >
-                                    <Link to="/flows/new">
-                                        <Plus />
-                                    </Link>
+                                <SidebarMenuAction asChild className="data-[state=open]:bg-accent rounded-sm" showOnHover>
+                                    <Link to="/flows/new"><Plus /></Link>
                                 </SidebarMenuAction>
                             </SidebarMenuItem>
                             <SidebarMenuItem>
-                                <SidebarMenuButton
-                                    asChild
-                                    isActive={location.pathname === '/web-pentest'}
-                                >
+                                <SidebarMenuButton asChild isActive={location.pathname === '/web-pentest'}>
                                     <Link to="/web-pentest">
                                         <Network />
                                         Web Pentest
-                                    </Link>
-                                </SidebarMenuButton>
-                            </SidebarMenuItem>
-                            <SidebarMenuItem>
-                                <SidebarMenuButton
-                                    asChild
-                                    isActive={location.pathname === '/infrastructure-pentest'}
-                                >
-                                    <Link to="/infrastructure-pentest">
-                                        <Server />
-                                        Infrastructure
                                     </Link>
                                 </SidebarMenuButton>
                             </SidebarMenuItem>
@@ -415,13 +394,10 @@ const MainSidebar = () => {
                     </SidebarGroup>
                 )}
             </SidebarContent>
-            <SidebarFooter>
+            <SidebarFooter className="border-t border-sidebar-border/60 pt-2">
                 <SidebarMenu>
                     <SidebarMenuItem>
-                        <SidebarMenuButton
-                            asChild
-                            isActive={!!isSettingsActive}
-                        >
+                        <SidebarMenuButton asChild isActive={!!isSettingsActive}>
                             <Link to="/settings">
                                 <Settings />
                                 Settings

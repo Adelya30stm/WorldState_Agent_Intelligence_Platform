@@ -22,24 +22,18 @@ const LeftPanel = () => (
             <div className="absolute h-52 w-72 translate-x-8 translate-y-8 rotate-6 rounded-2xl bg-white/10 shadow-xl" />
             <div className="absolute h-52 w-72 translate-x-4 translate-y-4 rotate-3 rounded-2xl bg-white/15 shadow-xl" />
             <div className="relative flex h-52 w-72 flex-col items-center justify-center gap-5 rounded-2xl bg-white/25 shadow-2xl backdrop-blur-md">
-                {/* Shield icon */}
-                <svg fill="none" height="56" viewBox="0 0 24 24" width="56" xmlns="http://www.w3.org/2000/svg">
-                    <path
-                        d="M12 2L4 5.5V11C4 15.42 7.5 19.57 12 21C16.5 19.57 20 15.42 20 11V5.5L12 2Z"
-                        fill="white"
-                        opacity="0.95"
-                    />
-                    <text
-                        dominantBaseline="middle"
-                        fill="#4f46e5"
-                        fontSize="6"
-                        fontWeight="bold"
-                        textAnchor="middle"
-                        x="12"
-                        y="12"
-                    >
-                        {'</>'}
-                    </text>
+                {/* Rabbit logo — sitting side profile */}
+                <svg fill="none" height="64" viewBox="0 0 64 64" width="64" xmlns="http://www.w3.org/2000/svg">
+                    <g fill="white" opacity="0.95">
+                        <ellipse cx="26" cy="45" rx="17" ry="14" />
+                        <ellipse cx="43" cy="48" rx="9" ry="13" />
+                        <ellipse cx="31" cy="60" rx="20" ry="4" />
+                        <circle cx="45" cy="31" r="10.5" />
+                        <path d="M50 28 C57 29 57 38 50 39 C47 39 46 30 50 28 Z" />
+                        <path d="M38 24 C33 16 32 6 36 3 C39 1 42 3 43 8 C44 14 44 20 43 25 Z" />
+                        <path d="M43 24 C41 15 42 6 46 4 C49 3 51 6 51 11 C51 17 49 22 47 25 Z" />
+                    </g>
+                    <circle cx="47" cy="29" r="1.6" fill="#4f46e5" />
                 </svg>
                 <p className="text-sm font-medium text-white/80">Security Platform</p>
             </div>
