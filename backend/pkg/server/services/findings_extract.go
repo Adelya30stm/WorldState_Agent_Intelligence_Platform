@@ -196,22 +196,15 @@ func (s *FindingsExtractService) ExtractFindings(c *gin.Context) {
 		reportText = reportText[:80000] + "\n...[truncated]"
 	}
 
-	// Get first available LLM provider
+	// Prefer OpenAI; fall back to any other configured provider
 	defaultProviders := s.providers.DefaultProviders()
-	names := defaultProviders.ListNames()
-	if len(names) == 0 {
+	prv, err := defaultProviders.Preferred()
+	if err != nil {
 		log.Error("no LLM providers configured")
 		response.Success(c, http.StatusOK, FindingsExtractResponse{
 			FlowID:   flowID,
 			Findings: []ExtractedFinding{},
 		})
-		return
-	}
-
-	prv, err := defaultProviders.Get(names[0])
-	if err != nil {
-		log.WithError(err).Error("failed to get provider")
-		response.Error(c, response.ErrInternal, err)
 		return
 	}
 

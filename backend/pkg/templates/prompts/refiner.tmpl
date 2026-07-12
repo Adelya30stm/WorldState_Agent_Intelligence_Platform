@@ -34,6 +34,11 @@ All subtasks are performed in:
 
 ## OPTIMIZATION PRINCIPLES
 
+0. **World State First**
+   - When `<world_state>` is present, treat it as the authoritative asset map
+   - Remove or skip planned subtasks that re-do work on entities already past `discovered` without new justification
+   - Prefer refining the plan toward frontier items (discovered / scanning / assessed / vulnerable)
+
 1. **Results-Based Adaptation**
    - Thoroughly analyze completed subtask results and outcomes
    - Assess progress toward **the user's original request from `<user_task><input>`**

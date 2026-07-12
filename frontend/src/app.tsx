@@ -28,9 +28,11 @@ const Projects = lazy(() => import('@/pages/projects/projects'));
 const ProjectsPhases = lazy(() =>
     import('@/pages/projects/projects').then((m) => ({ default: m.WebPentestPhases })),
 );
+const ProjectsConsole = lazy(() =>
+    import('@/pages/projects/projects').then((m) => ({ default: m.WebPentestConsole })),
+);
 const WebPentestReports = lazy(() => import('@/pages/projects/web-pentest-reports'));
 const WebPentestFindings = lazy(() => import('@/pages/projects/web-pentest-findings'));
-const Infrastructure = lazy(() => import('@/pages/infrastructure/infrastructure'));
 const Login = lazy(() => import('@/pages/login'));
 const OAuthResult = lazy(() => import('@/pages/oauth-result'));
 const SettingsAPITokens = lazy(() => import('@/pages/settings/settings-api-tokens'));
@@ -101,16 +103,16 @@ const App = () => {
                                                 path="web-pentest/phases"
                                             />
                                             <Route
+                                                element={<ProjectsConsole />}
+                                                path="web-pentest/console"
+                                            />
+                                            <Route
                                                 element={<WebPentestFindings />}
                                                 path="web-pentest/findings"
                                             />
                                             <Route
                                                 element={<WebPentestReports />}
                                                 path="web-pentest/reports"
-                                            />
-                                            <Route
-                                                element={<Infrastructure />}
-                                                path="infrastructure-pentest"
                                             />
                                         </Route>
 
@@ -198,11 +200,11 @@ const App = () => {
 
                                     {/* other routes */}
                                     <Route
-                                        element={<Navigate to="/flows" />}
+                                        element={<Navigate to="/web-pentest/phases" replace />}
                                         path="/"
                                     />
                                     <Route
-                                        element={<Navigate to="/flows" />}
+                                        element={<Navigate to="/web-pentest/phases" replace />}
                                         path="*"
                                     />
                                 </Routes>

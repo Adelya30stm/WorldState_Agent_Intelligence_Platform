@@ -38,9 +38,12 @@ export function NewFlowModal({ onCreated }: Props) {
 
     const providers: { name: string; type: string }[] = providersData?.providers ?? [];
 
-    // Default-select the first provider once loaded
+    // Default-select OpenAI when available, otherwise the first provider
     useEffect(() => {
-        if (!provider && providers.length > 0) setProvider(providers[0].name);
+        if (!provider && providers.length > 0) {
+            const openai = providers.find((p) => p.name === 'openai' || p.type === 'openai');
+            setProvider(openai?.name ?? providers[0].name);
+        }
     }, [providers, provider]);
 
     useEffect(() => {

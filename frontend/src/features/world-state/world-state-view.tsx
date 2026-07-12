@@ -2,6 +2,7 @@ import { Globe, Layers, RefreshCw, Workflow, Zap } from 'lucide-react';
 import { useCallback, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
+import { useFlow } from '@/providers/flow-provider';
 
 import type { GraphMode, WorldState, WorldStateEntity } from './world-state-types';
 import { GRAPH_MODE_LABELS, GRAPH_MODES } from './world-state-types';
@@ -9,6 +10,7 @@ import { useWorldState } from './world-state-hooks';
 import WorldStateDetailsPanel from './world-state-details-panel';
 import WorldStateGraph from './world-state-graph';
 import WorldStateSidebar from './world-state-sidebar';
+import { LifecycleStrip } from './lifecycle-strip';
 
 // ─── Mode icons ───────────────────────────────────────────────────────────────
 
@@ -185,6 +187,8 @@ const WorldStateContent = ({ worldState: initialWorldState, onBack }: ContentPro
                     </div>
                 </div>
             </div>
+
+            <LifecycleStrip flowId={String(worldState.flowId)} />
         </div>
     );
 };
@@ -197,9 +201,17 @@ interface WorldStateViewProps {
 
 const WorldStateView = ({ onBack }: WorldStateViewProps) => {
     const worldState = useWorldState();
+    const { flowId } = useFlow();
 
     if (!worldState || worldState.entities.length === 0) {
-        return <EmptyState onBack={onBack} />;
+        return (
+            <div className="flex h-full flex-col">
+                <div className="flex-1 min-h-0">
+                    <EmptyState onBack={onBack} />
+                </div>
+                {flowId && <LifecycleStrip flowId={flowId} />}
+            </div>
+        );
     }
 
     return (

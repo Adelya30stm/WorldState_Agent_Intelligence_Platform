@@ -11,6 +11,7 @@ import (
 	"pentagi/pkg/graphiti"
 	"pentagi/pkg/providers/embeddings"
 	"pentagi/pkg/schema"
+	"pentagi/pkg/worldstate"
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/sirupsen/logrus"
@@ -773,6 +774,8 @@ func (fte *flowToolsExecutor) GetPrimaryExecutor(cfg PrimaryExecutorConfig) (Con
 		ce.barriers[AskUserToolName] = struct{}{}
 	}
 
+	fte.registerWorldStateTools(ce, worldstate.AgentResearcher)
+
 	return ce, nil
 }
 
@@ -1087,6 +1090,8 @@ func (fte *flowToolsExecutor) GetPentesterExecutor(cfg PentesterExecutorConfig) 
 		ce.definitions = append(ce.definitions, registryDefinitions[SploitusToolName])
 		ce.handlers[SploitusToolName] = sploitus.Handle
 	}
+
+	fte.registerWorldStateTools(ce, worldstate.AgentExecutor)
 
 	return ce, nil
 }
@@ -1582,6 +1587,19 @@ func (fte *flowToolsExecutor) GetWebReporterExecutor(cfg WebReporterExecutorConf
 	}
 
 	return ce, nil
+}
+
+func (fte *flowToolsExecutor) registerWorldStateTools(ce *customExecutor, agent string) {
+	ws := NewWorldStateTool(fte.flowID, fte.db, agent)
+	if !ws.IsAvailable() {
+		return
+	}
+	ce.definitions = append(ce.definitions,
+		registryDefinitions[WorldStateQueryToolName],
+		registryDefinitions[WorldStateUpdateToolName],
+	)
+	ce.handlers[WorldStateQueryToolName] = ws.Handle
+	ce.handlers[WorldStateUpdateToolName] = ws.Handle
 }
 
 func enrichLogrusFields(flowID int64, taskID, subtaskID *int64, fields logrus.Fields) logrus.Fields {

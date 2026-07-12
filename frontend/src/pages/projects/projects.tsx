@@ -10,19 +10,25 @@ import {
     Clock,
     Cookie,
     FileText,
+    GitFork,
     Globe,
     Layers,
+    Loader2,
     Play,
     Search,
     ShieldAlert,
+    ShieldCheck,
+    Sparkles,
     Target,
+    TerminalSquare,
+    TrendingUp,
     X,
     Zap,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
+import { AiAutofillBox } from '@/components/ai-autofill-box';
 import { Badge } from '@/components/ui/badge';
-import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -183,9 +189,9 @@ Output a threat model document in Markdown with: trust boundary diagram (ASCII),
         icon: <ShieldAlert className="size-5" />,
         id: 'vuln-analysis',
         number: 4,
-        ptes: 'PTES: Vulnerability Analysis · OWASP WSTG · Web/API Security',
+        ptes: 'PTES: Vulnerability Analysis · Web/API Security',
         prompt: (t) =>
-            `You are a professional penetration tester performing an authorized vulnerability analysis of ${t} following OWASP Top 10 2021 and OWASP WSTG.
+            `You are a professional penetration tester performing an authorized vulnerability analysis of ${t} following the PTES methodology and OWASP Top 10 2021.
 
 ═══ SECTOR 1: WEB & API SECURITY ═══
 
@@ -219,13 +225,13 @@ BUSINESS LOGIC & API SECURITY
 
 ═══ SECTOR 2: AUTHENTICATION & SESSION SECURITY ═══
 
-AUTHENTICATION (WSTG-AUTHN)
+AUTHENTICATION
    - Username enumeration: compare timing/response for valid vs invalid usernames
    - Brute-force protection: send 20+ rapid attempts, test X-Forwarded-For IP rotation bypass
    - MFA validation: test MFA bypass (response manipulation, code reuse, backup code abuse)
    - Password recovery: test token expiry (≤15 min), single-use enforcement, host-header injection
 
-SESSION MANAGEMENT (WSTG-SESS)
+SESSION MANAGEMENT
    - Cookie flags: verify HttpOnly, Secure, SameSite=Strict/Lax on all session cookies
    - Session fixation: set pre-auth token, authenticate, confirm token rotates post-login
    - Logout invalidation: confirm old session token rejected server-side after logout
@@ -407,7 +413,7 @@ Produce a complete, client-ready penetration test report in Markdown:
 One-page non-technical overview: what was tested, when, overall risk rating, top 3 critical findings, and the single most important immediate action.
 
 # SCOPE & METHODOLOGY
-In-scope assets, testing dates, methodology: PTES + OWASP WSTG, tools used.
+In-scope assets, testing dates, methodology: PTES, tools used.
 
 # FINDINGS
 For each finding (ordered Critical → High → Medium → Low → Info):
@@ -440,10 +446,20 @@ Write in clear professional English. The report must be ready for client deliver
 ];
 
 const statusColors: Record<PhaseStatus, string> = {
-    active: 'bg-blue-500/10 border-blue-500/30',
-    done: 'bg-green-500/10 border-green-500/30',
-    pending: 'bg-muted/40 border-border',
+    active: 'border-l-4 border-l-blue-500',
+    done:   'border-l-4 border-l-emerald-500',
+    pending: '',
 };
+
+const phaseAccents: string[] = [
+    'from-violet-500 to-blue-500',
+    'from-blue-500 to-cyan-500',
+    'from-cyan-500 to-teal-500',
+    'from-amber-500 to-orange-500',
+    'from-red-500 to-rose-500',
+    'from-rose-500 to-pink-500',
+    'from-purple-500 to-violet-500',
+];
 
 // ── Donut chart (SVG) ──────────────────────────────────────────────
 const SEV_COLORS: Record<Finding['severity'], string> = {
@@ -636,6 +652,7 @@ interface PhaseCardProps {
     cookies?: string;
     disabled: boolean;
     launchLabel?: string;
+    onAutofill?: (text: string) => Promise<void>;
     onCookiesChange?: (v: string) => void;
     onLaunch: () => void;
     phase: PentestPhase;
@@ -643,39 +660,79 @@ interface PhaseCardProps {
     onScopeChange?: (items: string[]) => void;
 }
 
-const PhaseCard = ({ cookies, disabled, launchLabel, onCookiesChange, onLaunch, phase, scopeItems, onScopeChange }: PhaseCardProps) => (
-    <Card className={`flex h-full flex-col border transition-shadow hover:shadow-md ${statusColors[phase.status]}`}>
-        <CardHeader className="pb-2">
+const PhaseCard = ({ cookies, disabled, launchLabel, onAutofill, onCookiesChange, onLaunch, phase, scopeItems, onScopeChange }: PhaseCardProps) => {
+    const [afText, setAfText] = useState('');
+    const [afLoading, setAfLoading] = useState(false);
+    const [afError, setAfError] = useState('');
+
+    const accent = phaseAccents[(phase.number - 1) % phaseAccents.length] ?? phaseAccents[0]!;
+
+    const runAutofill = async () => {
+        if (!afText.trim() || afLoading || !onAutofill) return;
+        setAfLoading(true);
+        setAfError('');
+        try {
+            await onAutofill(afText);
+            setAfText('');
+        } catch (e) {
+            setAfError(e instanceof Error ? e.message : 'Failed to extract from text');
+        } finally {
+            setAfLoading(false);
+        }
+    };
+
+    return (
+    <div className="group relative flex h-full flex-col rounded-xl border border-border/60 bg-card shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 overflow-hidden">
+        {/* Gradient top bar */}
+        <div className={`h-1 w-full bg-gradient-to-r ${accent} shrink-0`} />
+
+        <div className="flex flex-1 flex-col p-4 gap-3">
+            {/* Header row */}
             <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-2">
-                    <span className="flex size-7 items-center justify-center rounded-md bg-background/60 text-xs font-bold text-muted-foreground">
-                        {phase.number}
-                    </span>
-                    <div className="text-foreground">{phase.icon}</div>
+                <div className="flex items-center gap-3">
+                    {/* Phase number badge */}
+                    <div className={`flex size-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${accent} shadow-sm`}>
+                        <span className="text-sm font-bold text-white">{phase.number}</span>
+                    </div>
+                    <div className="text-muted-foreground/70">{phase.icon}</div>
                 </div>
-                <Badge variant="outline">
-                    <Clock className="mr-1 size-3" />
-                    Pending
-                </Badge>
+                <span className="rounded-full border border-border/60 bg-muted/50 px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                    PTES
+                </span>
             </div>
-            <p className="mt-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/70">{phase.ptes}</p>
-            <CardTitle className="text-base">{phase.title}</CardTitle>
-            <p className="text-xs text-muted-foreground">{phase.description}</p>
-        </CardHeader>
-        <CardContent className="flex flex-1 flex-col gap-3 pt-0">
+
+            {/* Title & description */}
+            <div>
+                <h3 className="text-sm font-semibold tracking-tight text-foreground">{phase.title}</h3>
+                <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">{phase.description}</p>
+            </div>
+
+            {/* Autofill box */}
+            {onAutofill && (
+                <AiAutofillBox
+                    error={afError}
+                    hint="Paste notes — AI fills target, scope & cookies."
+                    loading={afLoading}
+                    placeholder="Paste a target list, brief, or session cookies…"
+                    rows={2}
+                    title="Autofill"
+                    value={afText}
+                    onChange={setAfText}
+                    onRun={runAutofill}
+                />
+            )}
+
+            {/* Task list */}
             <div className="flex-1">
                 {phase.taskSections ? (
-                    <div className="space-y-3">
+                    <div className="space-y-2.5">
                         {phase.taskSections.map((section) => (
                             <div key={section.label}>
-                                <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">{section.label}</p>
+                                <p className="mb-1 text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50">{section.label}</p>
                                 <ul className="space-y-0.5">
                                     {section.items.map((item) => (
-                                        <li
-                                            className="flex items-center gap-2 text-xs text-muted-foreground"
-                                            key={item}
-                                        >
-                                            <ChevronRight className="size-3 shrink-0" />
+                                        <li className="flex items-center gap-1.5 text-[11px] text-muted-foreground" key={item}>
+                                            <span className={`size-1 shrink-0 rounded-full bg-gradient-to-br ${accent} opacity-70`} />
                                             {item}
                                         </li>
                                     ))}
@@ -684,27 +741,23 @@ const PhaseCard = ({ cookies, disabled, launchLabel, onCookiesChange, onLaunch, 
                         ))}
                     </div>
                 ) : (
-                    <ul className="space-y-1">
+                    <ul className="space-y-0.5">
                         {phase.tasks.map((task) => (
-                            <li
-                                className="flex items-center gap-2 text-xs text-muted-foreground"
-                                key={task}
-                            >
-                                <ChevronRight className="size-3 shrink-0" />
+                            <li className="flex items-center gap-1.5 text-[11px] text-muted-foreground" key={task}>
+                                <span className={`size-1 shrink-0 rounded-full bg-gradient-to-br ${accent} opacity-70`} />
                                 {task}
                             </li>
                         ))}
                     </ul>
                 )}
             </div>
+
+            {/* Extra inputs */}
             {phase.id === 'planning' && onScopeChange && (
-                <ScopeTagInput
-                    items={scopeItems ?? []}
-                    onChange={onScopeChange}
-                />
+                <ScopeTagInput items={scopeItems ?? []} onChange={onScopeChange} />
             )}
             {phase.id === 'recon' && onCookiesChange && (
-                <div className="flex items-center gap-2 rounded-md border bg-muted/30 px-2 py-1.5">
+                <div className="flex items-center gap-2 rounded-lg border bg-muted/30 px-2 py-1.5">
                     <Cookie className="size-3.5 shrink-0 text-muted-foreground" />
                     <Input
                         className="h-6 border-0 bg-transparent p-0 text-xs shadow-none focus-visible:ring-0"
@@ -715,27 +768,29 @@ const PhaseCard = ({ cookies, disabled, launchLabel, onCookiesChange, onLaunch, 
                 </div>
             )}
             {phase.id === 'reporting' && (
-                <a
-                    className="text-[10px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
-                    href="http://www.pentest-standard.org/"
-                    rel="noopener noreferrer"
-                    target="_blank"
-                >
-                    The Penetration Testing Execution Standard (PTES)
+                <a className="text-[10px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline" href="http://www.pentest-standard.org/" rel="noopener noreferrer" target="_blank">
+                    Penetration Testing Execution Standard ↗
                 </a>
             )}
-            <Button
-                className="mt-1 w-full gap-2"
+
+            {/* Launch button */}
+            <button
+                className={`mt-auto flex w-full items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold transition-all ${
+                    disabled
+                        ? 'cursor-not-allowed bg-muted text-muted-foreground'
+                        : `bg-gradient-to-r ${accent} text-white shadow-sm hover:shadow-md hover:opacity-90 active:scale-[0.98]`
+                }`}
                 disabled={disabled}
-                size="sm"
+                type="button"
                 onClick={onLaunch}
             >
-                <Play className="size-3.5" />
-                {launchLabel ?? 'Launch'}
-            </Button>
-        </CardContent>
-    </Card>
-);
+                <Play className="size-3" />
+                {launchLabel ?? 'Launch Phase'}
+            </button>
+        </div>
+    </div>
+    );
+};
 
 // ── World State section ────────────────────────────────────────────
 
@@ -988,6 +1043,14 @@ interface ExtractedFinding {
 }
 interface FindingsExtractResponse { flow_id: number; findings: ExtractedFinding[]; }
 
+interface NextStepRec { step: string; rationale: string; priority: string; phase: string; command: string; }
+interface NextStepResponse { flowId: number; currentPhase: string; summary: string; recommendations: NextStepRec[]; caution: string; }
+const NS_PRIORITY_CLS: Record<string, string> = {
+    High:   'bg-red-100 text-red-700 border-red-200',
+    Medium: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+    Low:    'bg-blue-100 text-blue-700 border-blue-200',
+};
+
 const SEVERITIES_ORDER: Finding['severity'][] = ['Critical', 'High', 'Medium', 'Low', 'Info'];
 const SEV_STYLE_DASH: Record<Finding['severity'], string> = {
     Critical: 'bg-red-100 text-red-700 border-red-200',
@@ -998,12 +1061,237 @@ const SEV_STYLE_DASH: Record<Finding['severity'], string> = {
 };
 const llmCacheKey = (id: string) => `llm-findings-v2-${id}`;
 
+// ── Real findings + terminal, shared by Dashboard and Console ──────
+interface ExecResponse { flowId: number; container: string; command: string; output: string; exitCode: number; }
+
+interface WsFinding { title: string; severity: Finding['severity']; category: string; target: string; }
+const RISK_TO_SEV: Record<string, Finding['severity']> = { critical: 'Critical', high: 'High', medium: 'Medium', low: 'Low', none: 'Info' };
+const WS_FINDING_TYPES = ['finding', 'vulnerability', 'threat'];
+
+// deriveWsFindings turns World State (knowledge-graph) entities saved for a flow
+// into a flat findings list — the real, DB-backed source (not LLM guesses).
+const deriveWsFindings = (entities: WorldStateEntity[]): WsFinding[] =>
+    entities
+        .filter((e) => WS_FINDING_TYPES.includes(e.type))
+        .map((e) => ({
+            title: e.label,
+            severity: RISK_TO_SEV[e.riskLevel] ?? 'Info',
+            category: e.type,
+            target: e.metadata?.source || e.metadata?.url || e.metadata?.domain || '',
+        }))
+        .sort((a, b) => SEVERITIES_ORDER.indexOf(a.severity) - SEVERITIES_ORDER.indexOf(b.severity));
+
+// FlowFindings — Security Findings for a flow, read from the World State DB/graph.
+const FlowFindings = ({ flowId }: { flowId: string }) => {
+    const [findings, setFindings] = useState<WsFinding[]>([]);
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        if (!flowId) { setFindings([]); return; }
+        setLoading(true);
+        axios
+            .get<never, WorldStateResponse>(`/flows/${flowId}/worldstate`)
+            .then((res) => setFindings(deriveWsFindings(res.data?.entities ?? [])))
+            .catch(() => setFindings([]))
+            .finally(() => setLoading(false));
+    }, [flowId]);
+
+    const counts = useMemo(() => {
+        const c: Record<Finding['severity'], number> = { Critical: 0, High: 0, Medium: 0, Low: 0, Info: 0 };
+        findings.forEach((f) => { c[f.severity] = (c[f.severity] ?? 0) + 1; });
+        return c;
+    }, [findings]);
+
+    const sevDot: Record<Finding['severity'], string> = {
+        Critical: 'bg-red-500',
+        High:     'bg-orange-500',
+        Medium:   'bg-yellow-500',
+        Low:      'bg-blue-500',
+        Info:     'bg-slate-400',
+    };
+
+    return (
+        <div className="flex flex-col rounded-xl border border-border/60 bg-card shadow-sm overflow-hidden">
+            {/* Colored top strip */}
+            <div className="h-1 w-full bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 shrink-0" />
+
+            <div className="flex items-center justify-between px-4 pt-4 pb-2">
+                <div className="flex items-center gap-2">
+                    <div className="flex size-7 items-center justify-center rounded-lg bg-red-500/10">
+                        <ShieldAlert className="size-3.5 text-red-500" />
+                    </div>
+                    <span className="text-sm font-semibold">Security Findings</span>
+                </div>
+                <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">{findings.length} total</span>
+            </div>
+
+            {/* Severity summary bar */}
+            <div className="flex items-center gap-2 px-4 pb-3">
+                {(['Critical','High','Medium','Low'] as Finding['severity'][]).map((sev) => (
+                    <div className="flex items-center gap-1" key={sev}>
+                        <span className={`size-2 rounded-full ${sevDot[sev]}`} />
+                        <span className="text-[11px] font-semibold text-foreground">{counts[sev]}</span>
+                        <span className="text-[10px] text-muted-foreground">{sev}</span>
+                    </div>
+                ))}
+            </div>
+
+            <div className="max-h-[480px] overflow-y-auto border-t border-border/40 px-4">
+                {loading ? (
+                    <div className="flex items-center justify-center py-8 text-xs text-muted-foreground">
+                        <Loader2 className="mr-2 size-3.5 animate-spin" /> Loading findings…
+                    </div>
+                ) : findings.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center gap-2 py-10">
+                        <ShieldCheck className="size-8 text-muted-foreground/30" />
+                        <p className="text-xs text-muted-foreground">{flowId ? 'No findings yet for this flow.' : 'Select an engagement above.'}</p>
+                    </div>
+                ) : (
+                    <div className="flex flex-col divide-y divide-border/40">
+                        {findings.map((f, i) => (
+                            <div className="flex items-start gap-3 py-2.5" key={i}>
+                                <span className={`mt-0.5 size-2 shrink-0 rounded-full ${sevDot[f.severity]}`} />
+                                <div className="min-w-0 flex-1">
+                                    <p className="text-xs font-medium leading-snug">{f.title}</p>
+                                    {f.target && <p className="mt-0.5 font-mono text-[10px] text-muted-foreground truncate">{f.target}</p>}
+                                </div>
+                                <span className={`shrink-0 rounded-full border px-1.5 py-0.5 text-[9px] font-semibold ${SEV_STYLE_DASH[f.severity]}`}>{f.severity}</span>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
+// FlowTerminal — one-shot command runner in the flow's Kali container.
+const FlowTerminal = ({ flowId }: { flowId: string }) => {
+    const [cmd, setCmd] = useState('');
+    const [running, setRunning] = useState(false);
+    const [history, setHistory] = useState<ExecResponse[]>([]);
+    const [termError, setTermError] = useState('');
+
+    useEffect(() => { setHistory([]); setTermError(''); }, [flowId]);
+
+    const runCmd = () => {
+        const command = cmd.trim();
+        if (!command || running || !flowId) return;
+        setRunning(true);
+        setTermError('');
+        axios
+            .post<unknown, { data: ExecResponse }>(`/flows/${flowId}/exec/`, { command })
+            .then((res) => { if (res.data) setHistory((h) => [...h, res.data]); setCmd(''); })
+            .catch((e) => setTermError(e instanceof Error ? e.message : 'Command failed'))
+            .finally(() => setRunning(false));
+    };
+
+    return (
+        <div className="flex flex-col rounded-xl border border-border/60 bg-card shadow-sm overflow-hidden">
+            {/* Terminal chrome header */}
+            <div className="flex items-center gap-3 border-b border-border/40 bg-zinc-900 px-4 py-2.5">
+                <div className="flex items-center gap-1.5">
+                    <span className="size-3 rounded-full bg-red-500/80" />
+                    <span className="size-3 rounded-full bg-yellow-500/80" />
+                    <span className="size-3 rounded-full bg-emerald-500/80" />
+                </div>
+                <div className="flex items-center gap-1.5 ml-2">
+                    <TerminalSquare className="size-3.5 text-zinc-400" />
+                    <span className="text-xs font-semibold text-zinc-300">Terminal</span>
+                    <span className="text-[10px] text-zinc-500">· Kali container</span>
+                </div>
+            </div>
+
+            {/* Output area */}
+            <div className="h-[430px] overflow-y-auto bg-zinc-950 p-3 font-mono text-[11px] leading-relaxed text-slate-100">
+                {history.length === 0 && !termError && (
+                    <p className="text-zinc-600">{flowId ? '# Ready. Type a command below (e.g. nmap -sV target.com)' : '# Select an engagement to attach terminal.'}</p>
+                )}
+                {history.map((h, i) => (
+                    <div className="mb-3" key={i}>
+                        <div className="flex items-center gap-1">
+                            <span className="text-emerald-500 opacity-70">{h.container || 'kali'}:/work</span>
+                            <span className="text-zinc-500">$</span>
+                            <span className="text-zinc-100 ml-1">{h.command}</span>
+                        </div>
+                        {h.output && <pre className="mt-1 whitespace-pre-wrap break-words text-zinc-300 pl-2 border-l border-zinc-800">{h.output}</pre>}
+                        {h.exitCode !== 0 && <div className="text-red-400 text-[10px] mt-0.5">↳ exit {h.exitCode}</div>}
+                    </div>
+                ))}
+                {running && <div className="flex items-center gap-2 text-zinc-400"><Loader2 className="size-3 animate-spin" /> running…</div>}
+                {termError && <div className="text-red-400 text-[10px] mt-1">✕ {termError}</div>}
+            </div>
+
+            {/* Input row */}
+            <div className="flex items-center gap-2 border-t border-border/40 bg-zinc-900/50 px-3 py-2">
+                <span className="font-mono text-xs text-emerald-500 shrink-0">$</span>
+                <Input
+                    className="h-7 flex-1 border-0 bg-transparent font-mono text-xs text-zinc-100 shadow-none placeholder:text-zinc-600 focus-visible:ring-0"
+                    disabled={!flowId || running}
+                    placeholder="command…"
+                    value={cmd}
+                    onChange={(e) => setCmd(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') runCmd(); }}
+                />
+                <button
+                    className="flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1 text-xs font-semibold text-white transition-colors hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95"
+                    disabled={!flowId || running || !cmd.trim()}
+                    type="button"
+                    onClick={runCmd}
+                >
+                    {running ? <Loader2 className="size-3 animate-spin" /> : <Play className="size-3" />}
+                    Run
+                </button>
+            </div>
+        </div>
+    );
+};
+
+// FlowSelect — shared flow dropdown.
+const FlowSelect = ({ flows, value, onChange }: { flows: { id: string; title: string }[]; value: string; onChange: (id: string) => void }) => (
+    <div className="flex items-center gap-3 rounded-xl border border-border/60 bg-card px-4 py-2.5 shadow-sm">
+        <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+            <GitFork className="size-3.5 text-primary" />
+        </div>
+        <span className="shrink-0 text-xs font-semibold text-foreground">Engagement</span>
+        <select
+            className="flex-1 bg-transparent text-sm font-medium text-foreground focus:outline-none cursor-pointer"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+        >
+            <option value="">— select a flow —</option>
+            {flows.map((f) => (
+                <option key={f.id} value={f.id}>#{f.id}  {f.title.length > 60 ? f.title.slice(0, 60) + '…' : f.title}</option>
+            ))}
+        </select>
+    </div>
+);
+
 // ── Dashboard section (real data) ─────────────────────────────────
 const DashboardSection = () => {
     const { flows } = useSidebarFlows();
     const [selectedFlowId, setSelectedFlowId] = useState('');
-    const [llmFindings, setLlmFindings] = useState<ExtractedFinding[]>([]);
-    const [llmLoading, setLlmLoading] = useState(false);
+    const [nextStep, setNextStep] = useState<NextStepResponse | null>(null);
+    const [nsLoading, setNsLoading] = useState(false);
+    const [nsError, setNsError] = useState('');
+
+    // Reset the assistant's prediction when the selected flow changes.
+    useEffect(() => {
+        setNextStep(null);
+        setNsError('');
+    }, [selectedFlowId]);
+
+    // Ask the AI assistant to predict the next pentest step from the flow's DB state.
+    const predictNextStep = () => {
+        if (!selectedFlowId || nsLoading) return;
+        setNsLoading(true);
+        setNsError('');
+        axios
+            .get<never, { data: NextStepResponse }>(`/flows/${selectedFlowId}/nextstep/`)
+            .then((res) => setNextStep(res.data ?? null))
+            .catch((e) => setNsError(e instanceof Error ? e.message : 'Failed to predict next step'))
+            .finally(() => setNsLoading(false));
+    };
 
     useEffect(() => {
         if (!selectedFlowId && flows.length > 0) {
@@ -1011,184 +1299,138 @@ const DashboardSection = () => {
         }
     }, [flows, selectedFlowId]);
 
-    // Fetch LLM findings for selected flow (with localStorage cache)
-    useEffect(() => {
-        if (!selectedFlowId) { setLlmFindings([]); return; }
-        try {
-            const cached = localStorage.getItem(llmCacheKey(selectedFlowId));
-            if (cached) {
-                const parsed = JSON.parse(cached) as Array<{ severity?: string; title?: string; target?: string; description?: string; cve?: string; remediation?: string; phase?: string }>;
-                setLlmFindings(parsed.map((f) => ({
-                    title: f.title ?? '',
-                    severity: f.severity ?? 'Info',
-                    target: f.target ?? '',
-                    description: f.description ?? '',
-                    cve: f.cve ?? '',
-                    remediation: f.remediation ?? '',
-                    phase: f.phase ?? '',
-                })));
-                return;
-            }
-        } catch { /* ignore */ }
-        setLlmLoading(true);
-        setLlmFindings([]);
-        axios
-            .get<never, { data: FindingsExtractResponse }>(`/flows/${selectedFlowId}/extract-findings/`)
-            .then((res) => {
-                const f = res.data?.findings ?? [];
-                setLlmFindings(f);
-                localStorage.setItem(llmCacheKey(selectedFlowId), JSON.stringify(f));
-            })
-            .catch(() => setLlmFindings([]))
-            .finally(() => setLlmLoading(false));
-    }, [selectedFlowId]);
-
-    const { loading } = useFlowQuery({
-        variables: { id: selectedFlowId },
-        skip: !selectedFlowId,
-    });
-
-    // Severity counts from LLM findings (real security findings)
-    const findingCounts = useMemo(() => {
-        const c: Record<Finding['severity'], number> = { Critical: 0, High: 0, Medium: 0, Low: 0, Info: 0 };
-        llmFindings.forEach((f) => {
-            const sev = SEVERITIES_ORDER.includes(f.severity as Finding['severity']) ? f.severity as Finding['severity'] : 'Info';
-            c[sev] = (c[sev] ?? 0) + 1;
-        });
-        return c;
-    }, [llmFindings]);
-
-    const findingTotal = llmFindings.length;
-
-    const donutSegments = useMemo(() =>
-        SEVERITIES_ORDER
-            .map((sev) => ({ color: SEV_COLORS[sev], label: sev, pct: findingTotal > 0 ? Math.round((findingCounts[sev] / findingTotal) * 100) : 0 }))
-            .filter((s) => s.pct > 0),
-    [findingCounts, findingTotal]);
-
     return (
         <>
-            {/* Flow selector */}
-            <div className="flex items-center gap-2">
-                <span className="text-xs font-medium text-muted-foreground shrink-0">Flow</span>
-                <select
-                    className="h-8 max-w-sm flex-1 rounded-md border border-border bg-background px-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
-                    value={selectedFlowId}
-                    onChange={(e) => setSelectedFlowId(e.target.value)}
-                >
-                    <option value="">— select a flow —</option>
-                    {flows.map((f) => (
-                        <option key={f.id} value={f.id}>
-                            #{f.id} {f.title.length > 55 ? f.title.slice(0, 55) + '…' : f.title}
-                        </option>
-                    ))}
-                </select>
-                {(loading || llmLoading) && <span className="text-[11px] text-muted-foreground animate-pulse">Loading…</span>}
+            <FlowSelect flows={flows} value={selectedFlowId} onChange={setSelectedFlowId} />
+
+            {/* Findings (real, from World State) + live terminal, side by side */}
+            <div className="grid grid-cols-2 gap-4">
+                <FlowFindings flowId={selectedFlowId} />
+                <FlowTerminal flowId={selectedFlowId} />
             </div>
 
-            {/* Stats row */}
-            <div className="grid grid-cols-3 gap-4">
-                <Card>
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-muted-foreground">Security Findings</CardTitle>
-                    </CardHeader>
-                    <CardContent className="flex flex-col gap-3 pt-0">
-                        <div className="text-4xl font-bold">{findingTotal}</div>
-                        <div className="text-xs text-muted-foreground">from selected flow</div>
-                        <div className="flex gap-3 text-sm font-semibold">
-                            <span className="text-red-600">{findingCounts.Critical}</span>
-                            <span className="text-orange-500">{findingCounts.High}</span>
-                            <span className="text-yellow-500">{findingCounts.Medium}</span>
-                            <span className="text-blue-500">{findingCounts.Low}</span>
-                        </div>
-                        <div className="flex gap-3 text-[10px] text-muted-foreground">
-                            <span>Critical</span><span>High</span><span>Medium</span><span>Low</span>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-muted-foreground">Findings by Severity</CardTitle>
-                    </CardHeader>
-                    <CardContent className="flex items-center gap-3 pt-0">
-                        {findingTotal > 0 ? (
-                            <>
-                                <DonutChart segments={donutSegments} />
-                                <div className="flex flex-col gap-1.5 text-xs">
-                                    {donutSegments.map(({ color, label, pct }) => (
-                                        <div className="flex items-center gap-1.5" key={label}>
-                                            <span className="inline-block size-2 rounded-full" style={{ background: color }} />
-                                            <span className="text-muted-foreground">{label} ({pct}%)</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </>
-                        ) : (
-                            <p className="py-2 text-xs text-muted-foreground">
-                                {selectedFlowId ? (llmLoading ? 'Analyzing…' : 'No findings for this flow.') : 'Select a flow above.'}
+            {/* AI Assistant — Next Step prediction */}
+            <Card>
+                <CardHeader className="pb-2">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                            <CardTitle className="text-sm font-semibold">AI Assistant — Next Step</CardTitle>
+                            <p className="mt-0.5 text-[11px] text-muted-foreground">
+                                Reads this flow&apos;s findings &amp; results and predicts what to do next.
                             </p>
-                        )}
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-muted-foreground">Findings Trend</CardTitle>
-                    </CardHeader>
-                    <CardContent className="pt-0">
-                        <TrendChart />
-                    </CardContent>
-                </Card>
-            </div>
-
-            {/* LLM-extracted Security Findings list */}
-            {(llmFindings.length > 0 || llmLoading) && (
-                <Card>
-                    <CardHeader className="pb-3">
-                        <div className="flex items-center justify-between">
-                            <CardTitle className="text-sm font-semibold">Security Findings</CardTitle>
-                            {llmLoading && <span className="text-[11px] text-muted-foreground animate-pulse">AI is analyzing…</span>}
-                            {!llmLoading && <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">{llmFindings.length}</span>}
                         </div>
-                    </CardHeader>
-                    <CardContent className="pt-0">
-                        {llmLoading ? (
-                            <div className="flex items-center justify-center py-6 text-xs text-muted-foreground">Analyzing flow with AI…</div>
-                        ) : (
+                        <Button
+                            className="gap-1.5 bg-blue-600 text-white hover:bg-blue-700"
+                            disabled={!selectedFlowId || nsLoading}
+                            size="sm"
+                            type="button"
+                            onClick={predictNextStep}
+                        >
+                            {nsLoading ? <Loader2 className="size-3.5 animate-spin" /> : <Sparkles className="size-3.5" />}
+                            {nsLoading ? 'Analyzing…' : nextStep ? 'Re-analyze' : 'Predict next step'}
+                        </Button>
+                    </div>
+                </CardHeader>
+                <CardContent className="pt-0">
+                    {nsError && <p className="py-2 text-xs text-red-600">{nsError}</p>}
+                    {!nsError && !nextStep && !nsLoading && (
+                        <p className="py-4 text-center text-xs text-muted-foreground">
+                            {selectedFlowId ? 'Click “Predict next step” to get AI recommendations for this flow.' : 'Select a flow above.'}
+                        </p>
+                    )}
+                    {nsLoading && (
+                        <div className="flex items-center justify-center py-6 text-xs text-muted-foreground">
+                            Analyzing engagement state with AI…
+                        </div>
+                    )}
+                    {!nsLoading && nextStep && (
+                        <div className="flex flex-col gap-3">
+                            <div className="flex flex-wrap items-center gap-2">
+                                {nextStep.currentPhase && (
+                                    <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700">
+                                        Phase: {nextStep.currentPhase}
+                                    </span>
+                                )}
+                            </div>
+                            {nextStep.summary && <p className="text-xs text-muted-foreground">{nextStep.summary}</p>}
                             <div className="flex flex-col divide-y">
-                                {llmFindings.map((f, i) => {
-                                    const sev = (SEVERITIES_ORDER.includes(f.severity as Finding['severity']) ? f.severity : 'Info') as Finding['severity'];
+                                {nextStep.recommendations?.map((r, i) => {
+                                    const prio = NS_PRIORITY_CLS[r.priority] ?? 'bg-gray-100 text-gray-600 border-gray-200';
                                     return (
                                         <div className="flex items-start gap-3 py-2.5" key={i}>
-                                            <span className={`mt-0.5 shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${SEV_STYLE_DASH[sev]}`}>{sev}</span>
+                                            <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-blue-50 text-[11px] font-bold text-blue-600">{i + 1}</span>
                                             <div className="min-w-0 flex-1">
-                                                <p className="text-xs font-medium leading-snug">{f.title}</p>
-                                                {f.target && <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">{f.target}</p>}
-                                                {f.description && <p className="mt-1 line-clamp-2 text-[11px] text-muted-foreground">{f.description}</p>}
+                                                <div className="flex flex-wrap items-center gap-2">
+                                                    <p className="text-xs font-medium leading-snug">{r.step}</p>
+                                                    {r.priority && <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${prio}`}>{r.priority}</span>}
+                                                    {r.phase && <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">{r.phase}</span>}
+                                                </div>
+                                                {r.rationale && <p className="mt-1 text-[11px] text-muted-foreground">{r.rationale}</p>}
+                                                {r.command && <p className="mt-1 overflow-x-auto rounded bg-muted px-2 py-1 font-mono text-[10px] text-foreground">{r.command}</p>}
                                             </div>
-                                            {f.cve && <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">{f.cve}</span>}
                                         </div>
                                     );
                                 })}
                             </div>
-                        )}
-                    </CardContent>
-                </Card>
-            )}
+                            {nextStep.caution && (
+                                <p className="rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-[11px] text-amber-800">
+                                    ⚠ {nextStep.caution}
+                                </p>
+                            )}
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
 
             <WorldStateDashboardSection />
         </>
     );
 };
 
+// ── Console section (findings + live terminal to the flow's Kali container) ──
+const ConsoleSection = () => {
+    const { flows } = useSidebarFlows();
+    const [selectedFlowId, setSelectedFlowId] = useState('');
+
+    useEffect(() => {
+        if (!selectedFlowId && flows.length > 0) setSelectedFlowId(flows[0]?.id ?? '');
+    }, [flows, selectedFlowId]);
+
+    return (
+        <>
+            <FlowSelect flows={flows} value={selectedFlowId} onChange={setSelectedFlowId} />
+            <div className="grid grid-cols-2 gap-4">
+                <FlowFindings flowId={selectedFlowId} />
+                <FlowTerminal flowId={selectedFlowId} />
+            </div>
+        </>
+    );
+};
+
 // ── Main page ──────────────────────────────────────────────────────
-const WebPentest = ({ mode = 'dashboard' }: { mode?: 'dashboard' | 'phases' }) => {
+const WebPentest = ({ mode = 'dashboard' }: { mode?: 'dashboard' | 'phases' | 'console' }) => {
     const navigate = useNavigate();
     const [target, setTarget] = useState('');
     const [cookies, setCookies] = useState('');
     const [planningScope, setPlanningScope] = useState<string[]>([]);
     const [showPlanning, setShowPlanning] = useState(false);
+
+    // Extract phase inputs (target, scope list, session cookies) from pasted
+    // free-form text via the LLM endpoint and merge them into the shared inputs.
+    // Shared by every phase card's autofill box; throws so the card shows the error.
+    const fillFromText = async (text: string) => {
+        const res = await axios.post<unknown, { data: { scope?: { value?: string }[]; cookies?: string } }>(
+            '/planning/extract',
+            { text },
+        );
+        const d = res.data;
+        const targets = (d?.scope ?? []).map((s) => (s.value ?? '').trim()).filter(Boolean);
+        if (targets.length) {
+            setPlanningScope((prev) => Array.from(new Set([...prev, ...targets])));
+            if (!target.trim() && targets[0]) setTarget(targets[0]);
+        }
+        if (d?.cookies?.trim()) setCookies(d.cookies.trim());
+    };
 
     const handleLaunch = (phase: PentestPhase) => {
         const t = target.trim();
@@ -1210,14 +1452,17 @@ const WebPentest = ({ mode = 'dashboard' }: { mode?: 'dashboard' | 'phases' }) =
 
     return (
         <>
-            <header className="sticky top-0 z-10 flex h-12 shrink-0 items-center gap-2 border-b bg-background px-4">
-                <Breadcrumb>
-                    <BreadcrumbList>
-                        <BreadcrumbItem>
-                            <BreadcrumbPage>{mode === 'phases' ? 'Phases' : 'Dashboard'}</BreadcrumbPage>
-                        </BreadcrumbItem>
-                    </BreadcrumbList>
-                </Breadcrumb>
+            <header className="sticky top-0 z-10 flex h-12 shrink-0 items-center gap-3 border-b border-border/60 bg-background/80 backdrop-blur-md px-6">
+                <div className="flex items-center gap-2">
+                    <div className={`size-2 rounded-full ${mode === 'phases' ? 'bg-blue-500' : mode === 'console' ? 'bg-emerald-500' : 'bg-violet-500'}`} />
+                    <span className="text-sm font-semibold">
+                        {mode === 'phases' ? 'Phases' : mode === 'console' ? 'Console' : 'Dashboard'}
+                    </span>
+                </div>
+                <span className="text-muted-foreground/40">·</span>
+                <span className="text-xs text-muted-foreground">
+                    {mode === 'phases' ? 'Launch AI-assisted pentest phases' : mode === 'console' ? 'Live terminal & findings' : 'Engagement overview'}
+                </span>
             </header>
 
             <div className="flex flex-col gap-5 p-6">
@@ -1225,30 +1470,61 @@ const WebPentest = ({ mode = 'dashboard' }: { mode?: 'dashboard' | 'phases' }) =
                 {/* ── PHASES mode ── */}
                 {mode === 'phases' && !showPlanning && (
                     <>
-                        {/* Page title */}
-                        <div className="flex items-center gap-3">
-                            <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10">
-                                <Globe className="size-5 text-primary" />
-                            </div>
-                            <div>
-                                <h1 className="text-xl font-semibold">Web Application Pentest</h1>
-                                <p className="text-sm text-muted-foreground">8-phase PTES methodology · OWASP WSTG-aligned</p>
-                            </div>
-                        </div>
+                        {/* Hero header */}
+                        <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br from-primary/5 via-background to-background p-6">
+                            {/* Decorative blobs */}
+                            <div className="pointer-events-none absolute -right-16 -top-16 size-48 rounded-full bg-primary/5 blur-3xl" />
+                            <div className="pointer-events-none absolute -bottom-8 left-24 size-32 rounded-full bg-blue-500/5 blur-2xl" />
 
-                        {/* Target input */}
-                        <div className="flex items-center gap-3 rounded-lg border bg-muted/30 px-4 py-2.5">
-                            <Globe className="size-4 shrink-0 text-muted-foreground" />
-                            <Input
-                                className="h-7 border-0 bg-transparent p-0 text-sm shadow-none focus-visible:ring-0"
-                                placeholder="Target: e.g. example.com or 10.0.0.1"
-                                value={target}
-                                onChange={(e) => setTarget(e.target.value)}
-                            />
+                            <div className="relative flex flex-col gap-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="flex size-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-blue-600 shadow-lg">
+                                        <Globe className="size-6 text-white" />
+                                    </div>
+                                    <div>
+                                        <div className="flex items-center gap-2">
+                                            <h1 className="text-2xl font-bold tracking-tight">Web Application Pentest</h1>
+                                            <span className="rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-[11px] font-semibold text-primary">PTES</span>
+                                        </div>
+                                        <p className="mt-0.5 text-sm text-muted-foreground">7-phase methodology · PTES-aligned · AI-assisted</p>
+                                    </div>
+                                </div>
+
+                                {/* Phase timeline pills */}
+                                <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+                                    {PHASE_METADATA.map((ph, i) => (
+                                        <div className="flex items-center gap-1.5 shrink-0" key={ph.id}>
+                                            <div className={`flex items-center gap-1.5 rounded-full bg-gradient-to-r ${phaseAccents[i] ?? phaseAccents[0]!} px-2.5 py-1 shadow-sm`}>
+                                                <span className="text-[10px] font-bold text-white opacity-80">{ph.number}</span>
+                                                <span className="text-[11px] font-semibold text-white">{ph.title}</span>
+                                            </div>
+                                            {i < PHASE_METADATA.length - 1 && (
+                                                <ChevronRight className="size-3 shrink-0 text-muted-foreground/50" />
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Target input */}
+                                <div className="flex items-center gap-3 rounded-xl border border-border bg-background/80 px-4 py-3 shadow-sm backdrop-blur-sm">
+                                    <Globe className="size-4 shrink-0 text-muted-foreground" />
+                                    <Input
+                                        className="h-7 border-0 bg-transparent p-0 text-sm font-medium shadow-none focus-visible:ring-0"
+                                        placeholder="Target: e.g. example.com · 10.0.0.1 · api.target.io"
+                                        value={target}
+                                        onChange={(e) => setTarget(e.target.value)}
+                                    />
+                                    {target && (
+                                        <span className="shrink-0 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-600">
+                                            Ready
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
                         </div>
 
                         {/* Phase grid */}
-                        <div className="grid grid-cols-3 gap-4">
+                        <div className="grid grid-cols-2 gap-4 xl:grid-cols-3 2xl:grid-cols-4">
                             {PHASE_METADATA.map((phase) => (
                                 <PhaseCard
                                     key={phase.id}
@@ -1256,6 +1532,7 @@ const WebPentest = ({ mode = 'dashboard' }: { mode?: 'dashboard' | 'phases' }) =
                                     disabled={phase.id === 'planning' ? false : noTarget}
                                     launchLabel={phase.id === 'planning' ? 'Open Planning' : undefined}
                                     cookies={phase.id === 'recon' || phase.id === 'auth-testing' ? cookies : undefined}
+                                    onAutofill={fillFromText}
                                     onCookiesChange={phase.id === 'recon' || phase.id === 'auth-testing' ? setCookies : undefined}
                                     scopeItems={phase.id === 'planning' ? planningScope : undefined}
                                     onScopeChange={phase.id === 'planning' ? setPlanningScope : undefined}
@@ -1274,10 +1551,14 @@ const WebPentest = ({ mode = 'dashboard' }: { mode?: 'dashboard' | 'phases' }) =
                 {/* ── DASHBOARD mode ── */}
                 {mode === 'dashboard' && <DashboardSection />}
 
+                {/* ── CONSOLE mode ── */}
+                {mode === 'console' && <ConsoleSection />}
+
             </div>
         </>
     );
 };
 
 export const WebPentestPhases = () => <WebPentest mode="phases" />;
+export const WebPentestConsole = () => <WebPentest mode="console" />;
 export default WebPentest;

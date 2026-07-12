@@ -14,6 +14,7 @@ async function req<T>(path: string, opts?: RequestInit): Promise<T> {
 export const api = {
     flows: () => req<Flow[]>('/flows/'),
     worldState: (flowId: string) => req<WorldStateResponse>(`/flows/${flowId}/worldstate`),
+    lifecycle: (flowId: string) => req<LifecycleResponse>(`/flows/${flowId}/worldstate/lifecycle`),
     exec: (flowId: string, command: string) =>
         req<ExecResult>(`/flows/${flowId}/exec/`, { method: 'POST', body: JSON.stringify({ command }) }),
     nextstep: (flowId: string) => req<NextStepResponse>(`/flows/${flowId}/nextstep/`),
@@ -53,6 +54,34 @@ export interface WorldStateResponse {
     entities: WorldStateEntity[];
     links: WorldStateLink[];
     flowId: number;
+}
+
+export interface LifecycleEntity {
+    id: number;
+    entityKey: string;
+    type: string;
+    state: string;
+    properties: Record<string, unknown>;
+    updatedAt: string;
+}
+
+export interface LifecycleTransition {
+    id: number;
+    entityId: number;
+    entityKey: string;
+    fromState: string;
+    toState: string;
+    agent: string;
+    evidence: Record<string, unknown>;
+    createdAt: string;
+}
+
+export interface LifecycleResponse {
+    flowId: number;
+    entities: LifecycleEntity[];
+    transitions: LifecycleTransition[];
+    snapshot: string;
+    counts: Record<string, number>;
 }
 
 export interface ExecResult {

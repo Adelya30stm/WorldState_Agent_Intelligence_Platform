@@ -19,6 +19,7 @@ import (
 	"pentagi/pkg/providers/provider"
 	"pentagi/pkg/templates"
 	"pentagi/pkg/tools"
+	"pentagi/pkg/worldstate"
 
 	"github.com/sirupsen/logrus"
 	"github.com/vxcontrol/langchaingo/llms"
@@ -294,9 +295,10 @@ func (fp *flowProvider) GenerateSubtasks(ctx context.Context, taskID int64) ([]t
 
 	generatorContext := map[string]map[string]any{
 		"user": {
-			"Task":     tasksInfo.Task,
-			"Tasks":    tasksInfo.Tasks,
-			"Subtasks": tasksInfo.Subtasks,
+			"Task":       tasksInfo.Task,
+			"Tasks":      tasksInfo.Tasks,
+			"Subtasks":   tasksInfo.Subtasks,
+			"WorldState": fp.worldStateProjection(ctx),
 		},
 		"system": {
 			"SubtaskListToolName":     tools.SubtaskListToolName,
@@ -386,6 +388,7 @@ func (fp *flowProvider) RefineSubtasks(ctx context.Context, taskID int64) ([]too
 			"Tasks":             tasksInfo.Tasks,
 			"PlannedSubtasks":   subtasksInfo.Planned,
 			"CompletedSubtasks": subtasksInfo.Completed,
+			"WorldState":        fp.worldStateProjection(ctx),
 		},
 		"system": {
 			"SubtaskPatchToolName":    tools.SubtaskPatchToolName,
@@ -707,22 +710,24 @@ func (fp *flowProvider) PrepareAgentChain(ctx context.Context, taskID, subtaskID
 	}
 
 	systemAgentTmpl, err := fp.prompter.RenderTemplate(templates.PromptTypePrimaryAgent, map[string]any{
-		"FinalyToolName":          tools.FinalyToolName,
-		"SearchToolName":          tools.SearchToolName,
-		"PentesterToolName":       tools.PentesterToolName,
-		"CoderToolName":           tools.CoderToolName,
-		"AdviceToolName":          tools.AdviceToolName,
-		"MemoristToolName":        tools.MemoristToolName,
-		"MaintenanceToolName":     tools.MaintenanceToolName,
-		"SummarizationToolName":   cast.SummarizationToolName,
-		"SummarizedContentPrefix": strings.ReplaceAll(csum.SummarizedContentPrefix, "\n", "\\n"),
-		"AskUserToolName":         tools.AskUserToolName,
-		"AskUserEnabled":          fp.askUser,
-		"ExecutionContext":        executionContext,
-		"Lang":                    fp.language,
-		"DockerImage":             fp.image,
-		"CurrentTime":             getCurrentTime(),
-		"ToolPlaceholder":         ToolPlaceholder,
+		"FinalyToolName":            tools.FinalyToolName,
+		"SearchToolName":            tools.SearchToolName,
+		"PentesterToolName":         tools.PentesterToolName,
+		"CoderToolName":             tools.CoderToolName,
+		"AdviceToolName":            tools.AdviceToolName,
+		"MemoristToolName":          tools.MemoristToolName,
+		"MaintenanceToolName":       tools.MaintenanceToolName,
+		"WorldStateQueryToolName":   tools.WorldStateQueryToolName,
+		"WorldStateUpdateToolName":  tools.WorldStateUpdateToolName,
+		"SummarizationToolName":     cast.SummarizationToolName,
+		"SummarizedContentPrefix":   strings.ReplaceAll(csum.SummarizedContentPrefix, "\n", "\\n"),
+		"AskUserToolName":           tools.AskUserToolName,
+		"AskUserEnabled":            fp.askUser,
+		"ExecutionContext":          executionContext,
+		"Lang":                      fp.language,
+		"DockerImage":               fp.image,
+		"CurrentTime":               getCurrentTime(),
+		"ToolPlaceholder":           ToolPlaceholder,
 	})
 	if err != nil {
 		logger.WithError(err).Error("failed to get system prompt for primary agent template")
@@ -1024,6 +1029,18 @@ func (fp *flowProvider) updateMsgLogResult(
 	}
 
 	return msgLog.UpdateMsgResult(ctx, msgID, streamID, result, resultFormat)
+}
+
+// worldStateProjection returns a compact XML snapshot for planner prompts.
+// Failures are soft — empty/unavailable state must not block planning.
+func (fp *flowProvider) worldStateProjection(ctx context.Context) string {
+	proj, err := worldstate.BuildProjection(ctx, fp.db, fp.flowID)
+	if err != nil {
+		logrus.WithContext(ctx).WithError(err).WithField("flow_id", fp.flowID).
+			Warn("failed to build world state projection for planner")
+		return ""
+	}
+	return proj.Text()
 }
 
 func (fp *flowProvider) putAgentLog(

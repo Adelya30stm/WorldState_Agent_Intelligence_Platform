@@ -145,6 +145,20 @@ type GraphitiSearchAction struct {
 	Message        string   `json:"message" jsonschema:"required,title=Search message" jsonschema_description:"Not so long message with the summary of the search query and expected results to send to the user in user's language only"`
 }
 
+type WorldStateQueryAction struct {
+	Type    string `json:"type,omitempty" jsonschema:"enum=host,enum=endpoint,enum=credential,enum=finding" jsonschema_description:"Optional entity type filter"`
+	State   string `json:"state,omitempty" jsonschema:"enum=unknown,enum=discovered,enum=scanning,enum=assessed,enum=vulnerable,enum=exploited,enum=remediated" jsonschema_description:"Optional lifecycle state filter"`
+	Message string `json:"message" jsonschema:"required,title=Query message" jsonschema_description:"Short user-facing note about why you are querying world state, in the user's language"`
+}
+
+type WorldStateUpdateAction struct {
+	EntityKey  string `json:"entity_key" jsonschema:"required" jsonschema_description:"Canonical key, e.g. host:example.com, endpoint:https://example.com/login, credential:admin, finding:cve-2021-44228"`
+	Type       string `json:"type" jsonschema:"required,enum=host,enum=endpoint,enum=credential,enum=finding" jsonschema_description:"Entity type"`
+	ToState    string `json:"to_state" jsonschema:"required,enum=discovered,enum=scanning,enum=assessed,enum=vulnerable,enum=exploited,enum=remediated" jsonschema_description:"Target lifecycle state (must be a valid one-step transition from current state)"`
+	Properties string `json:"properties,omitempty" jsonschema_description:"Optional JSON object string with extra entity properties"`
+	Message    string `json:"message" jsonschema:"required,title=Update message" jsonschema_description:"Short user-facing note describing what changed, in the user's language"`
+}
+
 type EnricherResult struct {
 	Result  string `json:"result" jsonschema:"required,title=Enricher result" jsonschema_description:"Fully detailed report or error message what you can enriches of the user's question from different sources to take advice according to this data in English"`
 	Message string `json:"message" jsonschema:"required,title=Enricher result message" jsonschema_description:"Not so long message with the result and short view of the enriched data to send to the user in user's language only"`

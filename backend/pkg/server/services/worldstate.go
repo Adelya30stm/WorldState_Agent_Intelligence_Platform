@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"regexp"
@@ -10,10 +11,12 @@ import (
 	"strings"
 	"time"
 
+	"pentagi/pkg/database"
 	"pentagi/pkg/graphiti"
 	"pentagi/pkg/server/logger"
 	"pentagi/pkg/server/models"
 	"pentagi/pkg/server/response"
+	"pentagi/pkg/worldstate"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
@@ -610,3 +613,151 @@ func riskFromNeo4jLabels(labels []string, name string) string {
 	}
 	return "none"
 }
+
+// ─── Persisted lifecycle (PG world_state_*) ───────────────────────────────────
+
+type lifecycleEntity struct {
+	ID         int64           `json:"id"`
+	EntityKey  string          `json:"entityKey"`
+	Type       string          `json:"type"`
+	State      string          `json:"state"`
+	Properties json.RawMessage `json:"properties"`
+	UpdatedAt  time.Time       `json:"updatedAt"`
+}
+
+type lifecycleTransition struct {
+	ID        int64           `json:"id"`
+	EntityID  int64           `json:"entityId"`
+	EntityKey string          `json:"entityKey"`
+	FromState string          `json:"fromState"`
+	ToState   string          `json:"toState"`
+	Agent     string          `json:"agent"`
+	Evidence  json.RawMessage `json:"evidence"`
+	CreatedAt time.Time       `json:"createdAt"`
+}
+
+type lifecycleResponse struct {
+	FlowID      uint64                `json:"flowId"`
+	Entities    []lifecycleEntity     `json:"entities"`
+	Transitions []lifecycleTransition `json:"transitions"`
+	Snapshot    string                `json:"snapshot"`
+	Counts      map[string]int        `json:"counts"`
+}
+
+// GetLifecycle returns persisted World State entities + transition audit trail.
+// @Summary Get persisted World State lifecycle
+// @Tags WorldState
+// @Produce json
+// @Security BearerAuth
+// @Param flowID path int true "flow id" minimum(0)
+// @Success 200 {object} response.successResp{data=lifecycleResponse}
+// @Failure 403 {object} response.errorResp
+// @Failure 404 {object} response.errorResp
+// @Router /flows/{flowID}/worldstate/lifecycle [get]
+func (s *WorldStateService) GetLifecycle(c *gin.Context) {
+	flowID, err := strconv.ParseUint(c.Param("flowID"), 10, 64)
+	if err != nil {
+		response.Error(c, response.ErrFlowsInvalidRequest, err)
+		return
+	}
+
+	uid := c.GetUint64("uid")
+	privs := c.GetStringSlice("prm")
+
+	var flow models.Flow
+	var scope func(db *gorm.DB) *gorm.DB
+	if slices.Contains(privs, "flows.admin") {
+		scope = func(db *gorm.DB) *gorm.DB { return db.Where("id = ?", flowID) }
+	} else if slices.Contains(privs, "flows.view") {
+		scope = func(db *gorm.DB) *gorm.DB { return db.Where("id = ? AND user_id = ?", flowID, uid) }
+	} else {
+		response.Error(c, response.ErrNotPermitted, nil)
+		return
+	}
+
+	if err = s.db.Model(&flow).Scopes(scope).Take(&flow).Error; err != nil {
+		if gorm.IsRecordNotFoundError(err) {
+			response.Error(c, response.ErrFlowsNotFound, err)
+		} else {
+			response.Error(c, response.ErrInternal, err)
+		}
+		return
+	}
+
+	type entRow struct {
+		ID         int64           `gorm:"column:id"`
+		EntityKey  string          `gorm:"column:entity_key"`
+		Type       string          `gorm:"column:type"`
+		State      string          `gorm:"column:state"`
+		Properties json.RawMessage `gorm:"column:properties"`
+		UpdatedAt  time.Time       `gorm:"column:updated_at"`
+	}
+	var rows []entRow
+	if err = s.db.Raw(`
+		SELECT id, entity_key, type, state::text AS state, properties, updated_at
+		FROM world_state_entities WHERE flow_id = ? ORDER BY updated_at DESC`, flowID).
+		Scan(&rows).Error; err != nil {
+		logger.FromContext(c).WithError(err).Error("lifecycle entities query failed")
+		response.Error(c, response.ErrInternal, err)
+		return
+	}
+	entities := make([]lifecycleEntity, 0, len(rows))
+	counts := map[string]int{}
+	for _, r := range rows {
+		entities = append(entities, lifecycleEntity{
+			ID: r.ID, EntityKey: r.EntityKey, Type: r.Type, State: r.State,
+			Properties: r.Properties, UpdatedAt: r.UpdatedAt,
+		})
+		counts[r.State]++
+	}
+
+	type trRow struct {
+		ID        int64           `gorm:"column:id"`
+		EntityID  int64           `gorm:"column:entity_id"`
+		EntityKey string          `gorm:"column:entity_key"`
+		FromState string          `gorm:"column:from_state"`
+		ToState   string          `gorm:"column:to_state"`
+		Agent     string          `gorm:"column:agent"`
+		Evidence  json.RawMessage `gorm:"column:evidence"`
+		CreatedAt time.Time       `gorm:"column:created_at"`
+	}
+	var trows []trRow
+	if err = s.db.Raw(`
+		SELECT t.id, t.entity_id, e.entity_key,
+		       t.from_state::text AS from_state, t.to_state::text AS to_state,
+		       t.agent, t.evidence, t.created_at
+		FROM world_state_transitions t
+		JOIN world_state_entities e ON e.id = t.entity_id
+		WHERE e.flow_id = ?
+		ORDER BY t.created_at DESC
+		LIMIT 100`, flowID).Scan(&trows).Error; err != nil {
+		logger.FromContext(c).WithError(err).Error("lifecycle transitions query failed")
+		response.Error(c, response.ErrInternal, err)
+		return
+	}
+	transitions := make([]lifecycleTransition, 0, len(trows))
+	for _, r := range trows {
+		transitions = append(transitions, lifecycleTransition{
+			ID: r.ID, EntityID: r.EntityID, EntityKey: r.EntityKey,
+			FromState: r.FromState, ToState: r.ToState, Agent: r.Agent,
+			Evidence: r.Evidence, CreatedAt: r.CreatedAt,
+		})
+	}
+
+	snapshot := ""
+	if sqlDB := s.db.DB(); sqlDB != nil {
+		q := database.New(sqlDB)
+		if proj, err := worldstate.BuildProjection(c.Request.Context(), q, int64(flowID)); err == nil {
+			snapshot = proj.Text()
+		}
+	}
+
+	response.Success(c, http.StatusOK, lifecycleResponse{
+		FlowID:      flowID,
+		Entities:    entities,
+		Transitions: transitions,
+		Snapshot:    snapshot,
+		Counts:      counts,
+	})
+}
+

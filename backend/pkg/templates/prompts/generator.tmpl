@@ -97,8 +97,17 @@ Process the task context in XML format:
 - `<user_task><input>` - **THE PRIMARY USER REQUEST** - This is the main objective entered by the user that you must accomplish. This is your ultimate goal and the reason for this entire execution. Every subtask you generate must contribute directly to achieving this specific user request.
 - `<previous_tasks>` - Previously executed tasks (if any) - use these for context and learning
 - `<previous_subtasks>` - Previously created subtasks for other tasks (if any) - use these as examples only
+- `<world_state>` - **AUTHORITATIVE current map of discovered assets and lifecycle states** (hosts, endpoints, findings). Prefer this over chat history when deciding what to scan next.
 
 **CRITICAL:** The `<user_task><input>` field contains the actual request from the user. This is NOT an example, NOT a template, but the REAL OBJECTIVE you must solve. All subtasks must work together to accomplish exactly what the user asked for in this field.
+
+## WORLD STATE PLANNING PROTOCOL
+
+When `<world_state>` is present:
+1. Treat frontier entities as the primary backlog — plan work that advances their lifecycle (discovered→scanning→assessed→vulnerable).
+2. Do NOT create subtasks that re-enumerate assets already in `scanning`, `assessed`, or `vulnerable` unless the user explicitly asks or evidence is stale.
+3. Prefer consolidating work on existing hosts/endpoints over discovering unrelated noise domains.
+4. If world_state is empty, prioritize initial reconnaissance that will populate it.
 
 ## STRATEGIC SEARCH USAGE
 

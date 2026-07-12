@@ -122,6 +122,20 @@ func (p Providers) Get(pname ProviderName) (Provider, error) {
 	return provider, nil
 }
 
+// Preferred returns OpenAI when available, otherwise the first provider from ListNames.
+func (p Providers) Preferred() (Provider, error) {
+	if prv, err := p.Get(DefaultProviderNameOpenAI); err == nil {
+		return prv, nil
+	}
+
+	names := p.ListNames()
+	if len(names) == 0 {
+		return nil, fmt.Errorf("no providers available")
+	}
+
+	return p.Get(names[0])
+}
+
 func (p Providers) ListNames() ProvidersListNames {
 	listNames := make([]ProviderName, 0, len(p))
 	for pname := range p {

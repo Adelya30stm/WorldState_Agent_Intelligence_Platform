@@ -36,8 +36,12 @@ export const findProviderByName = (providerName: string, providers: Provider[]):
 };
 
 /**
- * Sorts providers by name alphabetically
+ * Sorts providers with OpenAI first, then alphabetically
  */
 export const sortProviders = (providers: Provider[]): Provider[] => {
-    return [...providers].sort((a, b) => a.name.localeCompare(b.name));
+    return [...providers].sort((a, b) => {
+        if (a.name === 'openai') return -1;
+        if (b.name === 'openai') return 1;
+        return a.name.localeCompare(b.name);
+    });
 };

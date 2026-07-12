@@ -148,6 +148,9 @@ func NewRouter(
 	scannerImportService := scanners.NewScannerImportService(providers.GraphitiClient())
 	webPentestService := services.NewWebPentestService(orm)
 	findingsExtractService := services.NewFindingsExtractService(orm, providers)
+	planningExtractService := services.NewPlanningExtractService(providers)
+	nextStepService := services.NewNextStepService(orm, providers)
+	execService := services.NewExecService(orm)
 	tokenService := services.NewTokenService(orm, cfg.CookieSigningSalt, tokenCache, subscriptions)
 	graphqlService := services.NewGraphqlService(
 		db, cfg, baseURL, cfg.CorsOrigins, tokenCache, providers, controller, subscriptions,
@@ -232,6 +235,9 @@ func NewRouter(
 		setAttackPathsGroup(privateGroup, attackPathService)
 		setScannerImportGroup(privateGroup, scannerImportService)
 		setFindingsExtractGroup(privateGroup, findingsExtractService)
+		setPlanningExtractGroup(privateGroup, planningExtractService)
+		setNextStepGroup(privateGroup, nextStepService)
+		setExecGroup(privateGroup, execService)
 		setTasksGroup(privateGroup, taskService)
 		setSubtasksGroup(privateGroup, subtaskService)
 		setContainersGroup(privateGroup, containerService)
@@ -594,6 +600,7 @@ func setWorldStateGroup(parent *gin.RouterGroup, svc *services.WorldStateService
 	worldStateGroup := parent.Group("/flows/:flowID/worldstate")
 	{
 		worldStateGroup.GET("/", svc.GetWorldState)
+		worldStateGroup.GET("/lifecycle", svc.GetLifecycle)
 	}
 }
 
@@ -613,5 +620,26 @@ func setFindingsExtractGroup(parent *gin.RouterGroup, svc *services.FindingsExtr
 	g := parent.Group("/flows/:flowID/extract-findings")
 	{
 		g.GET("/", svc.ExtractFindings)
+	}
+}
+
+func setPlanningExtractGroup(parent *gin.RouterGroup, svc *services.PlanningExtractService) {
+	g := parent.Group("/planning")
+	{
+		g.POST("/extract", svc.ExtractPlanning)
+	}
+}
+
+func setNextStepGroup(parent *gin.RouterGroup, svc *services.NextStepService) {
+	g := parent.Group("/flows/:flowID/nextstep")
+	{
+		g.GET("/", svc.PredictNextStep)
+	}
+}
+
+func setExecGroup(parent *gin.RouterGroup, svc *services.ExecService) {
+	g := parent.Group("/flows/:flowID/exec")
+	{
+		g.POST("/", svc.RunCommand)
 	}
 }

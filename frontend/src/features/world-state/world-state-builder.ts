@@ -91,13 +91,15 @@ function extractDomains(text: string): string[] {
 
     const d = new RegExp(DOMAIN_RE.source, 'g');
     while ((m = d.exec(text)) !== null) {
-        const v = m[1].toLowerCase();
+        const v = m[1]?.toLowerCase();
+        if (!v) continue;
         if (!NOISE_DOMAINS.has(v) && v.includes('.') && !isLikelyCodeRef(v)) out.add(v);
     }
 
     const ip = new RegExp(IPV4_RE.source, 'g');
     while ((m = ip.exec(text)) !== null) {
         const v = m[1];
+        if (!v) continue;
         if (!v.startsWith('127.') && !v.startsWith('0.')) out.add(v);
     }
 

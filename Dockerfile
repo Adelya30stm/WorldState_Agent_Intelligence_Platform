@@ -82,9 +82,11 @@ COPY backend/ .
 RUN --mount=type=cache,target=/go/pkg/mod \
     go mod download && go mod verify
 
-# Install go-licenses tool for license extraction
+# Install go-licenses tool for license extraction (best-effort: the license CSV
+# step below already tolerates its absence, so a transient install failure here
+# must not fail the whole image build).
 RUN --mount=type=cache,target=/go/pkg/mod \
-    go install github.com/google/go-licenses@latest
+    go install github.com/google/go-licenses@latest || true
 
 # Generate license reports for backend dependencies
 RUN mkdir -p /licenses/backend && \

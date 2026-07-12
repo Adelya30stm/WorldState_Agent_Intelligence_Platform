@@ -9,11 +9,12 @@ import { DirectiveFeed } from '@/components/DirectiveFeed';
 import { NextStepPanel } from '@/components/NextStepPanel';
 import { AgentStateTimeline } from '@/components/AgentStateTimeline';
 import { StateMachineMap } from '@/components/StateMachineMap';
+import { LifecyclePanel } from '@/components/LifecyclePanel';
 import { useWorldState } from '@/hooks/useWorldState';
 import { useAgentTransitions, AgentStatus } from '@/hooks/useAgentTransitions';
-import { ExternalLink, GitBranch } from 'lucide-react';
+import { ExternalLink, GitBranch, Map } from 'lucide-react';
 
-type Tab = 'graph' | 'transitions';
+type Tab = 'graph' | 'lifecycle' | 'transitions';
 
 // Rabbit logo — sitting side profile
 function RabbitIcon({ size = 28, color = 'white' }: { size?: number; color?: string }) {
@@ -83,7 +84,8 @@ function WorkspaceContent() {
                 <div className="flex items-center gap-1 bg-[#0a0d14] border border-indigo-900/30 rounded-lg p-0.5 mx-2">
                     {([
                         { id: 'graph', label: 'World State', icon: <RabbitIcon size={14} /> },
-                        { id: 'transitions', label: 'Transitions', icon: <GitBranch size={11} />, badge: transitions.filter(t => t.fromState !== null).length },
+                        { id: 'lifecycle', label: 'Lifecycle', icon: <Map size={11} /> },
+                        { id: 'transitions', label: 'Agent Transitions', icon: <GitBranch size={11} />, badge: transitions.filter(t => t.fromState !== null).length },
                     ] as const).map(t => (
                         <button
                             key={t.id}
@@ -150,9 +152,12 @@ function WorkspaceContent() {
                                 <NextStepPanel flowId={flowId} />
                             </div>
                         </>
+                    ) : tab === 'lifecycle' ? (
+                        <div className="flex-1 min-h-0">
+                            <LifecyclePanel flowId={flowId} />
+                        </div>
                     ) : (
                         <>
-                            {/* State machine diagram + transitions log */}
                             <div className="shrink-0">
                                 <StateMachineMap currentStates={currentStates} />
                             </div>

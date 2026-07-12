@@ -16,10 +16,12 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
+import { AiAutofillBox } from '@/components/ai-autofill-box';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
+import { axios } from '@/lib/axios';
 
 // ── Types ──────────────────────────────────────────────────────────────
 
@@ -191,9 +193,9 @@ const PRESETS: Record<string, Partial<PlanState>> = {
 };
 
 const defaultPlan: PlanState = {
-    name: '', client: '', assessmentType: ASSESSMENT_TYPES[0], engagementModel: 'greybox',
+    name: '', client: '', assessmentType: ASSESSMENT_TYPES[0]!, engagementModel: 'greybox',
     startDate: '', endDate: '', primaryContact: '', emergencyContact: '',
-    testingWindow: TESTING_WINDOWS[0],
+    testingWindow: TESTING_WINDOWS[0]!,
     allowedCategories: ['Reconnaissance', 'Vulnerability validation'],
     prohibitedActivities: ['Denial of Service', 'Phishing', 'Social engineering', 'Data exfiltration'],
     rateLimit: '', sensitiveExclusions: '', stopConditions: '',
@@ -211,6 +213,59 @@ const defaultPlan: PlanState = {
 
 const uid = () => Math.random().toString(36).slice(2, 9);
 const pct = (n: number, d: number) => Math.round((n / d) * 100);
+
+// pick returns v only if it is one of the allowed options, else the fallback —
+// used to normalize LLM-extracted enum values against the form's <select> options.
+const pick = (v: string | undefined, allowed: readonly string[], fallback: string): string =>
+    v && allowed.includes(v) ? v : fallback;
+
+// Shape returned by POST /planning/extract — a partial, best-effort mapping of
+// free-form text onto the planning form. All fields are optional.
+interface ExtractedPlan {
+    name?: string;
+    client?: string;
+    assessmentType?: string;
+    engagementModel?: string;
+    startDate?: string;
+    endDate?: string;
+    primaryContact?: string;
+    emergencyContact?: string;
+    testingWindow?: string;
+    allowedCategories?: string[];
+    prohibitedActivities?: string[];
+    rateLimit?: string;
+    sensitiveExclusions?: string;
+    stopConditions?: string;
+    escalationProcess?: string;
+    evidenceHandling?: string;
+    dataHandling?: string;
+    reportingExpectations?: string;
+    frameworks?: string[];
+    businessCriticalAssets?: string;
+    highRiskRoles?: string;
+    trustBoundaries?: string;
+    authFlows?: string;
+    externalIntegrations?: string;
+    sensitiveDataTypes?: string;
+    knownConcerns?: string;
+    assumptions?: string;
+    constraints?: string;
+    credAccounts?: string;
+    credRoles?: string;
+    credAccessLimits?: string;
+    scope?: Partial<Omit<ScopeItem, 'id'>>[];
+    assets?: Partial<Omit<AssetItem, 'id'>>[];
+}
+
+// String PlanState fields that are merged verbatim (non-empty wins) from extraction.
+const EXTRACT_STRING_KEYS: (keyof PlanState)[] = [
+    'name', 'client', 'startDate', 'endDate', 'primaryContact', 'emergencyContact',
+    'rateLimit', 'sensitiveExclusions', 'stopConditions', 'escalationProcess',
+    'evidenceHandling', 'dataHandling', 'reportingExpectations',
+    'businessCriticalAssets', 'highRiskRoles', 'trustBoundaries', 'authFlows',
+    'externalIntegrations', 'sensitiveDataTypes', 'knownConcerns', 'assumptions',
+    'constraints', 'credAccounts', 'credRoles', 'credAccessLimits',
+];
 
 const critCls = (c: string) =>
     c === 'Critical' ? 'border-red-300 bg-red-50 text-red-700'
@@ -269,7 +324,7 @@ const RadioGroup = ({ options, value, onChange }: { options: string[]; value: st
 
 const SectionHdr = ({ icon, title, subtitle, progress, open, onToggle }: {
     icon: React.ReactNode; title: string; subtitle?: string;
-    progress: number; open: boolean; onToggle: () => void;
+    progress: number; open: boolean | undefined; onToggle: () => void;
 }) => (
     <button className="flex w-full items-center gap-3 py-2 text-left" type="button" onClick={onToggle}>
         <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">{icon}</div>
@@ -290,7 +345,7 @@ const SectionHdr = ({ icon, title, subtitle, progress, open, onToggle }: {
 // ── Scope builder ──────────────────────────────────────────────────────
 
 const ScopeBuilder = ({ items, onChange }: { items: ScopeItem[]; onChange: (items: ScopeItem[]) => void }) => {
-    const add = () => onChange([...items, { id: uid(), value: '', assetType: SCOPE_ASSET_TYPES[0], environment: ENVIRONMENTS[0], exposure: EXPOSURES[0], criticality: CRITICALITIES[2], owner: '', notes: '' }]);
+    const add = () => onChange([...items, { id: uid(), value: '', assetType: SCOPE_ASSET_TYPES[0]!, environment: ENVIRONMENTS[0]!, exposure: EXPOSURES[0]!, criticality: CRITICALITIES[2]!, owner: '', notes: '' }]);
     const upd = (id: string, f: keyof ScopeItem, v: string) => onChange(items.map((it) => it.id === id ? { ...it, [f]: v } : it));
     const del = (id: string) => onChange(items.filter((it) => it.id !== id));
 
@@ -331,7 +386,7 @@ const ScopeBuilder = ({ items, onChange }: { items: ScopeItem[]; onChange: (item
 // ── Asset builder ──────────────────────────────────────────────────────
 
 const AssetBuilder = ({ items, onChange }: { items: AssetItem[]; onChange: (items: AssetItem[]) => void }) => {
-    const add = () => onChange([...items, { id: uid(), name: '', type: ASSET_TYPES_INVENTORY[0], identifier: '', environment: ENVIRONMENTS[0], owner: '', dataClass: DATA_CLASSIFICATIONS[1], criticality: CRITICALITIES[2], inScope: true, notes: '' }]);
+    const add = () => onChange([...items, { id: uid(), name: '', type: ASSET_TYPES_INVENTORY[0]!, identifier: '', environment: ENVIRONMENTS[0]!, owner: '', dataClass: DATA_CLASSIFICATIONS[1]!, criticality: CRITICALITIES[2]!, inScope: true, notes: '' }]);
     const upd = <K extends keyof AssetItem>(id: string, f: K, v: AssetItem[K]) => onChange(items.map((it) => it.id === id ? { ...it, [f]: v } : it));
     const del = (id: string) => onChange(items.filter((it) => it.id !== id));
 
@@ -380,10 +435,81 @@ export const PlanningPhaseForm = ({ onBack }: { onBack: () => void }) => {
     const [assets, setAssets] = useState<AssetItem[]>([]);
     const [open, setOpen] = useState<Record<string, boolean>>({ overview: true, scope: false, roe: false, threat: false, inventory: false, creds: false });
     const [copied, setCopied] = useState(false);
+    const [importText, setImportText] = useState('');
+    const [importing, setImporting] = useState(false);
+    const [importError, setImportError] = useState('');
 
     const set = <K extends keyof PlanState>(k: K, v: PlanState[K]) => setPlan((p) => ({ ...p, [k]: v }));
     const tog = (k: string) => setOpen((o) => ({ ...o, [k]: !o[k] }));
     const preset = (name: string) => { const p = PRESETS[name]; if (p) setPlan((s) => ({ ...s, ...p })); };
+
+    // Send pasted free-form text to the LLM extraction endpoint and merge the
+    // structured result into the form (non-empty scalars win; scope/assets appended).
+    const handleAutofill = async () => {
+        const text = importText.trim();
+        if (!text || importing) return;
+        setImporting(true);
+        setImportError('');
+        try {
+            const res = await axios.post<unknown, { data: ExtractedPlan }>('/planning/extract', { text });
+            const d = res.data;
+            if (!d) throw new Error('Empty response from extractor');
+
+            setPlan((p) => {
+                const next: Record<string, unknown> = { ...p };
+                for (const k of EXTRACT_STRING_KEYS) {
+                    const v = (d as Record<string, unknown>)[k];
+                    if (typeof v === 'string' && v.trim()) next[k] = v;
+                }
+                if (d.assessmentType && ASSESSMENT_TYPES.includes(d.assessmentType)) next.assessmentType = d.assessmentType;
+                if (d.engagementModel && (['blackbox', 'greybox', 'whitebox'] as string[]).includes(d.engagementModel)) next.engagementModel = d.engagementModel;
+                if (d.testingWindow && TESTING_WINDOWS.includes(d.testingWindow)) next.testingWindow = d.testingWindow;
+                if (d.allowedCategories?.length) next.allowedCategories = d.allowedCategories.filter((x) => ALLOWED_CATEGORIES.includes(x));
+                if (d.prohibitedActivities?.length) next.prohibitedActivities = d.prohibitedActivities.filter((x) => PROHIBITED_ACTIVITIES.includes(x));
+                if (d.frameworks?.length) next.frameworks = d.frameworks.filter((x) => THREAT_FRAMEWORKS.includes(x));
+                return next as unknown as PlanState;
+            });
+
+            if (d.scope?.length) {
+                setScope((prev) => [...prev, ...d.scope!.map((s) => ({
+                    id: uid(),
+                    value: s.value ?? '',
+                    assetType: pick(s.assetType, SCOPE_ASSET_TYPES, 'Domain'),
+                    environment: pick(s.environment, ENVIRONMENTS, 'Production'),
+                    exposure: pick(s.exposure, EXPOSURES, 'External'),
+                    criticality: pick(s.criticality, CRITICALITIES, 'High'),
+                    owner: s.owner ?? '',
+                    notes: s.notes ?? '',
+                }))]);
+            }
+            if (d.assets?.length) {
+                setAssets((prev) => [...prev, ...d.assets!.map((a) => ({
+                    id: uid(),
+                    name: a.name ?? '',
+                    type: pick(a.type, ASSET_TYPES_INVENTORY, 'Web Application'),
+                    identifier: a.identifier ?? '',
+                    environment: pick(a.environment, ENVIRONMENTS, 'Production'),
+                    owner: a.owner ?? '',
+                    dataClass: pick(a.dataClass, DATA_CLASSIFICATIONS, 'Internal'),
+                    criticality: pick(a.criticality, CRITICALITIES, 'High'),
+                    inScope: a.inScope !== false,
+                    notes: a.notes ?? '',
+                }))]);
+            }
+
+            setOpen((o) => ({
+                ...o,
+                overview: true,
+                scope: (d.scope?.length ?? 0) > 0 || !!o.scope,
+                inventory: (d.assets?.length ?? 0) > 0 || !!o.inventory,
+            }));
+            setImportText('');
+        } catch (e) {
+            setImportError(e instanceof Error ? e.message : 'Failed to extract plan from text');
+        } finally {
+            setImporting(false);
+        }
+    };
 
     // progress
     const ovP = pct([plan.name, plan.client, plan.assessmentType, plan.startDate, plan.endDate, plan.primaryContact].filter(Boolean).length, 6);
@@ -470,6 +596,17 @@ export const PlanningPhaseForm = ({ onBack }: { onBack: () => void }) => {
                     <span className="w-7 text-xs font-semibold">{total}%</span>
                 </div>
             </div>
+
+            {/* AI autofill */}
+            <AiAutofillBox
+                error={importError}
+                loading={importing}
+                placeholder="Paste an engagement brief, scoping email, or statement of work — the AI extracts scope, rules of engagement, threat model, assets and more."
+                title="Autofill the plan from text"
+                value={importText}
+                onChange={setImportText}
+                onRun={handleAutofill}
+            />
 
             {/* Presets */}
             <div className="flex flex-wrap items-center gap-2">
