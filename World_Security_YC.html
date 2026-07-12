@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>World Security — YC Application Strategy &amp; Technical Truth Document</title>
+<style>
+  :root{
+    --ink:#14171f; --muted:#5b6270; --line:#e3e6ec; --accent:#b3271e; --accent2:#1f3a8a;
+    --ok:#0f7b3d; --warn:#b06a00; --bad:#b3271e; --bg:#ffffff; --soft:#f6f7f9;
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-print-color-adjust:exact; print-color-adjust:exact;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    color:var(--ink); line-height:1.5; font-size:11px; margin:0; background:var(--bg);}
+  .page{max-width:820px; margin:0 auto; padding:32px 40px;}
+  h1{font-size:24px; line-height:1.15; margin:0 0 4px;}
+  h2{font-size:16px; margin:26px 0 8px; padding-bottom:4px; border-bottom:2px solid var(--ink); page-break-after:avoid;}
+  h3{font-size:12.5px; margin:16px 0 6px; color:var(--accent2); page-break-after:avoid;}
+  p{margin:6px 0;}
+  .sub{color:var(--muted); font-size:11px;}
+  .cover{border:1px solid var(--line); border-left:5px solid var(--accent); background:var(--soft);
+    padding:16px 18px; border-radius:6px; margin:14px 0 4px;}
+  .cover p{margin:4px 0;}
+  .tag{display:inline-block; font-size:9.5px; font-weight:700; letter-spacing:.3px; text-transform:uppercase;
+    padding:1px 6px; border-radius:3px; vertical-align:middle;}
+  .tag.ok{background:#e4f4ea; color:var(--ok);}
+  .tag.warn{background:#fdf0dc; color:var(--warn);}
+  .tag.bad{background:#fce8e6; color:var(--bad);}
+  .need{background:#fff3cd; padding:0 4px; border-radius:3px; font-weight:600; color:#7a5b00;}
+  table{width:100%; border-collapse:collapse; margin:8px 0 12px; font-size:10px;}
+  th,td{border:1px solid var(--line); padding:5px 7px; text-align:left; vertical-align:top;}
+  th{background:var(--soft); font-weight:700;}
+  code,.mono{font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:9.5px;
+    background:var(--soft); padding:1px 4px; border-radius:3px;}
+  blockquote{margin:8px 0; padding:8px 12px; background:var(--soft); border-left:3px solid var(--accent2);
+    border-radius:0 5px 5px 0; font-style:normal;}
+  ul,ol{margin:6px 0 6px 18px; padding:0;}
+  li{margin:3px 0;}
+  .callout{border:1px solid var(--line); border-left:5px solid var(--warn); background:#fffdf6;
+    padding:12px 16px; border-radius:6px; margin:12px 0;}
+  .callout.crit{border-left-color:var(--bad); background:#fff8f7;}
+  .callout.good{border-left-color:var(--ok); background:#f6fbf8;}
+  .section{page-break-inside:auto;}
+  h2, h3{page-break-inside:avoid;}
+  .avoid{page-break-inside:avoid;}
+  hr{border:none; border-top:1px solid var(--line); margin:18px 0;}
+  .foot{color:var(--muted); font-size:9px; margin-top:6px;}
+  @page{margin:14mm 0;}
+</style>
+</head>
+<body>
+<div class="page">
+
+<h1>World Security</h1>
+<p class="sub">YC Application Strategy &amp; Technical Truth Document — batch deadline July 27, 2026</p>
+
+<div class="cover">
+  <p><strong>Product:</strong> Autonomous penetration-testing agent with a persistent operational <strong>World State</strong> layer, built on the open-source <strong>PentAGI</strong> engine (MIT license).</p>
+  <p><strong>Status of this document:</strong> every technical claim is verified against the codebase; every fact that cannot be verified is marked <span class="need">[NEED FROM YOU]</span>. Nothing is invented.</p>
+  <p class="foot"><strong>Naming note (flag, not a debate):</strong> "World Security" ties to the World-State thesis, but is generic (hard to trademark, <span class="mono">.com</span> likely taken, weak for search). Keep a backup name. This document uses World Security throughout per your decision.</p>
+</div>
+
+<div class="callout crit avoid">
+  <h3 style="margin-top:0;color:var(--bad)">0 · The one thing that governs everything</h3>
+  <p>Your YC story rests on two claims. The code says:</p>
+  <ol>
+    <li><strong>The persistent World State is NOT yet wired into the agent loop.</strong> The FSM validator, the DB tables, and the "World State" REST view are three disconnected pieces. The pentest agent never reads or writes the state tables.</li>
+    <li><strong>DDQN / reinforcement learning does not exist in code — zero lines, anywhere.</strong> It is a design concept only.</li>
+  </ol>
+  <p>Neither is fatal. But presented as <em>implemented</em>, a due-diligence reviewer finds the gap in ~15 minutes and loses trust in everything else. This plan makes claim&nbsp;#1 <em>true</em> before July&nbsp;27 and never makes claim&nbsp;#2 at all.</p>
+</div>
+
+<div class="section">
+<h2>1 · Technical Audit (verified against code)</h2>
+
+<h3>1.0 Audit ledger — what exists / what doesn't (all 40 points)</h3>
+<p class="sub">Verdict key: <span class="tag ok">YES</span> exists &amp; works · <span class="tag warn">PART</span> partial / not wired / view-only · <span class="tag bad">NO</span> does not exist. Every verdict is grep- or file-verified.</p>
+<table>
+<tr><th style="width:20px">#</th><th>Question</th><th style="width:52px">Verdict</th><th>Evidence</th></tr>
+<tr><td>1</td><td>What works end-to-end right now</td><td><span class="tag ok">YES</span></td><td>Autonomous multi-agent pentest engine runs (inherited PentAGI): flows → agents → Docker-sandboxed tools → results in UI</td></tr>
+<tr><td>2</td><td>Your original code</td><td><span class="tag ok">YES</span></td><td>worldstate FSM+migration (untracked), <span class="mono">worldstate.go</span>, <span class="mono">attackpath.go</span>, <span class="mono">findings_extract.go</span>, <span class="mono">webpentest.go</span>, web-pentest migration, UI rebrand/tabs — all read-only views + data model</td></tr>
+<tr><td>3</td><td>Inherited from PentAGI</td><td><span class="tag ok">YES</span></td><td>Entire engine: providers, tools, docker/terminal, queue, csum, graphiti client, auth, DB core, flows/tasks/subtasks, GraphQL, most frontend</td></tr>
+<tr><td>4</td><td>Modified by you over PentAGI</td><td><span class="tag warn">PART</span></td><td>Mostly additive (new services + UI); little modification of core engine files</td></tr>
+<tr><td>5</td><td>World State implementation location</td><td><span class="tag warn">PART</span></td><td><span class="mono">backend/pkg/worldstate/lifecycle.go</span> + migration + <span class="mono">services/worldstate.go</span> — three disconnected pieces</td></tr>
+<tr><td>6</td><td>Database migrations</td><td><span class="tag ok">YES</span></td><td>~20 goose migrations in <span class="mono">backend/migrations/sql/</span>; world_state + web_pentest ones are yours</td></tr>
+<tr><td>7</td><td>Entity schemas</td><td><span class="tag warn">PART</span></td><td><span class="mono">world_state_entities</span> (typed, JSONB props) defined in migration — but no Go model/query uses it</td></tr>
+<tr><td>8</td><td>State transitions (definition)</td><td><span class="tag ok">YES</span></td><td><span class="mono">allowedTransitions</span> map + <span class="mono">ValidateTransition()</span> in lifecycle.go, unit-tested</td></tr>
+<tr><td>9</td><td>Explicit lifecycle FSM</td><td><span class="tag warn">PART</span></td><td>Correct + tested, but untracked in git and imported by nothing</td></tr>
+<tr><td>10</td><td><span class="mono">world_state_query</span> tool</td><td><span class="tag bad">NO</span></td><td>No such tool in <span class="mono">pkg/tools/</span>; grep empty</td></tr>
+<tr><td>11</td><td><span class="mono">world_state_update</span> tool</td><td><span class="tag bad">NO</span></td><td>Same — agent cannot mutate state</td></tr>
+<tr><td>12</td><td>Planner queries state before action</td><td><span class="tag bad">NO</span></td><td>No state-query in planning path; planner is unmodified PentAGI</td></tr>
+<tr><td>13</td><td>Executor updates state after tool exec</td><td><span class="tag bad">NO</span></td><td>Nothing writes <span class="mono">world_state_entities/_transitions</span></td></tr>
+<tr><td>14</td><td>Pre-execution gate</td><td><span class="tag bad">NO</span></td><td>No gate before command execution</td></tr>
+<tr><td>15</td><td>Duplicate-action prevention</td><td><span class="tag bad">NO</span></td><td>No dedup logic in agent loop</td></tr>
+<tr><td>16</td><td>Credential persistence</td><td><span class="tag bad">NO</span></td><td>No credential entity/table/store</td></tr>
+<tr><td>17</td><td>Cross-subtask credential reuse</td><td><span class="tag bad">NO</span></td><td>Nothing to reuse from</td></tr>
+<tr><td>18</td><td>Finding deduplication</td><td><span class="tag bad">NO</span></td><td><span class="mono">findings_extract.go</span> re-extracts via LLM per request; no dedup/persistence</td></tr>
+<tr><td>19</td><td>Authorization-as-state / scope enforcement</td><td><span class="tag bad">NO</span></td><td>"Authorizations" is a UI tab only; no scope entity checked before actions</td></tr>
+<tr><td>20</td><td>Auditable transition history</td><td><span class="tag warn">PART</span></td><td><span class="mono">world_state_transitions</span> table exists but nothing writes it</td></tr>
+<tr><td>21</td><td>Evidence validation</td><td><span class="tag bad">NO</span></td><td><span class="mono">evidence</span> JSONB column defined but never populated/validated</td></tr>
+<tr><td>22</td><td>PostgreSQL integration</td><td><span class="tag ok">YES</span></td><td>Required; pgvector; GORM + goose (inherited)</td></tr>
+<tr><td>23</td><td>Neo4j / Graphiti integration</td><td><span class="tag ok">YES</span></td><td>Optional; <span class="mono">pkg/graphiti/</span> client; used by worldstate/attackpath views</td></tr>
+<tr><td>24</td><td>Operational state vs knowledge graph separation</td><td><span class="tag bad">NO</span></td><td>No operational state layer exists yet; only the Graphiti KG + log-derived view</td></tr>
+<tr><td>25</td><td>Methodologies encoded in prompts/workflows</td><td><span class="tag warn">PART</span></td><td>Inherited PentAGI agent prompts + your web-pentest phase types (migration 20260419)</td></tr>
+<tr><td>26</td><td>Security tools supported</td><td><span class="tag ok">YES</span></td><td>~15 (nmap, sqlmap, nuclei, ffuf, gobuster, hydra, metasploit…) via <span class="mono">pkg/tools/</span> + terminal</td></tr>
+<tr><td>27</td><td>LLM providers supported</td><td><span class="tag ok">YES</span></td><td>11: anthropic, openai, gemini, bedrock, ollama, deepseek, glm, kimi, qwen, custom, embeddings</td></tr>
+<tr><td>28</td><td>UI</td><td><span class="tag ok">YES</span></td><td>React/TS app; flows, settings, World State graph view, Authorizations tab</td></tr>
+<tr><td>29</td><td>API</td><td><span class="tag ok">YES</span></td><td>REST (Gin) + GraphQL + Swagger</td></tr>
+<tr><td>30</td><td>Multi-user support</td><td><span class="tag ok">YES</span></td><td>JWT/OAuth2/API tokens, roles/permissions (<span class="mono">auth.go</span>, <span class="mono">roles.go</span>)</td></tr>
+<tr><td>31</td><td>Deployment mechanism</td><td><span class="tag ok">YES</span></td><td>Docker Compose (core + observability + langfuse + graphiti); installer TUI</td></tr>
+<tr><td>32</td><td>Docker / Kubernetes</td><td><span class="tag warn">PART</span></td><td>Docker ✅; <strong>no Kubernetes manifests</strong></td></tr>
+<tr><td>33</td><td>Tests</td><td><span class="tag ok">YES</span></td><td>94 Go <span class="mono">_test.go</span> files; worldstate FSM well-tested; attackpath test is trivial</td></tr>
+<tr><td>34</td><td>Benchmark scripts</td><td><span class="tag bad">NO</span></td><td>No benchmark/eval/A-B harness anywhere</td></tr>
+<tr><td>35</td><td>Telemetry</td><td><span class="tag ok">YES</span></td><td>OpenTelemetry + Langfuse (<span class="mono">pkg/observability/</span>)</td></tr>
+<tr><td>36</td><td>Real execution logs (committed)</td><td><span class="tag bad">NO</span></td><td>No run logs/results committed to repo</td></tr>
+<tr><td>37</td><td>Evidence of real A/B runs</td><td><span class="tag bad">NO</span></td><td>None exist</td></tr>
+<tr><td>38</td><td>Measurable performance improvements</td><td><span class="tag bad">NO</span></td><td>No metrics of any kind</td></tr>
+<tr><td>39</td><td>RL / DDQN code</td><td><span class="tag bad">NO</span></td><td>Zero matches repo-wide; only a DeepSeek model description mentions "reinforcement learning"</td></tr>
+<tr><td>40</td><td>Production blockers</td><td><span class="tag warn">PART</span></td><td>World State un-wired + untracked; no metrics; no K8s; single-author fork; EULA/license consistency to confirm</td></tr>
+</table>
+<p class="foot"><strong>One-line reading of the ledger:</strong> the <em>platform</em> (engine, tools, providers, API, UI, auth, deploy, telemetry, tests) mostly says YES — because it's inherited PentAGI. The <em>differentiated thesis</em> (state query/update, planner-reads, executor-writes, gate, dedup, credentials, auditable transitions, RL, metrics) mostly says NO — because it isn't built yet. That gap is exactly what the July plan closes.</p>
+
+<h3>1.1 The World State: three pieces that don't connect</h3>
+<table>
+<tr><th>Piece</th><th>File</th><th>What it is</th><th>Wired in?</th></tr>
+<tr><td>FSM validator</td><td class="mono">backend/pkg/worldstate/lifecycle.go</td><td>Correct, unit-tested 110-line state machine: 7 states (unknown→discovered→scanning→assessed→vulnerable→exploited→remediated), <span class="mono">ValidateTransition()</span></td><td><span class="tag bad">No</span> Untracked in git; imported only by its own test.</td></tr>
+<tr><td>DB tables</td><td class="mono">migrations/…world_state_tables.sql</td><td><span class="mono">world_state_entities</span>, <span class="mono">_links</span>, <span class="mono">_transitions</span> + lifecycle enum</td><td><span class="tag bad">No</span> Untracked; no Go code reads/writes them.</td></tr>
+<tr><td>"World State" REST view</td><td class="mono">server/services/worldstate.go</td><td>Read-only UI graph endpoint <span class="mono">GetWorldState()</span></td><td><span class="tag warn">Stateless</span> Wired to router, but see below.</td></tr>
+</table>
+<p><strong>What <span class="mono">GetWorldState</span> actually does:</strong> each request re-derives a graph from <span class="mono">flows/tasks/subtasks</span>, <strong>regex-scrapes the last 500 terminal logs</strong> for tool names/domains/URLs, and optionally reads Graphiti/Neo4j nodes. It <strong>never reads the state tables</strong> and <strong>never uses the FSM</strong>. <span class="mono">version</span> is hardcoded; <span class="mono">updatedAt = time.Now()</span>. A stateless visualizer that reverse-engineers a graph from logs.</p>
+
+<h3>1.2 The described agent loop does not exist yet</h3>
+<p>The cycle <em>Query State → Select Action → Execute → Validate → Update State → Record Transition → Re-plan</em> is <strong>not implemented</strong>:</p>
+<ul>
+  <li>No <span class="mono">world_state_query</span> / <span class="mono">world_state_update</span> agent tool exists.</li>
+  <li>Planner does not query state before acting; executor does not write state/transitions after acting.</li>
+  <li>No pre-execution gate, no duplicate-action prevention.</li>
+  <li>No credential entity/store; no cross-subtask credential reuse.</li>
+  <li><span class="mono">findings_extract.go</span> = on-demand LLM extraction, not a deduplicated persistent store.</li>
+  <li><span class="mono">attackpath.go</span> = paths computed on the fly from Graphiti at request time; not persisted; needs Neo4j.</li>
+  <li>Authorization = a UI tab, not scope-as-state enforcement. The <span class="mono">evidence</span> column exists but nothing writes it.</li>
+</ul>
+
+<h3>1.3 DDQN / RL — explicit verdict: ABSENT</h3>
+<p>Repo-wide search for <span class="mono">ddqn|dueling|double deep|q-network|q-learning|reinforcement|replay buffer|reward|policy network|epsilon-greedy|target network</span> = <strong>zero matches</strong>. The only "reinforcement learning" string is a DeepSeek model <em>description</em>. No state/action space, reward, replay buffer, target network, training loop, inference path, policy, or results. <strong>Never present as implemented or in-progress.</strong> (Your public <span class="mono">redscope.html</span> and README contain zero RL/DDQN/world-state mentions — nothing public overclaims yet.)</p>
+
+<h3>1.4 What genuinely works (inherited from PentAGI, real)</h3>
+<ul>
+  <li>Autonomous multi-agent pentest engine (Researcher/Developer/Executor + support agents).</li>
+  <li>11 LLM providers; ~15 security tools + 6 search providers; Docker-sandboxed execution.</li>
+  <li>REST + GraphQL API, React UI, multi-user auth (JWT/OAuth2/API tokens).</li>
+  <li>PostgreSQL + pgvector (required); Neo4j/Graphiti (optional); Docker Compose deployment (no Kubernetes).</li>
+  <li>94 Go test files; OpenTelemetry + Langfuse. <strong>No benchmark harness, no committed logs, no A/B results, no metrics.</strong></li>
+</ul>
+
+<h3>1.5 Provenance: yours vs PentAGI</h3>
+<p>Fork of <span class="mono">vxcontrol/pentagi</span>, <strong>MIT-licensed</strong> → commercial/closed derivatives allowed, no copyleft IP risk. <span class="tag warn">flag</span> Clarify whether the repo's <span class="mono">EULA.md</span>/<span class="mono">NOTICE</span> are inherited or yours, so the license story is consistent.</p>
+<p><strong>Your original additions:</strong> the worldstate FSM package + migration (untracked); read-only analytics/visualization services (worldstate, attackpath, findings_extract, webpentest); the web-pentest agent-types migration; UI rebrand + Authorizations tab + World State graph view + knowledge-graph view; the writeup + diagrams.</p>
+<p><strong>Inherited (largely unmodified):</strong> the entire autonomous engine — providers, tools, docker/terminal sandbox, queue, chain-summarization, graphiti client, auth, database core, flows/tasks/subtasks, GraphQL, most of the frontend.</p>
+<p><strong>Honest summary:</strong> today your contribution is read-only visualization/analytics endpoints + UI on top of PentAGI, plus an un-wired World-State data model. The autonomous capability itself is upstream. The plan makes the World State loop your real, working contribution.</p>
+</div>
+
+<div class="section">
+<h2>2 · Product Truth Table</h2>
+<p class="sub">Key: <span class="tag ok">wired</span> implemented &amp; wired · partial · built-but-not-wired · <span class="tag bad">absent</span></p>
+<table>
+<tr><th>Claim</th><th>Status</th><th>Safe to claim in YC app?</th></tr>
+<tr><td>Persistent World State</td><td>built, not wired</td><td>No — only as "designed"</td></tr>
+<tr><td>Typed entities</td><td>partial</td><td>No (not persisted)</td></tr>
+<tr><td>Explicit lifecycle FSM</td><td>built, not wired</td><td>Only as "designed + unit-tested, not integrated"</td></tr>
+<tr><td>Auditable transitions</td><td>planned</td><td>No</td></tr>
+<tr><td>Planner reads state before acting</td><td><span class="tag bad">absent</span></td><td>No</td></tr>
+<tr><td>Executor writes state after acting</td><td><span class="tag bad">absent</span></td><td>No</td></tr>
+<tr><td>Duplicate recon prevention</td><td><span class="tag bad">absent</span></td><td>No</td></tr>
+<tr><td>Credential persistence / reuse</td><td><span class="tag bad">absent</span></td><td>No</td></tr>
+<tr><td>Finding deduplication</td><td>absent / on-demand only</td><td>No</td></tr>
+<tr><td>Attack-path persistence</td><td>partial (view only)</td><td>"visualization" ✅; "persistence" No</td></tr>
+<tr><td>Authorization scope as entity</td><td><span class="tag bad">absent</span></td><td>No</td></tr>
+<tr><td>Pre-execution safety gate</td><td><span class="tag bad">absent</span></td><td>No</td></tr>
+<tr><td>Methodology-driven autonomous pentest</td><td>partial (inherited)</td><td>✅ if framed as inherited + extended</td></tr>
+<tr><td>Usable by non-expert users</td><td>partial, unverified</td><td>Soft claim only</td></tr>
+<tr><td>Reinforcement learning / Dueling Double DQN</td><td><span class="tag bad">absent</span></td><td><strong>Never</strong></td></tr>
+<tr><td>Self-learning / policy improvement</td><td><span class="tag bad">absent</span></td><td><strong>Never</strong></td></tr>
+<tr><td>Lower dup-rate / tokens / higher coverage / faster finding</td><td><span class="tag bad">no evidence</span></td><td>No (until A/B)</td></tr>
+</table>
+</div>
+
+<div class="section">
+<h2>3 · Positioning decision</h2>
+<blockquote>
+  <p><strong>Product (10-sec):</strong> "An autonomous pentester that doesn't forget — it remembers what it already scanned, exploited, and which credentials it found, so it goes deeper instead of repeating itself."</p>
+  <p><strong>Company (big story):</strong> the operational-state + audit layer that makes autonomous security agents reliable and trustworthy enough for enterprises.</p>
+</blockquote>
+<p>Passes all five tests: understood in 10s, not a research project, not the 4th identical pentester (state = reliability = the gap others fight), credible market today (AppSec budgets), looks big (control-plane expansion).</p>
+<p><strong>Backup:</strong> pure "Stateful Autonomous Security" infra framing — deploy if partners say the pentest market is crowded. <strong>Drop:</strong> "World Models for Security" (research trap) and the word <em>learning/RL</em> (no RL exists).</p>
+</div>
+
+<div class="section">
+<h2>4 · Competitor teardown</h2>
+<p class="sub">⚠️ funding/batch marked [VERIFY] — confirm before submission.</p>
+<table>
+<tr><th>Company</th><th>Autonomous</th><th>Continuous</th><th>Exploit</th><th>Remediation</th><th>Persistent op-state</th><th>Lifecycle FSM</th><th>Auditable transitions</th><th>RL policy</th></tr>
+<tr><td>XBOW</td><td>✅</td><td>~</td><td>✅</td><td>✗</td><td>✗</td><td>✗</td><td>✗</td><td>✗</td></tr>
+<tr><td>MindFort (YC) [V]</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✗</td><td>✗</td><td>✗</td><td>✗</td></tr>
+<tr><td>RunSybil [V]</td><td>✅</td><td>~</td><td>✅</td><td>✗</td><td>✗</td><td>✗</td><td>✗</td><td>✗</td></tr>
+<tr><td>Ethiack</td><td>✅</td><td>✅</td><td>✅ PoE</td><td>~</td><td>✗</td><td>✗</td><td>✗</td><td>✗</td></tr>
+<tr><td>Horizon3 / NodeZero</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>~</td><td>✗</td><td>✗</td><td>✗</td></tr>
+<tr><td>Pentera</td><td>~</td><td>✅</td><td>✅</td><td>✅</td><td>~</td><td>✗</td><td>✗</td><td>✗</td></tr>
+<tr><td>PentAGI (upstream)</td><td>✅</td><td>✗</td><td>✅</td><td>~</td><td>✗ vector only</td><td>✗</td><td>✗</td><td>✗</td></tr>
+<tr><td><strong>World Security (if wired)</strong></td><td>✅</td><td>roadmap</td><td>✅</td><td>~</td><td>building</td><td>built</td><td>building</td><td>✗</td></tr>
+</table>
+<div class="callout avoid">
+  <p><strong>Synthesis:</strong> the "persistent operational state + auditable transitions" lane is <strong>open</strong> — no competitor claims it. But it is <strong>thin as a pure tech moat</strong> (copyable in weeks). The defensible story leans on: (a) <strong>audit/compliance for autonomous offense</strong> — a signed, replayable record of everything the agent did, required before enterprises trust autonomous exploitation; and (b) <strong>compounding per-customer environment models</strong>. Neither exists yet; both are the roadmap. <strong>Do not claim the FSM itself is the moat.</strong></p>
+</div>
+</div>
+
+<div class="section">
+<h2>5 · YC Application draft (standard 2026 form)</h2>
+<p class="sub">Per answer: <strong>Answer</strong> → why it works → ⚠️ risk → 🔼 stronger with evidence.</p>
+
+<h3>Company name</h3>
+<p>World Security <span class="sub">(confirm; keep a backup name).</span></p>
+
+<h3>One-line (≤50 chars)</h3>
+<p>"Autonomous pentester that remembers what it did." → 🔼 post-metrics: "Autonomous pentester that doesn't repeat itself."</p>
+
+<h3>What are you making?</h3>
+<blockquote>"World Security is an autonomous penetration-testing agent that maintains a persistent operational model of the target — every host, service, credential, and finding as a typed entity with an enforced lifecycle. Before it acts it queries what it already knows; after each action it records what changed. This stops the repeated scans, forgotten credentials, and rediscovered findings that make today's autonomous pentest agents waste tokens and miss depth. It's built on the open-source PentAGI engine (MIT), with our operational-state and audit layer on top."</blockquote>
+<p class="sub"><em>Why:</em> product-first, names the pain, discloses the fork. ⚠️ "before it acts it queries state" must be TRUE at submission (Steps 3–5). 🔼 add A/B numbers.</p>
+
+<h3>How far along?</h3>
+<blockquote>"Working platform (forked from PentAGI, MIT): autonomous multi-agent pentest, 11 LLM providers, Docker-sandboxed tools, REST/GraphQL, React UI, multi-user auth — running today. Our additions: a designed-and-tested lifecycle FSM + typed-entity schema, live attack-path/findings visualization, web-pentest phase workflows. In progress this month: wiring the state layer into the agent loop + a baseline-vs-stateful benchmark."</blockquote>
+<p class="sub">⚠️ "forked" invites "what's actually yours" — answer head-on. 🔼 "Benchmark complete: [numbers]. Demo: [link]."</p>
+
+<h3>Competitors / who you fear</h3>
+<blockquote>"XBOW (best-funded, autonomous exploitation, tops HackerOne), MindFort (YC, continuous + remediation), RunSybil, Ethiack; incumbents Horizon3/Pentera. None publicly builds an explicit operational-state model with an auditable, enforced action lifecycle — our wedge. I fear XBOW most on raw capability; our bet is that reliability and auditability, not model horsepower, block enterprise trust in autonomous offense."</blockquote>
+
+<h3>Remaining fields — need your facts</h3>
+<ul>
+  <li><strong>Why this idea / expertise / how you know people need it:</strong> <span class="need">[NEED §7-H origin story + §7-G background]</span></li>
+  <li><strong>How long working / full-time:</strong> <span class="need">[NEED §7-C]</span></li>
+  <li><strong>Tech stack:</strong> Go (REST+GraphQL), React/TS, PostgreSQL+pgvector, optional Neo4j/Graphiti, Docker; 11 LLM providers; OTel + Langfuse; forked from PentAGI (MIT). ✅ verified</li>
+  <li><strong>Users / revenue:</strong> <span class="need">[NEED §7-D]</span> — if none: "Pre-launch. Applying on working platform + insight + early benchmark."</li>
+  <li><strong>How you make money:</strong> per-target/per-seat SaaS for continuous autonomous web-app pentesting → audit/control layer for other security agents. <span class="need">[NEED §7-F buyer/pricing]</span></li>
+  <li><strong>Legal entity / investment / fundraising:</strong> <span class="need">[NEED §7-B]</span></li>
+  <li><strong>Category:</strong> Security (B2B SaaS)</li>
+  <li><strong>Most impressive non-startup build:</strong> <span class="need">[NEED §7-G]</span>, public/safe only</li>
+  <li><strong>Founders known how long / how met:</strong> <span class="need">[NEED §7-A]</span> (skip if solo; be ready to defend solo)</li>
+  <li><strong>"Hacked a non-computer system" / why apply to YC / how heard:</strong> <span class="need">[NEED — personal]</span></li>
+  <li><strong>Equity / IP / employer risk:</strong> <span class="need">[NEED §7-A — flag any non-compete now]</span></li>
+</ul>
+</div>
+
+<div class="section avoid">
+<h2>6 · 90-second demo script</h2>
+<p class="sub">Two side-by-side runs, same target (OWASP Juice Shop), pre-recorded + one live fallback. Left = run log; right = World State graph.</p>
+<table>
+<tr><th>Time</th><th>Screen</th><th>Narration</th><th>Notes</th></tr>
+<tr><td>0:00–0:10</td><td>Flow-create</td><td>"Autonomous pentest agents forget what they've done. Same agent, same target, twice."</td><td>Hide branding.</td></tr>
+<tr><td>0:10–0:30</td><td>Baseline, zoom 2 near-identical scans</td><td>"Without state: scans the host in subtask 1… scans it again in subtask 3. Watch the duplicate."</td><td>Red box on duplicate.</td></tr>
+<tr><td>0:30–0:42</td><td>Baseline: found cred, later asks for creds again</td><td>"Found admin creds here — forgot them here."</td><td>Red boxes.</td></tr>
+<tr><td>0:42–0:55</td><td>Stateful; right panel populates (host→scanning→assessed)</td><td>"Now with the World State layer. Before acting, it queries what it knows."</td><td>Zoom right panel.</td></tr>
+<tr><td>0:55–1:10</td><td>Pre-exec gate: "target already scanned (entity #4), skipping"</td><td>"It sees the host is already scanned — and skips the duplicate. That's the FSM gate."</td><td><strong>Most important frame.</strong> Green box.</td></tr>
+<tr><td>1:10–1:22</td><td>Later subtask pulls stored credential</td><td>"It retrieves the credential it stored earlier and uses it in an authorized step — no rediscovery."</td><td>Green box + transition record.</td></tr>
+<tr><td>1:22–1:30</td><td>Metrics table (from CSV)</td><td>"Same agent, same model: duplicate actions down X%, tokens/finding down Y%. It's the state, not the model."</td><td>Real numbers only.</td></tr>
+</table>
+<p><strong>Hide:</strong> logos, API keys, untracked-file mess, crashed runs. <strong>Zoom:</strong> the duplicate (baseline) + the skip/reuse (stateful). <strong>Backup:</strong> the pre-recorded split-screen — never run live in the submission.</p>
+</div>
+
+<div class="section">
+<h2>7 · Founder questionnaire (private facts needed)</h2>
+<ul>
+  <li><strong>A. Founders:</strong> legal name(s); solo/cofounders; roles; equity split; when/how met; how long together; who's full-time; who can relocate; IP owner; <strong>employer-IP risk / non-compete</strong>.</li>
+  <li><strong>B. Company:</strong> legal entity (country, date, name)? domain/product URL? repo public/private? prior investment/commitments/accelerator? fundraising now?</li>
+  <li><strong>C. Product:</strong> exact start date; total hours + full-time share; time to first pentest run for a non-expert.</li>
+  <li><strong>D. Traction:</strong> users? pilots/design partners? completed runs, targets, findings, confirmed vulns? anyone asked/willing to pay? (zero is a valid, honest answer.)</li>
+  <li><strong>E. Metrics:</strong> from the A/B (Jul 18–20). None exist until then — state none.</li>
+  <li><strong>F. Customer:</strong> who's the buyer (Head of AppSec / CISO / consultancy / dev lead)? talked to any? what did they say?</li>
+  <li><strong>G. Founder-market fit:</strong> AppSec, detection eng, AI-security, AWS/automotive security, research, IEEE/talks, open-source, production AI — tag each verified/public/confidential/safe-to-cite. Any accepted talk/paper to cite?</li>
+  <li><strong>H. Origin story:</strong> the concrete moment — which run, what repeated (which scan / forgotten credential / rediscovered finding), what you tried first, why vector memory didn't fix it, when you realized you needed explicit state, what you built first, prototype speed, what surprised you. <strong>Your most persuasive asset.</strong></li>
+</ul>
+</div>
+
+<div class="section">
+<h2>8 · Founder video — pick V1 (technical founder)</h2>
+<blockquote>"I'm [name]. I build autonomous pentest agents, and I kept watching them fail the same way: scan a host, then scan it again two steps later. Find admin credentials, then forget them. The problem isn't the model — these agents have conversation history and vector search, but no operational model of the target. So I built one: every host, credential, and finding is a typed entity with an enforced lifecycle. Before the agent acts, it checks what it already knows. After it acts, it records what changed — an auditable trail of everything the autonomous attacker did. Same model, but it stops repeating itself and goes deeper. It's built on PentAGI, the open-source engine — our layer is the state and audit on top. [If wired:] Here it is skipping a duplicate scan, live."</blockquote>
+<p class="sub">Backup V2 (customer problem) if you land a buyer quote <span class="need">[NEED §7-F]</span>. Avoid V3 (ambitious thesis) as primary — research-project risk.</p>
+</div>
+
+<div class="section">
+<h2>9 · Hostile questions — the non-negotiables</h2>
+<ul>
+  <li><strong>Is this just memory / caching / a DB?</strong> → "Memory retrieves; our layer <em>gates</em>. The FSM refuses illegal transitions; the agent skips actions it already did. It changes decisions." (Only true once Steps 3–5 are wired.)</li>
+  <li><strong>DDQN / RL / reward / training data?</strong> → "There is no RL in the product. It was a design idea; I'm not shipping or claiming it." (Never imply otherwise.)</li>
+  <li><strong>What did YOU code vs PentAGI?</strong> → "The operational-state schema + FSM, the state-layer wiring, attack-path/findings visualization, web-pentest workflows, the UI. The base engine is PentAGI, MIT — I didn't rebuild a solved thing."</li>
+  <li><strong>License violation?</strong> → "No — MIT allows commercial derivatives; we retain attribution."</li>
+  <li><strong>Feature, not a company?</strong> → "The product is a pentester; the company is the audit/control layer for autonomous offense — compounding per-customer data + compliance."</li>
+  <li><strong>What if the A/B shows nothing?</strong> → "Then the thesis is wrong and I'll know by July 20 — I'd rather find out than sell a story."</li>
+  <li><strong>Why you?</strong> → origin story + background <span class="need">[NEED G/H]</span>.</li>
+</ul>
+<p class="foot">Two you must never bluff: RL/DDQN and metrics. One overclaim there and the whole application's credibility collapses. Honest "not built / not yet measured" is the winning answer.</p>
+</div>
+
+<div class="section">
+<h2>10 · Execution plan → July 27</h2>
+<p><strong>Wiring (Steps 0–6):</strong> 0) commit untracked worldstate pkg + migration behind a <span class="mono">WORLD_STATE_ENABLED</span> flag; 1) Store layer backing the tables + FSM; 2) <span class="mono">world_state_query</span>/<span class="mono">world_state_update</span> agent tools; 3) planner reads state digest before action; 4) executor writes entities + transitions after tool exec; 5) <strong>pre-execution dedup gate</strong> (the money demo); 6) credentials as typed entity + reuse. Prioritize 0–5.</p>
+<p><strong>A/B protocol:</strong> flag OFF (vanilla) vs ON; same target/model/prompt; ~5 runs × 2 targets × 2 conditions = 20 runs; targets = Juice Shop + DVWA (authorized only). Metrics: duplicate-action rate, tokens/finding, coverage, time-to-first-critical, cost/run, runtime. <strong>Output: <span class="mono">benchmarks/ab_results.csv</span> committed — your single most valuable artifact.</strong></p>
+<table>
+<tr><th>Dates</th><th>Focus</th><th>Output</th><th>YC value</th></tr>
+<tr><td>Jul 4</td><td>Commit worldstate + migration; add flag</td><td>Migration runs; flag toggles</td><td>Foundation</td></tr>
+<tr><td>Jul 5–6</td><td>Store layer + tests</td><td>Tables become real</td><td>Real state</td></tr>
+<tr><td>Jul 7–8</td><td>Tools + planner-reads</td><td>Agent queries state pre-action</td><td>"Query state" edge</td></tr>
+<tr><td>Jul 9–10</td><td>Executor-writes + pre-exec gate</td><td>Duplicate scan skipped live</td><td><strong>Demo core</strong></td></tr>
+<tr><td>Jul 11–12</td><td>Credentials entity + reuse</td><td>Cred stored &amp; reused</td><td>Demo beat 2</td></tr>
+<tr><td>Jul 13</td><td>Metrics scripts</td><td>benchmarks/metrics.py</td><td>Measurable claims</td></tr>
+<tr><td><strong>Jul 15</strong></td><td><strong>Cutline: stable? if not, invoke fallback</strong></td><td>Go/no-go</td><td>Protects from fake data</td></tr>
+<tr><td>Jul 15–17</td><td>Debug on Juice Shop + DVWA</td><td>Clean runs both flags</td><td>De-risk A/B</td></tr>
+<tr><td>Jul 18–20</td><td>Full A/B, 20 runs</td><td>ab_results.csv + summary</td><td><strong>#1 artifact</strong></td></tr>
+<tr><td>Jul 21</td><td>Record 90-sec demo</td><td>Demo video</td><td>Application field</td></tr>
+<tr><td>Jul 22</td><td>Founder video (V1)</td><td>60-sec video</td><td>Required field</td></tr>
+<tr><td>Jul 23–24</td><td>Draft full application (needs §7)</td><td>Complete draft</td><td>Submission</td></tr>
+<tr><td>Jul 25</td><td>Hostile-Q rehearsal</td><td>Confident answers</td><td>Interview readiness</td></tr>
+<tr><td>Jul 26</td><td>Final edit; every claim → CSV/code</td><td>Fact-checked app</td><td>Kills credibility risk</td></tr>
+<tr><td>Jul 27</td><td><strong>Submit with half-day buffer</strong></td><td>Submitted</td><td>Done</td></tr>
+</table>
+<div class="callout avoid"><p><strong>Cutline / fallback:</strong> if Steps 3–5 aren't stable by <strong>July 15</strong>, drop Step 6 + the formal A/B; ship the <em>live</em> demo (gate working on one target) with directional numbers from ~6 honest runs. Never let the deadline push you toward fabricated metrics.</p></div>
+</div>
+
+<div class="section">
+<h2>11 · Final lists</h2>
+<div class="callout crit avoid">
+  <h3 style="margin-top:0;color:var(--bad)">Claims you must NOT make</h3>
+  <p>Wired World State gating actions; planner-reads/executor-writes as done; any DDQN/RL/self-learning/policy; duplicate-prevention/credential-reuse/finding-dedup as shipped; any metric before the A/B; "we built an autonomous pentester" (it's PentAGI).</p>
+</div>
+<div class="callout good avoid">
+  <h3 style="margin-top:0;color:var(--ok)">Strongest verified claims</h3>
+  <p>(a) working, forked, MIT autonomous pentest platform running today; (b) designed + unit-tested lifecycle FSM and typed-entity/transition schema; (c) live attack-path + findings visualization; (d) a real, specific insight — vector memory ≠ operational model — no competitor's product addresses (confirmed vs PentAGI's own docs).</p>
+</div>
+<h3>Top 3 rejection reasons → mitigations</h3>
+<ol>
+  <li><strong>"Feature, not a company"</strong> → wire Steps 3–6 so state changes decisions (demo it); lead with audit/compliance + per-customer-data moat, not the FSM.</li>
+  <li><strong>"You forked PentAGI — what's yours?"</strong> → ship the wiring so your original code is the <em>working</em> state loop; disclose the fork proudly; quantify contribution with git.</li>
+  <li><strong>"No users, no metrics, no proof"</strong> → land the A/B CSV (Jul 20) + one design partner or 3 real buyer conversations <span class="need">[NEED F/D]</span>.</li>
+</ol>
+<h3>Submission checklist</h3>
+<ul>
+  <li>☐ Application answers final (all [NEED] resolved)</li>
+  <li>☐ <span class="mono">benchmarks/ab_results.csv</span> committed + summary table</li>
+  <li>☐ 90-sec demo video (recorded + live take)</li>
+  <li>☐ Founder video V1 recorded</li>
+  <li>☐ Every claim maps to code or CSV (no orphan claims)</li>
+  <li>☐ Zero DDQN/RL/metric overclaims</li>
+  <li>☐ Fork disclosed; license/EULA/NOTICE consistent</li>
+  <li>☐ worldstate pkg + migration committed (not untracked)</li>
+  <li>☐ Backup name secured; domain checked</li>
+  <li>☐ Submitted with half-day buffer (not 11pm July 27)</li>
+</ul>
+</div>
+
+<p class="foot">Generated as a working strategy document for World Security. All technical claims verified against the codebase at <span class="mono">/Pentest_solution</span>; unverifiable facts marked [NEED FROM YOU]. Competitor funding/batch figures marked [VERIFY] pending web confirmation.</p>
+
+</div>
+</body>
+</html>
