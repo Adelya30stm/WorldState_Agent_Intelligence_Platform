@@ -1,0 +1,79 @@
+[     195ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ https://localhost:8443/login?returnUrl=%2Fweb-pentest:0
+[   10079ms] [LOG] Download the Apollo DevTools for a better development experience: %s https://chrome.google.com/webstore/detail/apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm @ https://localhost:8443/assets/apollo-client-CnCddnUw.js:0
+[   93562ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ https://localhost:8443/login?returnUrl=%2Fweb-pentest:0
+[  103444ms] [LOG] Download the Apollo DevTools for a better development experience: %s https://chrome.google.com/webstore/detail/apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm @ https://localhost:8443/assets/apollo-client-CnCddnUw.js:0
+[  139653ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ https://localhost:8443/login?returnUrl=%2Fweb-pentest:0
+[  149542ms] [LOG] Download the Apollo DevTools for a better development experience: %s https://chrome.google.com/webstore/detail/apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm @ https://localhost:8443/assets/apollo-client-CnCddnUw.js:0
+[  280823ms] [LOG] Download the Apollo DevTools for a better development experience: %s https://chrome.google.com/webstore/detail/apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm @ https://localhost:8443/assets/apollo-client-CnCddnUw.js:0
+[  299802ms] [WARNING] task queue exceeded allotted deadline by 55ms @ https://localhost:8443/assets/terminal-BZ22UCQy.js:57
+[  342447ms] [LOG] Download the Apollo DevTools for a better development experience: %s https://chrome.google.com/webstore/detail/apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm @ https://localhost:8443/assets/apollo-client-CnCddnUw.js:0
+[  438133ms] TypeError: Cannot read properties of undefined (reading 'startsWith')
+    at k (https://localhost:8443/assets/web-pentest-findings-bUpltcYp.js:1:7378)
+    at https://localhost:8443/assets/web-pentest-findings-bUpltcYp.js:2:5602
+    at Array.map (<anonymous>)
+    at be (https://localhost:8443/assets/web-pentest-findings-bUpltcYp.js:2:5041)
+    at ld (https://localhost:8443/assets/index-1eY0Lylq.js:9:48126)
+    at Cd (https://localhost:8443/assets/index-1eY0Lylq.js:9:70927)
+    at Xg (https://localhost:8443/assets/index-1eY0Lylq.js:9:81262)
+    at Ep (https://localhost:8443/assets/index-1eY0Lylq.js:9:117033)
+    at Lx (https://localhost:8443/assets/index-1eY0Lylq.js:9:116081)
+    at Xd (https://localhost:8443/assets/index-1eY0Lylq.js:9:115913)
+[  441557ms] TypeError: Cannot read properties of undefined (reading 'startsWith')
+    at k (https://localhost:8443/assets/web-pentest-findings-bUpltcYp.js:1:7378)
+    at https://localhost:8443/assets/web-pentest-findings-bUpltcYp.js:2:5602
+    at Array.map (<anonymous>)
+    at be (https://localhost:8443/assets/web-pentest-findings-bUpltcYp.js:2:5041)
+    at ld (https://localhost:8443/assets/index-1eY0Lylq.js:9:48126)
+    at Cd (https://localhost:8443/assets/index-1eY0Lylq.js:9:70927)
+    at Xg (https://localhost:8443/assets/index-1eY0Lylq.js:9:81262)
+    at Ep (https://localhost:8443/assets/index-1eY0Lylq.js:9:117033)
+    at Lx (https://localhost:8443/assets/index-1eY0Lylq.js:9:116081)
+    at Xd (https://localhost:8443/assets/index-1eY0Lylq.js:9:115913)
+[  444902ms] TypeError: Cannot read properties of undefined (reading 'startsWith')
+    at k (https://localhost:8443/assets/web-pentest-findings-bUpltcYp.js:1:7378)
+    at https://localhost:8443/assets/web-pentest-findings-bUpltcYp.js:2:5602
+    at Array.map (<anonymous>)
+    at be (https://localhost:8443/assets/web-pentest-findings-bUpltcYp.js:2:5041)
+    at ld (https://localhost:8443/assets/index-1eY0Lylq.js:9:48126)
+    at Cd (https://localhost:8443/assets/index-1eY0Lylq.js:9:70927)
+    at Xg (https://localhost:8443/assets/index-1eY0Lylq.js:9:81262)
+    at Ep (https://localhost:8443/assets/index-1eY0Lylq.js:9:117033)
+    at Lx (https://localhost:8443/assets/index-1eY0Lylq.js:9:116081)
+    at Xd (https://localhost:8443/assets/index-1eY0Lylq.js:9:115913)
+[  454583ms] [LOG] Download the Apollo DevTools for a better development experience: %s https://chrome.google.com/webstore/detail/apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm @ https://localhost:8443/assets/apollo-client-CnCddnUw.js:0
+[  541305ms] TypeError: Cannot read properties of undefined (reading 'startsWith')
+    at k (https://localhost:8443/assets/web-pentest-findings-bUpltcYp.js:1:7378)
+    at https://localhost:8443/assets/web-pentest-findings-bUpltcYp.js:2:5602
+    at Array.map (<anonymous>)
+    at be (https://localhost:8443/assets/web-pentest-findings-bUpltcYp.js:2:5041)
+    at ld (https://localhost:8443/assets/index-1eY0Lylq.js:9:48126)
+    at Cd (https://localhost:8443/assets/index-1eY0Lylq.js:9:70927)
+    at Xg (https://localhost:8443/assets/index-1eY0Lylq.js:9:81262)
+    at Ep (https://localhost:8443/assets/index-1eY0Lylq.js:9:117033)
+    at Lx (https://localhost:8443/assets/index-1eY0Lylq.js:9:116081)
+    at Xd (https://localhost:8443/assets/index-1eY0Lylq.js:9:115913)
+[  542776ms] TypeError: Cannot read properties of undefined (reading 'startsWith')
+    at k (https://localhost:8443/assets/web-pentest-findings-bUpltcYp.js:1:7378)
+    at https://localhost:8443/assets/web-pentest-findings-bUpltcYp.js:2:5602
+    at Array.map (<anonymous>)
+    at be (https://localhost:8443/assets/web-pentest-findings-bUpltcYp.js:2:5041)
+    at ld (https://localhost:8443/assets/index-1eY0Lylq.js:9:48126)
+    at Cd (https://localhost:8443/assets/index-1eY0Lylq.js:9:70927)
+    at Xg (https://localhost:8443/assets/index-1eY0Lylq.js:9:81262)
+    at Ep (https://localhost:8443/assets/index-1eY0Lylq.js:9:117033)
+    at Lx (https://localhost:8443/assets/index-1eY0Lylq.js:9:116081)
+    at Xd (https://localhost:8443/assets/index-1eY0Lylq.js:9:115913)
+[  552453ms] [LOG] Download the Apollo DevTools for a better development experience: %s https://chrome.google.com/webstore/detail/apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm @ https://localhost:8443/assets/apollo-client-CnCddnUw.js:0
+[ 1458441ms] TypeError: Cannot read properties of undefined (reading 'startsWith')
+    at k (https://localhost:8443/assets/web-pentest-findings-bUpltcYp.js:1:7378)
+    at https://localhost:8443/assets/web-pentest-findings-bUpltcYp.js:2:5602
+    at Array.map (<anonymous>)
+    at be (https://localhost:8443/assets/web-pentest-findings-bUpltcYp.js:2:5041)
+    at ld (https://localhost:8443/assets/index-1eY0Lylq.js:9:48126)
+    at Cd (https://localhost:8443/assets/index-1eY0Lylq.js:9:70927)
+    at Xg (https://localhost:8443/assets/index-1eY0Lylq.js:9:81262)
+    at Ep (https://localhost:8443/assets/index-1eY0Lylq.js:9:117033)
+    at Lx (https://localhost:8443/assets/index-1eY0Lylq.js:9:116081)
+    at Xd (https://localhost:8443/assets/index-1eY0Lylq.js:9:115913)
+[ 1476305ms] [LOG] Download the Apollo DevTools for a better development experience: %s https://chrome.google.com/webstore/detail/apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm @ https://localhost:8443/assets/apollo-client-CnCddnUw.js:0
+[ 6416351ms] [ERROR] WebSocket connection to 'wss://localhost:8443/api/v1/graphql' failed: Error in connection establishment: net::ERR_CONNECTION_CLOSED @ https://localhost:8443/assets/apollo-client-CnCddnUw.js:62

@@ -1,0 +1,102 @@
+- generic [ref=f4e2]:
+  - region "Notifications alt+T"
+  - generic [ref=f4e41]:
+    - banner [ref=f4e42]:
+      - button "Web Pentest" [ref=f4e43] [cursor=pointer]:
+        - img [ref=f4e44]:
+          - generic [ref=f4e46]: </>
+        - generic [ref=f4e47]: Web Pentest
+        - img [ref=f4e48]
+      - navigation [ref=f4e51]:
+        - link "Flows" [ref=f4e52] [cursor=pointer]:
+          - /url: /flows
+        - link "Dashboard" [ref=f4e53] [cursor=pointer]:
+          - /url: /web-pentest
+        - link "Findings" [ref=f4e54] [cursor=pointer]:
+          - /url: /web-pentest/findings
+        - link "Phases" [ref=f4e55] [cursor=pointer]:
+          - /url: /web-pentest/phases
+        - link "Reports" [ref=f4e56] [cursor=pointer]:
+          - /url: /web-pentest/reports
+      - generic [ref=f4e57]:
+        - link "Settings" [ref=f4e58] [cursor=pointer]:
+          - /url: /settings
+          - img [ref=f4e59]
+          - text: Settings
+        - button "AD admin Senior Pentester" [ref=f4e62] [cursor=pointer]:
+          - generic [ref=f4e63]: AD
+          - generic [ref=f4e64]:
+            - generic [ref=f4e65]: admin
+            - generic [ref=f4e66]: Senior Pentester
+          - img [ref=f4e67]
+    - generic [ref=f4e69]:
+      - banner [ref=f4e70]:
+        - navigation "breadcrumb" [ref=f4e71]:
+          - list [ref=f4e72]:
+            - listitem [ref=f4e73]:
+              - link "Dashboard" [disabled] [ref=f4e74]
+      - generic [ref=f4e75]:
+        - generic [ref=f4e76]:
+          - generic [ref=f4e77]: Flow
+          - combobox [ref=f4e78]:
+            - option "— select a flow —"
+            - option "#7 Penetration Test mokka.ru" [selected]
+            - option "#6 Mokka.ru Penetration Test Report"
+            - option "#5 Recon & Attack Surface Mapping"
+            - option "#4 Web Pentest Plan Review"
+            - option "#3 Web Pentest Planning"
+            - option "#2 Web Pentest Plan"
+            - option "#1 Web Pentest Plan"
+          - generic [ref=f4e79]: Loading…
+        - generic [ref=f4e80]:
+          - generic [ref=f4e81]:
+            - heading "Security Findings" [level=3] [ref=f4e83]
+            - generic [ref=f4e84]:
+              - generic [ref=f4e85]: "0"
+              - generic [ref=f4e86]: from selected flow
+              - generic [ref=f4e87]:
+                - generic [ref=f4e88]: "0"
+                - generic [ref=f4e89]: "0"
+                - generic [ref=f4e90]: "0"
+                - generic [ref=f4e91]: "0"
+              - generic [ref=f4e92]:
+                - generic [ref=f4e93]: Critical
+                - generic [ref=f4e94]: High
+                - generic [ref=f4e95]: Medium
+                - generic [ref=f4e96]: Low
+          - generic [ref=f4e97]:
+            - heading "Findings by Severity" [level=3] [ref=f4e99]
+            - paragraph [ref=f4e101]: Analyzing…
+          - generic [ref=f4e102]:
+            - heading "Findings Trend" [level=3] [ref=f4e104]
+            - img [ref=f4e106]:
+              - generic [ref=f4e116]: May 5
+              - generic [ref=f4e117]: May 12
+              - generic [ref=f4e118]: May 19
+              - generic [ref=f4e119]: May 26
+              - generic [ref=f4e120]: Jun 2
+        - generic [ref=f4e121]:
+          - generic [ref=f4e123]:
+            - heading "Security Findings" [level=3] [ref=f4e124]
+            - generic [ref=f4e125]: AI is analyzing…
+          - generic [ref=f4e127]: Analyzing flow with AI…
+        - generic [ref=f4e128]:
+          - generic [ref=f4e130]:
+            - generic [ref=f4e132]:
+              - heading "World State" [level=3] [ref=f4e133]
+              - paragraph [ref=f4e134]: Attack surface from knowledge graph
+            - generic [ref=f4e135]:
+              - combobox [ref=f4e136]:
+                - option "#7 Penetration Test mokka.ru" [selected]
+                - option "#6 Mokka.ru Penetration Test Report"
+                - option "#5 Recon & Attack Surface Mapping"
+                - option "#4 Web Pentest Plan Review"
+                - option "#3 Web Pentest Planning"
+                - option "#2 Web Pentest Plan"
+                - option "#1 Web Pentest Plan"
+              - generic [ref=f4e137]:
+                - button "Graph" [ref=f4e138] [cursor=pointer]
+                - button "Table" [ref=f4e139] [cursor=pointer]
+          - generic [ref=f4e141]:
+            - paragraph [ref=f4e142]: No pentest-relevant entities found
+            - paragraph [ref=f4e143]: World State is populated after Recon phase completes.
