@@ -761,3 +761,98 @@ func (s *WorldStateService) GetLifecycle(c *gin.Context) {
 	})
 }
 
+// ─── World State tool-call feed (agent read/write evidence) ───────────────────
+
+type worldStateToolCall struct {
+	ID        int64           `json:"id"`
+	Name      string          `json:"name"`
+	Status    string          `json:"status"`
+	Args      json.RawMessage `json:"args"`
+	Result    string          `json:"result"`
+	CreatedAt time.Time       `json:"createdAt"`
+}
+
+type toolCallsResponse struct {
+	FlowID    uint64               `json:"flowId"`
+	ToolCalls []worldStateToolCall `json:"toolCalls"`
+}
+
+// GetToolCalls returns recent world_state_query / world_state_update invocations
+// so the UI can show, live, that agents are actually reading/writing World State.
+// @Summary Get recent World State tool calls for a flow
+// @Tags WorldState
+// @Produce json
+// @Security BearerAuth
+// @Param flowID path int true "flow id" minimum(0)
+// @Success 200 {object} response.successResp{data=toolCallsResponse}
+// @Failure 403 {object} response.errorResp
+// @Failure 404 {object} response.errorResp
+// @Router /flows/{flowID}/worldstate/toolcalls [get]
+func (s *WorldStateService) GetToolCalls(c *gin.Context) {
+	flowID, err := strconv.ParseUint(c.Param("flowID"), 10, 64)
+	if err != nil {
+		response.Error(c, response.ErrFlowsInvalidRequest, err)
+		return
+	}
+
+	uid := c.GetUint64("uid")
+	privs := c.GetStringSlice("prm")
+
+	var flow models.Flow
+	var scope func(db *gorm.DB) *gorm.DB
+	if slices.Contains(privs, "flows.admin") {
+		scope = func(db *gorm.DB) *gorm.DB { return db.Where("id = ?", flowID) }
+	} else if slices.Contains(privs, "flows.view") {
+		scope = func(db *gorm.DB) *gorm.DB { return db.Where("id = ? AND user_id = ?", flowID, uid) }
+	} else {
+		response.Error(c, response.ErrNotPermitted, nil)
+		return
+	}
+
+	if err = s.db.Model(&flow).Scopes(scope).Take(&flow).Error; err != nil {
+		if gorm.IsRecordNotFoundError(err) {
+			response.Error(c, response.ErrFlowsNotFound, err)
+		} else {
+			response.Error(c, response.ErrInternal, err)
+		}
+		return
+	}
+
+	type tcRow struct {
+		ID        int64           `gorm:"column:id"`
+		Name      string          `gorm:"column:name"`
+		Status    string          `gorm:"column:status"`
+		Args      json.RawMessage `gorm:"column:args"`
+		Result    string          `gorm:"column:result"`
+		CreatedAt time.Time       `gorm:"column:created_at"`
+	}
+	var rows []tcRow
+	if err = s.db.Raw(`
+		SELECT id, name, status::text AS status, args, result, created_at
+		FROM toolcalls
+		WHERE flow_id = ? AND name IN ('world_state_query', 'world_state_update')
+		ORDER BY created_at DESC
+		LIMIT 50`, flowID).Scan(&rows).Error; err != nil {
+		logger.FromContext(c).WithError(err).Error("world state toolcalls query failed")
+		response.Error(c, response.ErrInternal, err)
+		return
+	}
+
+	calls := make([]worldStateToolCall, 0, len(rows))
+	for _, r := range rows {
+		args := r.Args
+		if len(args) == 0 {
+			args = json.RawMessage(`{}`)
+		}
+		calls = append(calls, worldStateToolCall{
+			ID: r.ID, Name: r.Name, Status: r.Status,
+			Args: args, Result: r.Result, CreatedAt: r.CreatedAt,
+		})
+	}
+
+	response.Success(c, http.StatusOK, toolCallsResponse{
+		FlowID:    flowID,
+		ToolCalls: calls,
+	})
+}
+
