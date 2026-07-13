@@ -15,7 +15,7 @@ RedScope combines a Go backend, a React frontend, and a multi-agent execution pi
 | Planning quality | Easy to re-discover already known facts | Better basis for fact-driven next-step planning from current target state |
 | UI for workflows | Standard dashboard views | Improved phases-first workflow view and world-state focused UX |
 | Auditability | Action traces exist across multiple logs | Stronger reconstruction of handoffs, tool calls, transitions, and timeline |
-| Strategic direction | Pentesting automation | Pentesting automation + **WorldState Security** as an intelligence platform |
+| Strategic direction | Pentesting automation | Pentesting automation + **World State** as an intelligence platform |
 
 ### Visual Comparison (Before vs After)
 
@@ -23,19 +23,19 @@ RedScope combines a Go backend, a React frontend, and a multi-agent execution pi
 
 ![PentAGI before: new flow screen](./docs/images/pentagi-before-new-flow.png)
 
-**After: your WorldState Security direction**
+**After: your World State direction**
 
-![WorldState Security after: world state graph](./docs/images/worldstate-after-graph-latest.png)
-![WorldState Security after: transitions view](./docs/images/worldstate-after-transitions.png)
+![World State after: world state graph](./docs/images/worldstate-after-graph-latest.png)
+![World State after: transitions view](./docs/images/worldstate-after-transitions.png)
 
-## WorldState Security Vision (Agent State Intelligence Platform)
+## World State Vision (Agent State Intelligence Platform)
 
 ### Core Idea
 
-WorldState Security is a dedicated standalone application layered around the main PentAGI pentest platform, focused on observing, recording, and understanding AI agent behavior during penetration testing.
+World State is a dedicated standalone application layered around the main PentAGI pentest platform, focused on observing, recording, and understanding AI agent behavior during penetration testing.
 
 - **PentAGI** remains the execution engine (flows, tool runs, reports).
-- **WorldState Security** is the intelligence layer (what agents know, what state they are in, and how they transition in real time).
+- **World State** is the intelligence layer (what agents know, what state they are in, and how they transition in real time).
 
 ### What This Platform Is Building Toward
 
@@ -50,7 +50,7 @@ WorldState Security is a dedicated standalone application layered around the mai
 
 ### Deeper Vision
 
-PentAGI is powerful, but traditionally opaque: agents execute actions while internal state is hard to inspect. WorldState Security makes that intelligence visible, recordable, and interactive, so humans can work alongside agents rather than only receiving final output.
+PentAGI is powerful, but traditionally opaque: agents execute actions while internal state is hard to inspect. World State makes that intelligence visible, recordable, and interactive, so humans can work alongside agents rather than only receiving final output.
 
 The white rabbit identity is intentional: *follow the white rabbit* into the agent's internal reasoning path, state transitions, and exploration flow.
 
@@ -58,9 +58,9 @@ The white rabbit identity is intentional: *follow the white rabbit* into the age
 
 - [What You Get](#what-you-get)
 - [System Architecture](#system-architecture)
-- [WorldState Security Vision (Agent State Intelligence Platform)](#worldstate-security-vision-agent-state-intelligence-platform)
+- [World State Vision (Agent State Intelligence Platform)](#world-state-vision-agent-state-intelligence-platform)
 - [What Is Improved In This Fork](#what-is-improved-in-this-fork)
-- [In Progress: WorldState Security](#in-progress-worldstate-security)
+- [In Progress: World State](#in-progress-world-state)
 - [Quick Start (Docker)](#quick-start-docker)
 - [Configuration](#configuration)
 - [Local Development](#local-development)
@@ -110,14 +110,14 @@ Key improvements already implemented:
 Current visual direction:
 
 ![RedScope pentest workflow board](./docs/images/fresh-dashboard.png)
-![WorldState Security workflow board (latest screenshot)](./docs/images/worldstate-workflow-board.png)
+![World State workflow board (latest screenshot)](./docs/images/worldstate-workflow-board.png)
 
-## In Progress: WorldState Security
+## In Progress: World State
 
-**WorldState Security** is being built as a dedicated intelligence layer around PentAGI.
+**World State** is being built as a dedicated intelligence layer around PentAGI.
 
 - PentAGI remains the execution engine (flows, tools, reports)
-- WorldState Security becomes the real-time agent intelligence layer (state, context, transitions, recommendations)
+- World State becomes the real-time agent intelligence layer (state, context, transitions, recommendations)
 
 Core capabilities under active development:
 
@@ -141,7 +141,7 @@ Final UI snapshots (phases + graphs):
 
 **Phases board (final):**
 
-![WorldState Security phases board (final)](./docs/images/worldstate-workflow-board.png)
+![World State phases board (final)](./docs/images/worldstate-workflow-board.png)
 
 **World graph views (final):**
 
