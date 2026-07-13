@@ -2,9 +2,28 @@
 
 ## Core Idea
 
-A dedicated standalone application, separate from the main PentAGI pentest platform, focused on observing, recording, and understanding AI agent behavior during a penetration test.
+A dedicated standalone application separate from the main PentAGI pentest platform, focused exclusively on observing, recording, and understanding AI agent behavior during a penetration test.
 
-While PentAGI is the execution engine (creates flows, runs tools, generates reports), WorldState is the intelligence layer: a real-time window into what agents know, what state they are in, and how they transition.
+While PentAGI is the execution engine (creates flows, runs tools, generates reports), WorldState Security is the intelligence layer: a real-time window into what agents know, what state they are in, and how they transition.
+
+## What You Were Building Toward
+
+1. **World State Graph**  
+   A live force-directed graph that visualizes what agents have discovered: hosts, services, vulnerabilities, credentials, networks, and the relationships between them. As agents work, the graph grows. This is the agents' shared mental model of the target.
+2. **Agent State Machine Recorder**  
+   Every agent (Researcher, Developer, Executor, PenTester) goes through states: `created -> waiting -> running -> finished/failed`. WorldState Security records every transition with timestamps and reasons. This is audit-grade observability of agent cognition.
+3. **Directive Feed**  
+   A terminal-style interface to send commands directly into agent containers and watch the live message stream: what agents are saying to each other, what tools they are running, and what they found.
+4. **AI Next Step**  
+   An AI-powered recommendations panel that analyzes the current world state and suggests the most impactful next actions.
+
+## The Deeper Vision
+
+You saw that PentAGI was powerful but opaque: agents do things, but you cannot see inside the process. WorldState Security solves this by making agent intelligence visible, recordable, and interactive.
+
+The white rabbit logo is deliberate: *follow the white rabbit* into the system, see what the agent sees, and track where it goes.
+
+It is a platform for humans who want to work alongside AI agents, not just receive their output.
 
 ## PentAGI vs This Fork (At a Glance)
 
@@ -29,23 +48,6 @@ While PentAGI is the execution engine (creates flows, runs tools, generates repo
 
 ![World State after: world state graph](./docs/images/worldstate-after-graph-latest.png)
 ![World State after: transitions view](./docs/images/worldstate-after-transitions.png)
-
-## What You Were Building Toward
-
-1. **World State Graph**  
-   A live force-directed graph that visualizes what agents have discovered: hosts, services, vulnerabilities, credentials, networks, and their relationships. As agents work, the graph grows as their shared mental model of the target.
-2. **Agent State Machine Recorder**  
-   Every agent (Researcher, Developer, Executor, PenTester) moves through states: `created -> waiting -> running -> finished/failed`. WorldState records each transition with timestamps and reasons, not only the final result.
-3. **Directive Feed**  
-   A terminal-style interface for sending commands to agent containers and watching live message streams: what agents are saying, what tools they run, and what they find.
-4. **AI Next Step**  
-   An AI recommendations panel that analyzes the current world state and suggests the most impactful next actions.
-
-## The Deeper Vision
-
-PentAGI is powerful but opaque: agents act, yet their internal process is hard to inspect. WorldState makes agent intelligence visible, recordable, and interactive.
-
-The white rabbit identity is deliberate: *follow the white rabbit* into the system, see what the agent sees, and track where it goes.
 
 ## Contents
 

@@ -1,8 +1,6 @@
 import { ChevronDown, Copy, Download, ExternalLink, GripVertical, Loader2, NotepadText } from 'lucide-react';
-import WorldStateView from '@/features/world-state/world-state-view';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { usePutUserInputMutation } from '@/graphql/types';
 import { toast } from 'sonner';
 
 import { FlowStatusIcon } from '@/components/icons/flow-status-icon';
@@ -18,6 +16,9 @@ import {
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import FlowCentralTabs from '@/features/flows/flow-central-tabs';
 import FlowTabs from '@/features/flows/flow-tabs';
+import { useWorldStateToolCallPopup } from '@/features/world-state/use-world-state-toolcall-popup';
+import WorldStateView from '@/features/world-state/world-state-view';
+import { usePutUserInputMutation } from '@/graphql/types';
 import { useBreakpoint } from '@/hooks/use-breakpoint';
 import { Log } from '@/lib/log';
 import { copyToClipboard, downloadTextFile, generateFileName, generateReport } from '@/lib/report';
@@ -146,7 +147,10 @@ const Flow = () => {
     const [searchParams, setSearchParams] = useSearchParams();
 
     // Get flow data from FlowProvider
-    const { flowData, flowError, isLoading: isFlowLoading, flowId } = useFlow();
+    const { flowData, flowError, flowId, isLoading: isFlowLoading } = useFlow();
+
+    // Pop a toast each time an agent calls a World State tool during the flow.
+    useWorldStateToolCallPopup(flowId);
 
     // Redirect to flows list if there's an error loading flow data or flow not found
     useEffect(() => {
@@ -160,7 +164,9 @@ const Flow = () => {
     const autoPromptRef = useRef(false);
     useEffect(() => {
         const prompt = searchParams.get('prompt');
-        if (!prompt || !flowId || autoPromptRef.current) return;
+
+        if (!prompt || !flowId || autoPromptRef.current) {return;}
+
         autoPromptRef.current = true;
         putUserInput({ variables: { flowId, input: prompt } });
         setSearchParams({}, { replace: true });
