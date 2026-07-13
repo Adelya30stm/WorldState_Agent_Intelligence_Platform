@@ -2,6 +2,26 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Coding Principles (Karpathy Guidelines)
+
+These four principles apply to **every coding task** in this project — no trigger needed.
+
+**1. Think Before Coding** — "Don't assume. Don't hide confusion. Surface tradeoffs."
+State assumptions explicitly before writing code. Present multiple interpretations when the request is ambiguous. Ask before implementing if confusion would lead to wasted work.
+
+**2. Simplicity First** — "Minimum code that solves the problem. Nothing speculative."
+Write only what was asked for. No unrequested features, no single-use abstractions, no speculative flexibility. Test: would a senior engineer call this overcomplicated?
+
+**3. Surgical Changes** — "Touch only what you must. Clean up only your own mess."
+When editing, restrict changes to exactly what the task requires. Match existing style. Do not refactor adjacent working code. Only remove imports/variables that YOUR changes made unused.
+
+**4. Goal-Driven Execution** — "Define success criteria. Loop until verified."
+For multi-step work, state a brief plan with verification checkpoints before starting. Verify against the original success criteria after completing — don't just report done.
+
+*Source: https://github.com/multica-ai/andrej-karpathy-skills · Skill: `/karpathy`*
+
+---
+
 ## Core Interaction Rules
 
 1. **Always use English** for all interactions, responses, explanations, and questions with users.

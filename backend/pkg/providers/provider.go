@@ -19,6 +19,7 @@ import (
 	"pentagi/pkg/providers/provider"
 	"pentagi/pkg/templates"
 	"pentagi/pkg/tools"
+	"pentagi/pkg/worldstate"
 
 	"github.com/sirupsen/logrus"
 	"github.com/vxcontrol/langchaingo/llms"
@@ -90,6 +91,7 @@ type FlowProvider interface {
 	GenerateSubtasks(ctx context.Context, taskID int64) ([]tools.SubtaskInfo, error)
 	RefineSubtasks(ctx context.Context, taskID int64) ([]tools.SubtaskInfo, error)
 	GetTaskResult(ctx context.Context, taskID int64) (*tools.TaskResult, error)
+	GetWebPentestReport(ctx context.Context, taskID int64) (*tools.TaskResult, error)
 
 	PrepareAgentChain(ctx context.Context, taskID, subtaskID int64) (int64, error)
 	PerformAgentChain(ctx context.Context, taskID, subtaskID, msgChainID int64) (PerformResult, error)
@@ -293,9 +295,10 @@ func (fp *flowProvider) GenerateSubtasks(ctx context.Context, taskID int64) ([]t
 
 	generatorContext := map[string]map[string]any{
 		"user": {
-			"Task":     tasksInfo.Task,
-			"Tasks":    tasksInfo.Tasks,
-			"Subtasks": tasksInfo.Subtasks,
+			"Task":       tasksInfo.Task,
+			"Tasks":      tasksInfo.Tasks,
+			"Subtasks":   tasksInfo.Subtasks,
+			"WorldState": fp.worldStateProjection(ctx),
 		},
 		"system": {
 			"SubtaskListToolName":     tools.SubtaskListToolName,
@@ -385,6 +388,7 @@ func (fp *flowProvider) RefineSubtasks(ctx context.Context, taskID int64) ([]too
 			"Tasks":             tasksInfo.Tasks,
 			"PlannedSubtasks":   subtasksInfo.Planned,
 			"CompletedSubtasks": subtasksInfo.Completed,
+			"WorldState":        fp.worldStateProjection(ctx),
 		},
 		"system": {
 			"SubtaskPatchToolName":    tools.SubtaskPatchToolName,
@@ -556,6 +560,119 @@ func (fp *flowProvider) GetTaskResult(ctx context.Context, taskID int64) (*tools
 	return result, nil
 }
 
+// GetWebPentestReport is the web-pentest-specific replacement for GetTaskResult.
+// It uses web_reporter.tmpl as the system prompt and imposes no character limit,
+// so the agent can produce a complete Mokka-style structured Markdown report.
+// It also collects completed tasks from ALL other flows owned by the same user so
+// the agent sees findings from every prior pentest phase, not just the current flow.
+// Call this instead of GetTaskResult when the task is the Reporting phase of a
+// web application penetration test.
+func (fp *flowProvider) GetWebPentestReport(ctx context.Context, taskID int64) (*tools.TaskResult, error) {
+	ctx, span := obs.Observer.NewSpan(ctx, obs.SpanKindInternal, "providers.flowProvider.GetWebPentestReport")
+	defer span.End()
+
+	logger := logrus.WithContext(ctx).WithField("task_id", taskID)
+
+	tasksInfo, err := fp.getTasksInfo(ctx, taskID)
+	if err != nil {
+		logger.WithError(err).Error("failed to get tasks info for web pentest report")
+		return nil, fmt.Errorf("failed to get tasks info: %w", err)
+	}
+
+	subtasksInfo := fp.getSubtasksInfo(taskID, tasksInfo.Subtasks)
+
+	// Enrich with tasks from all other user flows so the reporter sees every phase's findings.
+	allPriorTasks := fp.collectAllUserFlowTasks(ctx, taskID)
+
+	// user context — same fields as GetTaskResult so task_reporter.tmpl renders correctly
+	userContext := map[string]any{
+		"Task":              tasksInfo.Task,
+		"Tasks":             append(allPriorTasks, tasksInfo.Tasks...),
+		"CompletedSubtasks": subtasksInfo.Completed,
+		"PlannedSubtasks":   subtasksInfo.Planned,
+	}
+
+	// system context — web_reporter.tmpl variables (no N limit)
+	systemContext := map[string]any{
+		"GraphitiEnabled":      fp.graphitiClient != nil && fp.graphitiClient.IsEnabled(),
+		"SearchGuideToolName":  tools.SearchGuideToolName,
+		"StoreGuideToolName":   tools.StoreGuideToolName,
+		"ReportResultToolName": tools.ReportResultToolName,
+		"ToolPlaceholder":      ToolPlaceholder,
+	}
+
+	ctx, observation := obs.Observer.NewObservation(ctx)
+	webReporterEvaluator := observation.Evaluator(
+		langfuse.WithEvaluatorName("web reporter agent"),
+		langfuse.WithEvaluatorInput(map[string]any{
+			"user_context":   userContext,
+			"system_context": systemContext,
+		}),
+		langfuse.WithEvaluatorMetadata(langfuse.Metadata{
+			"task_id":        taskID,
+			"subtasks_count": len(subtasksInfo.Completed),
+		}),
+	)
+	ctx, _ = webReporterEvaluator.Observation(ctx)
+
+	// human message: task_reporter.tmpl gives the agent the full findings context
+	userReporterTmpl, err := fp.prompter.RenderTemplate(templates.PromptTypeTaskReporter, userContext)
+	if err != nil {
+		return nil, wrapErrorEndEvaluatorSpan(ctx, webReporterEvaluator, "failed to render task reporter template", err)
+	}
+
+	// optionally enrich with execution state and logs (same progressive logic as GetTaskResult)
+	if len(userReporterTmpl) < msgReporterSizeLimit {
+		summarizerHandler := fp.GetSummarizeResultHandler(&taskID, nil)
+
+		executionState, err := fp.getTaskPrimaryAgentChainSummary(ctx, taskID, summarizerHandler)
+		if err != nil {
+			return nil, wrapErrorEndEvaluatorSpan(ctx, webReporterEvaluator, "failed to prepare execution state", err)
+		}
+
+		userContext["ExecutionState"] = executionState
+		userReporterTmpl, err = fp.prompter.RenderTemplate(templates.PromptTypeTaskReporter, userContext)
+		if err != nil {
+			return nil, wrapErrorEndEvaluatorSpan(ctx, webReporterEvaluator, "failed to render task reporter template (2)", err)
+		}
+
+		if len(userReporterTmpl) < msgReporterSizeLimit {
+			msgLogsSummary, err := fp.getTaskMsgLogsSummary(ctx, taskID, summarizerHandler)
+			if err != nil {
+				return nil, wrapErrorEndEvaluatorSpan(ctx, webReporterEvaluator, "failed to get task msg logs summary", err)
+			}
+
+			userContext["ExecutionLogs"] = msgLogsSummary
+			userReporterTmpl, err = fp.prompter.RenderTemplate(templates.PromptTypeTaskReporter, userContext)
+			if err != nil {
+				return nil, wrapErrorEndEvaluatorSpan(ctx, webReporterEvaluator, "failed to render task reporter template (3)", err)
+			}
+		}
+	}
+
+	// system message: web_reporter.tmpl — professional report writing agent
+	systemReporterTmpl, err := fp.prompter.RenderTemplate(templates.PromptTypeWebReporter, systemContext)
+	if err != nil {
+		return nil, wrapErrorEndEvaluatorSpan(ctx, webReporterEvaluator, "failed to render web reporter system template", err)
+	}
+
+	result, err := fp.performWebReportResult(ctx, &taskID, systemReporterTmpl, userReporterTmpl, tasksInfo.Task.Input)
+	if err != nil {
+		return nil, wrapErrorEndEvaluatorSpan(ctx, webReporterEvaluator, "failed to perform web report result", err)
+	}
+
+	webReporterEvaluator.End(
+		langfuse.WithEvaluatorStatus("success"),
+		langfuse.WithEvaluatorOutput(map[string]any{
+			"success":       result.Success,
+			"message":       result.Message,
+			"result_length": len(result.Result),
+		}),
+	)
+
+	return result, nil
+}
+
 func (fp *flowProvider) PrepareAgentChain(ctx context.Context, taskID, subtaskID int64) (int64, error) {
 	ctx, span := obs.Observer.NewSpan(ctx, obs.SpanKindInternal, "providers.flowProvider.PrepareAgentChain")
 	defer span.End()
@@ -593,22 +710,24 @@ func (fp *flowProvider) PrepareAgentChain(ctx context.Context, taskID, subtaskID
 	}
 
 	systemAgentTmpl, err := fp.prompter.RenderTemplate(templates.PromptTypePrimaryAgent, map[string]any{
-		"FinalyToolName":          tools.FinalyToolName,
-		"SearchToolName":          tools.SearchToolName,
-		"PentesterToolName":       tools.PentesterToolName,
-		"CoderToolName":           tools.CoderToolName,
-		"AdviceToolName":          tools.AdviceToolName,
-		"MemoristToolName":        tools.MemoristToolName,
-		"MaintenanceToolName":     tools.MaintenanceToolName,
-		"SummarizationToolName":   cast.SummarizationToolName,
-		"SummarizedContentPrefix": strings.ReplaceAll(csum.SummarizedContentPrefix, "\n", "\\n"),
-		"AskUserToolName":         tools.AskUserToolName,
-		"AskUserEnabled":          fp.askUser,
-		"ExecutionContext":        executionContext,
-		"Lang":                    fp.language,
-		"DockerImage":             fp.image,
-		"CurrentTime":             getCurrentTime(),
-		"ToolPlaceholder":         ToolPlaceholder,
+		"FinalyToolName":            tools.FinalyToolName,
+		"SearchToolName":            tools.SearchToolName,
+		"PentesterToolName":         tools.PentesterToolName,
+		"CoderToolName":             tools.CoderToolName,
+		"AdviceToolName":            tools.AdviceToolName,
+		"MemoristToolName":          tools.MemoristToolName,
+		"MaintenanceToolName":       tools.MaintenanceToolName,
+		"WorldStateQueryToolName":   tools.WorldStateQueryToolName,
+		"WorldStateUpdateToolName":  tools.WorldStateUpdateToolName,
+		"SummarizationToolName":     cast.SummarizationToolName,
+		"SummarizedContentPrefix":   strings.ReplaceAll(csum.SummarizedContentPrefix, "\n", "\\n"),
+		"AskUserToolName":           tools.AskUserToolName,
+		"AskUserEnabled":            fp.askUser,
+		"ExecutionContext":          executionContext,
+		"Lang":                      fp.language,
+		"DockerImage":               fp.image,
+		"CurrentTime":               getCurrentTime(),
+		"ToolPlaceholder":           ToolPlaceholder,
 	})
 	if err != nil {
 		logger.WithError(err).Error("failed to get system prompt for primary agent template")
@@ -910,6 +1029,18 @@ func (fp *flowProvider) updateMsgLogResult(
 	}
 
 	return msgLog.UpdateMsgResult(ctx, msgID, streamID, result, resultFormat)
+}
+
+// worldStateProjection returns a compact XML snapshot for planner prompts.
+// Failures are soft — empty/unavailable state must not block planning.
+func (fp *flowProvider) worldStateProjection(ctx context.Context) string {
+	proj, err := worldstate.BuildProjection(ctx, fp.db, fp.flowID)
+	if err != nil {
+		logrus.WithContext(ctx).WithError(err).WithField("flow_id", fp.flowID).
+			Warn("failed to build world state projection for planner")
+		return ""
+	}
+	return proj.Text()
 }
 
 func (fp *flowProvider) putAgentLog(

@@ -1,0 +1,427 @@
+- generic [ref=f14e2]:
+  - region "Notifications alt+T"
+  - generic [ref=f14e5]:
+    - banner [ref=f14e6]:
+      - button "Web Pentest" [ref=f14e7] [cursor=pointer]:
+        - img [ref=f14e8]:
+          - generic [ref=f14e10]: </>
+        - generic [ref=f14e11]: Web Pentest
+        - img [ref=f14e12]
+      - navigation [ref=f14e15]:
+        - link "Flows" [ref=f14e16] [cursor=pointer]:
+          - /url: /flows
+        - link "Dashboard" [ref=f14e17] [cursor=pointer]:
+          - /url: /web-pentest
+        - link "Findings" [ref=f14e18] [cursor=pointer]:
+          - /url: /web-pentest/findings
+        - link "Phases" [ref=f14e19] [cursor=pointer]:
+          - /url: /web-pentest/phases
+        - link "Reports" [ref=f14e20] [cursor=pointer]:
+          - /url: /web-pentest/reports
+      - generic [ref=f14e21]:
+        - link "Settings" [ref=f14e22] [cursor=pointer]:
+          - /url: /settings
+          - img [ref=f14e23]
+          - text: Settings
+        - button "AD admin Senior Pentester" [ref=f14e26] [cursor=pointer]:
+          - generic [ref=f14e27]: AD
+          - generic [ref=f14e28]:
+            - generic [ref=f14e29]: admin
+            - generic [ref=f14e30]: Senior Pentester
+          - img [ref=f14e31]
+    - generic [ref=f14e33]:
+      - banner [ref=f14e34]:
+        - navigation "breadcrumb" [ref=f14e35]:
+          - list [ref=f14e36]:
+            - listitem [ref=f14e37]:
+              - link "Dashboard" [disabled] [ref=f14e38]
+      - generic [ref=f14e39]:
+        - generic [ref=f14e40]:
+          - generic [ref=f14e41]: Flow
+          - combobox [ref=f14e42]:
+            - option "— select a flow —"
+            - option "#7 Penetration Test mokka.ru" [selected]
+            - option "#6 Mokka.ru Penetration Test Report"
+            - option "#5 Recon & Attack Surface Mapping"
+            - option "#4 Web Pentest Plan Review"
+            - option "#3 Web Pentest Planning"
+            - option "#2 Web Pentest Plan"
+            - option "#1 Web Pentest Plan"
+        - generic [ref=f14e43]:
+          - generic [ref=f14e44]:
+            - heading "Security Findings" [level=3] [ref=f14e46]
+            - generic [ref=f14e47]:
+              - generic [ref=f14e48]: "15"
+              - generic [ref=f14e49]: from selected flow
+              - generic [ref=f14e50]:
+                - generic [ref=f14e51]: "0"
+                - generic [ref=f14e52]: "4"
+                - generic [ref=f14e53]: "8"
+                - generic [ref=f14e54]: "3"
+              - generic [ref=f14e55]:
+                - generic [ref=f14e56]: Critical
+                - generic [ref=f14e57]: High
+                - generic [ref=f14e58]: Medium
+                - generic [ref=f14e59]: Low
+          - generic [ref=f14e60]:
+            - heading "Findings by Severity" [level=3] [ref=f14e62]
+            - generic [ref=f14e63]:
+              - img [ref=f14e64]
+              - generic [ref=f14e68]:
+                - generic [ref=f14e71]: High (27%)
+                - generic [ref=f14e74]: Medium (53%)
+                - generic [ref=f14e77]: Low (20%)
+          - generic [ref=f14e78]:
+            - heading "Findings Trend" [level=3] [ref=f14e80]
+            - img [ref=f14e82]:
+              - generic [ref=f14e92]: May 5
+              - generic [ref=f14e93]: May 12
+              - generic [ref=f14e94]: May 19
+              - generic [ref=f14e95]: May 26
+              - generic [ref=f14e96]: Jun 2
+        - generic [ref=f14e97]:
+          - generic [ref=f14e99]:
+            - heading "Security Findings" [level=3] [ref=f14e100]
+            - generic [ref=f14e101]: "15"
+          - generic [ref=f14e103]:
+            - generic [ref=f14e104]:
+              - generic [ref=f14e105]: Medium
+              - generic [ref=f14e106]:
+                - paragraph [ref=f14e107]: Missing Content Security Policy (CSP) on mokka.ru, partner-app.mokka.ru, demo.mokka.ru
+                - paragraph [ref=f14e108]: mokka.ru, partner-app.mokka.ru, demo.mokka.ru
+                - paragraph [ref=f14e109]: The application responses do not include a Content-Security-Policy header. Without CSP, the impact of any XSS or script injection increases (reduced ability to restrict script execution sources).
+            - generic [ref=f14e110]:
+              - generic [ref=f14e111]: Medium
+              - generic [ref=f14e112]:
+                - paragraph [ref=f14e113]: Missing clickjacking protection headers (X-Frame-Options) on mokka.ru and partner-app.mokka.ru
+                - paragraph [ref=f14e114]: mokka.ru, partner-app.mokka.ru
+                - paragraph [ref=f14e115]: The application does not set X-Frame-Options. This enables clickjacking attacks where an attacker can embed the site in a malicious iframe and trick users into interacting with attacker-controlled UI.
+            - generic [ref=f14e116]:
+              - generic [ref=f14e117]: Medium
+              - generic [ref=f14e118]:
+                - paragraph [ref=f14e119]: Insecure session cookie configuration (qrator_ssid missing HttpOnly/Secure/SameSite)
+                - paragraph [ref=f14e120]: "mokka.ru (cookie: qrator_ssid)"
+                - paragraph [ref=f14e121]: The qrator_ssid cookie is missing HttpOnly, Secure, and SameSite flags. This increases risk of session theft via XSS (no HttpOnly), interception via MITM (no Secure), and CSRF/session riding (no SameSite).
+            - generic [ref=f14e122]:
+              - generic [ref=f14e123]: Medium
+              - generic [ref=f14e124]:
+                - paragraph [ref=f14e125]: "Weak TLS configuration: 3DES cipher suite enabled (TLS_RSA_WITH_3DES_EDE_CBC_SHA)"
+                - paragraph [ref=f14e126]: mokka.ru (TLS)
+                - paragraph [ref=f14e127]: A weak 3DES cipher suite is enabled. This can allow downgrade/legacy cipher usage and is associated with SWEET32-style attacks against 3DES in CBC mode.
+              - generic [ref=f14e128]: CVE-2016-2183
+            - generic [ref=f14e129]:
+              - generic [ref=f14e130]: Medium
+              - generic [ref=f14e131]:
+                - paragraph [ref=f14e132]: "CORS misconfiguration: Access-Control-Allow-Origin '*' with credentials enabled"
+                - paragraph [ref=f14e133]: mokka.ru/cc/, landings-b.mokka.ru
+                - paragraph [ref=f14e134]: "CORS is configured with Access-Control-Allow-Origin: * while allowing credentials. This can enable cross-origin data access or CSRF-like abuse depending on browser behavior and additional headers."
+            - generic [ref=f14e135]:
+              - generic [ref=f14e136]: Medium
+              - generic [ref=f14e137]:
+                - paragraph [ref=f14e138]: Information disclosure via Next.js build data endpoint (public merchant database in /_next/data)
+                - paragraph [ref=f14e139]: mokka.ru/_next/data/r2SZpa_GtWJuvtahjK0Jd/index.json
+                - paragraph [ref=f14e140]: The Next.js data endpoint returns a 320KB JSON file without authentication, disclosing a merchant/partner database and related business data (IDs, payment terms, asset URLs, tracking parameters). This enables competitor intelligence and potential downstream abuse.
+            - generic [ref=f14e141]:
+              - generic [ref=f14e142]: Low
+              - generic [ref=f14e143]:
+                - paragraph [ref=f14e144]: Backend infrastructure URL disclosure in client-side config (env-config.js)
+                - paragraph [ref=f14e145]: mokka.ru/cc/env-config.js
+                - paragraph [ref=f14e146]: Client-side JavaScript exposes backend URLs (e.g., kokao.revoup.ru and other endpoints). This materially aids attacker reconnaissance and increases the chance of successful targeting of internal/sandbox services.
+            - generic [ref=f14e147]:
+              - generic [ref=f14e148]: High
+              - generic [ref=f14e149]:
+                - paragraph [ref=f14e150]: "Demo Rails admin endpoint misconfigured: HTTP 500 on /admin"
+                - paragraph [ref=f14e151]: demo.mokka.ru/admin
+                - paragraph [ref=f14e152]: The /admin endpoint returns HTTP 500 Internal Server Error instead of a proper 403/404. This indicates a misconfiguration and may leak framework/error details or enable further probing for authentication bypass or backend issues.
+            - generic [ref=f14e153]:
+              - generic [ref=f14e154]: High
+              - generic [ref=f14e155]:
+                - paragraph [ref=f14e156]: Authentication rate limiting missing on partner-app.mokka.ru/auth/sign-in (credential stuffing risk)
+                - paragraph [ref=f14e157]: partner-app.mokka.ru/auth/sign-in
+                - paragraph [ref=f14e158]: The authentication endpoint allows high-rate attempts without rate limiting, IP blocking, progressive delays, or CAPTCHA. This enables credential stuffing and brute-force attacks against partner accounts.
+            - generic [ref=f14e159]:
+              - generic [ref=f14e160]: High
+              - generic [ref=f14e161]:
+                - paragraph [ref=f14e162]: Authentication rate limiting missing on partner-app.mokka.ru/api/auth/login (credential stuffing risk)
+                - paragraph [ref=f14e163]: partner-app.mokka.ru/api/auth/login
+                - paragraph [ref=f14e164]: An alternative authentication vector (/api/auth/login) is unprotected by rate limiting controls, enabling high-volume login attempts and credential stuffing.
+            - generic [ref=f14e165]:
+              - generic [ref=f14e166]: High
+              - generic [ref=f14e167]:
+                - paragraph [ref=f14e168]: Authentication rate limiting missing on demo.mokka.ru/users/sign_in (credential stuffing risk)
+                - paragraph [ref=f14e169]: demo.mokka.ru/users/sign_in
+                - paragraph [ref=f14e170]: The demo sign-in endpoint lacks rate limiting controls, allowing repeated authentication attempts without throttling. Even if labeled 'demo', this can be abused for credential testing and may expose real accounts or shared logic.
+            - generic [ref=f14e171]:
+              - generic [ref=f14e172]: Medium
+              - generic [ref=f14e173]:
+                - paragraph [ref=f14e174]: "HTTP verb misconfiguration on authentication endpoint: POST /auth/sign-in returns 405"
+                - paragraph [ref=f14e175]: partner-app.mokka.ru/auth/sign-in
+                - paragraph [ref=f14e176]: The login endpoint does not accept POST (returns HTTP 405 Method Not Allowed), which breaks expected authentication workflows and complicates secure handling. Misconfigurations like this can also indicate inconsistent auth routing that may be exploitable in other contexts.
+            - generic [ref=f14e177]:
+              - generic [ref=f14e178]: Medium
+              - generic [ref=f14e179]:
+                - paragraph [ref=f14e180]: Username enumeration via timing differences on partner-app.mokka.ru/auth/sign-in
+                - paragraph [ref=f14e181]: partner-app.mokka.ru/auth/sign-in
+                - paragraph [ref=f14e182]: The response timing differs between existing and non-existing usernames (approx. 0.300s). This can enable user enumeration, which increases the effectiveness of targeted credential stuffing and phishing.
+            - generic [ref=f14e183]:
+              - generic [ref=f14e184]: Low
+              - generic [ref=f14e185]:
+                - paragraph [ref=f14e186]: Missing security headers (X-Content-Type-Options, Referrer-Policy, Permissions-Policy, etc.) on mokka.ru and partner-app.mokka.ru
+                - paragraph [ref=f14e187]: mokka.ru, partner-app.mokka.ru
+                - paragraph [ref=f14e188]: Multiple recommended security headers are absent (e.g., X-Content-Type-Options, Referrer-Policy, Permissions-Policy, and others). This reduces defense-in-depth and can increase exposure to browser-based attacks.
+            - generic [ref=f14e189]:
+              - generic [ref=f14e190]: Low
+              - generic [ref=f14e191]:
+                - paragraph [ref=f14e192]: Information disclosure via Rails framework fingerprinting headers (X-Runtime, X-Request-Id)
+                - paragraph [ref=f14e193]: demo.mokka.ru/admin
+                - paragraph [ref=f14e194]: Error responses expose framework and request identifiers (e.g., X-Runtime and X-Request-Id). This aids fingerprinting and can support timing/behavior analysis for further attacks.
+        - generic [ref=f14e195]:
+          - generic [ref=f14e197]:
+            - generic [ref=f14e198]:
+              - generic [ref=f14e199]:
+                - heading "World State" [level=3] [ref=f14e200]
+                - paragraph [ref=f14e201]: Attack surface from knowledge graph
+              - generic [ref=f14e202]:
+                - generic [ref=f14e203]: 29 targets
+                - generic [ref=f14e204]: 6 vulns
+                - generic [ref=f14e205]: 13 threats
+                - generic [ref=f14e206]: 22 findings
+            - generic [ref=f14e207]:
+              - combobox [ref=f14e208]:
+                - option "#7 Penetration Test mokka.ru" [selected]
+                - option "#6 Mokka.ru Penetration Test Report"
+                - option "#5 Recon & Attack Surface Mapping"
+                - option "#4 Web Pentest Plan Review"
+                - option "#3 Web Pentest Planning"
+                - option "#2 Web Pentest Plan"
+                - option "#1 Web Pentest Plan"
+              - generic [ref=f14e209]:
+                - button "Graph" [ref=f14e210] [cursor=pointer]
+                - button "Table" [ref=f14e211] [cursor=pointer]
+          - generic [ref=f14e213]:
+            - img [ref=f14e214]:
+              - generic [ref=f14e215]:
+                - generic [ref=f14e218]: Attack Surface
+                - generic [ref=f14e221]: Endpoints
+                - generic [ref=f14e224]: Network
+                - generic [ref=f14e227]: Findings
+                - generic [ref=f14e230]: Vulnerabilities
+                - generic [ref=f14e233]: Threats
+                - generic [ref=f14e258] [cursor=pointer]:
+                  - generic: T
+                  - generic: https://mokka.ru/_…
+                - generic [ref=f14e260] [cursor=pointer]:
+                  - generic: T
+                  - generic: Qrator (reverse pr…
+                - generic [ref=f14e262] [cursor=pointer]:
+                  - generic: T
+                  - generic: nginx
+                - generic [ref=f14e264] [cursor=pointer]:
+                  - generic: T
+                  - generic: Financial service …
+                - generic [ref=f14e266] [cursor=pointer]:
+                  - generic: T
+                  - generic: detmir.mokka.ru
+                - generic [ref=f14e268] [cursor=pointer]:
+                  - generic: T
+                  - generic: TLSv1.2
+                - generic [ref=f14e270] [cursor=pointer]:
+                  - generic: T
+                  - generic: https://mokka.ru/a…
+                - generic [ref=f14e272] [cursor=pointer]:
+                  - generic: T
+                  - generic: partner-app.mokka.…
+                - generic [ref=f14e274] [cursor=pointer]:
+                  - generic: T
+                  - generic: qrator-test-partne…
+                - generic [ref=f14e276] [cursor=pointer]:
+                  - generic: T
+                  - generic: https://mokka.ru/_…
+                - generic [ref=f14e278] [cursor=pointer]:
+                  - generic: T
+                  - generic: TLSv1.3
+                - generic [ref=f14e280] [cursor=pointer]:
+                  - generic: T
+                  - generic: landings-b.mokka.r…
+                - generic [ref=f14e282] [cursor=pointer]:
+                  - generic: T
+                  - generic: tnx585.mokka.ru
+                - generic [ref=f14e284] [cursor=pointer]:
+                  - generic: T
+                  - generic: https://mokka.ru/w…
+                - generic [ref=f14e286] [cursor=pointer]:
+                  - generic: T
+                  - generic: https://mokka.ru/_…
+                - generic [ref=f14e288] [cursor=pointer]:
+                  - generic: T
+                  - generic: Node.js
+                - generic [ref=f14e290] [cursor=pointer]:
+                  - generic: T
+                  - generic: Yandex (hosting, D…
+                - generic [ref=f14e292] [cursor=pointer]:
+                  - generic: T
+                  - generic: https://mokka.ru/_…
+                - generic [ref=f14e294] [cursor=pointer]:
+                  - generic: T
+                  - generic: konkurs.mokka.ru
+                - generic [ref=f14e296] [cursor=pointer]:
+                  - generic: T
+                  - generic: https://mokka.ru/s…
+                - generic [ref=f14e298] [cursor=pointer]:
+                  - generic: T
+                  - generic: storage.yandexclou…
+                - generic [ref=f14e300] [cursor=pointer]:
+                  - generic: T
+                  - generic: WordPress with Ele…
+                - generic [ref=f14e302] [cursor=pointer]:
+                  - generic: T
+                  - generic: demo.mokka.ru
+                - generic [ref=f14e304] [cursor=pointer]:
+                  - generic: T
+                  - generic: gj.mokka.ru
+                - generic [ref=f14e306] [cursor=pointer]:
+                  - generic: T
+                  - generic: https://mokka.ru/_…
+                - generic [ref=f14e308] [cursor=pointer]:
+                  - generic: T
+                  - generic: https://mokka.ru/_…
+                - generic [ref=f14e310] [cursor=pointer]:
+                  - generic: T
+                  - generic: https://mokka.ru/_…
+                - generic [ref=f14e312] [cursor=pointer]:
+                  - generic: T
+                  - generic: alfabank.mokka.ru
+                - generic [ref=f14e314] [cursor=pointer]:
+                  - generic: T
+                  - generic: partner.mokka.ru
+                - generic [ref=f14e316] [cursor=pointer]:
+                  - generic: V
+                  - generic: SQL injection (vul…
+                - generic [ref=f14e319] [cursor=pointer]:
+                  - generic: V
+                  - generic: CVE analysis
+                - generic [ref=f14e322] [cursor=pointer]:
+                  - generic: V
+                  - generic: NoSQL injection (v…
+                - generic [ref=f14e325] [cursor=pointer]:
+                  - generic: V
+                  - generic: IDOR/access contro…
+                - generic [ref=f14e328] [cursor=pointer]:
+                  - generic: V
+                  - generic: session management
+                - generic [ref=f14e331] [cursor=pointer]:
+                  - generic: V
+                  - generic: CWE-79
+                - generic [ref=f14e334] [cursor=pointer]:
+                  - generic: T
+                  - generic: advanced attacks
+                - generic [ref=f14e337] [cursor=pointer]:
+                  - generic: T
+                  - generic: Ruby on Rails expl…
+                - generic [ref=f14e340] [cursor=pointer]:
+                  - generic: T
+                  - generic: OWASP WSTG-INPV-01…
+                - generic [ref=f14e343] [cursor=pointer]:
+                  - generic: T
+                  - generic: OWASP WSTG-INPV-02…
+                - generic [ref=f14e346] [cursor=pointer]:
+                  - generic: T
+                  - generic: X-Forwarded-For / …
+                - generic [ref=f14e349] [cursor=pointer]:
+                  - generic: T
+                  - generic: SSL/TLS analysis
+                - generic [ref=f14e352] [cursor=pointer]:
+                  - generic: T
+                  - generic: SQL injection payl…
+                - generic [ref=f14e355] [cursor=pointer]:
+                  - generic: T
+                  - generic: WAF bypass tamper …
+                - generic [ref=f14e358] [cursor=pointer]:
+                  - generic: T
+                  - generic: "--random-agent (sq…"
+                - generic [ref=f14e361] [cursor=pointer]:
+                  - generic: T
+                  - generic: "XSS payload: <img …"
+                - generic [ref=f14e364] [cursor=pointer]:
+                  - generic: T
+                  - generic: JWT testing
+                - generic [ref=f14e367] [cursor=pointer]:
+                  - generic: T
+                  - generic: Gf-Patterns, DOM M…
+                - generic [ref=f14e370] [cursor=pointer]:
+                  - generic: T
+                  - generic: UNION SELECT NULL-…
+                - generic [ref=f14e373] [cursor=pointer]:
+                  - generic: F
+                  - generic: Cross-Site Scripti…
+                - generic [ref=f14e376] [cursor=pointer]:
+                  - generic: F
+                  - generic: /_health endpoint …
+                - generic [ref=f14e379] [cursor=pointer]:
+                  - generic: F
+                  - generic: /admin endpoint on…
+                - generic [ref=f14e382] [cursor=pointer]:
+                  - generic: F
+                  - generic: WordPress inner pa…
+                - generic [ref=f14e385] [cursor=pointer]:
+                  - generic: F
+                  - generic: HTTP 404 Not Found
+                - generic [ref=f14e388] [cursor=pointer]:
+                  - generic: F
+                  - generic: Client.Timeout exc…
+                - generic [ref=f14e391] [cursor=pointer]:
+                  - generic: F
+                  - generic: document.write
+                - generic [ref=f14e394] [cursor=pointer]:
+                  - generic: F
+                  - generic: JavaScript protoco…
+                - generic [ref=f14e397] [cursor=pointer]:
+                  - generic: F
+                  - generic: terms [2,3,6,10,15…
+                - generic [ref=f14e400] [cursor=pointer]:
+                  - generic: F
+                  - generic: eval()
+                - generic [ref=f14e403] [cursor=pointer]:
+                  - generic: F
+                  - generic: "x-runtime: 0.01133…"
+                - generic [ref=f14e406] [cursor=pointer]:
+                  - generic: F
+                  - generic: "HTTP Code: 500"
+                - generic [ref=f14e409] [cursor=pointer]:
+                  - generic: F
+                  - generic: dangerouslySetInne…
+                - generic [ref=f14e412] [cursor=pointer]:
+                  - generic: F
+                  - generic: Basic script tag p…
+                - generic [ref=f14e415] [cursor=pointer]:
+                  - generic: F
+                  - generic: HTTP 403 Forbidden
+                - generic [ref=f14e418] [cursor=pointer]:
+                  - generic: F
+                  - generic: "URL rejected: Malf…"
+                - generic [ref=f14e421] [cursor=pointer]:
+                  - generic: F
+                  - generic: https?://[a-zA-Z0-…
+                - generic [ref=f14e424] [cursor=pointer]:
+                  - generic: F
+                  - generic: Non-Secure Cookies
+                - generic [ref=f14e427] [cursor=pointer]:
+                  - generic: F
+                  - generic: Third-party depend…
+                - generic [ref=f14e430] [cursor=pointer]:
+                  - generic: F
+                  - generic: DNS records
+                - generic [ref=f14e433] [cursor=pointer]:
+                  - generic: F
+                  - generic: innerHTML
+                - generic [ref=f14e436] [cursor=pointer]:
+                  - generic: F
+                  - generic: "Response Time: 0.6…"
+            - generic [ref=f14e439]:
+              - generic [ref=f14e442]: Attack Surface
+              - generic [ref=f14e445]: Endpoints
+              - generic [ref=f14e448]: Network
+              - generic [ref=f14e451]: Findings
+              - generic [ref=f14e454]: Vulnerabilities
+              - generic [ref=f14e457]: Threats
+            - generic [ref=f14e458]: scroll to zoom · drag to pan · click node to inspect

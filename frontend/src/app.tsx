@@ -24,6 +24,15 @@ const Flow = lazy(() => import('@/pages/flows/flow'));
 const FlowReport = lazy(() => import('@/pages/flows/flow-report'));
 const Flows = lazy(() => import('@/pages/flows/flows'));
 const NewFlow = lazy(() => import('@/pages/flows/new-flow'));
+const Projects = lazy(() => import('@/pages/projects/projects'));
+const ProjectsPhases = lazy(() =>
+    import('@/pages/projects/projects').then((m) => ({ default: m.WebPentestPhases })),
+);
+const ProjectsConsole = lazy(() =>
+    import('@/pages/projects/projects').then((m) => ({ default: m.WebPentestConsole })),
+);
+const WebPentestReports = lazy(() => import('@/pages/projects/web-pentest-reports'));
+const WebPentestFindings = lazy(() => import('@/pages/projects/web-pentest-findings'));
 const Login = lazy(() => import('@/pages/login'));
 const OAuthResult = lazy(() => import('@/pages/oauth-result'));
 const SettingsAPITokens = lazy(() => import('@/pages/settings/settings-api-tokens'));
@@ -85,6 +94,26 @@ const App = () => {
                                             </Route>
 
                                             {/* Other pages can be added here without FlowsProvider */}
+                                            <Route
+                                                element={<Projects />}
+                                                path="web-pentest"
+                                            />
+                                            <Route
+                                                element={<ProjectsPhases />}
+                                                path="web-pentest/phases"
+                                            />
+                                            <Route
+                                                element={<ProjectsConsole />}
+                                                path="web-pentest/console"
+                                            />
+                                            <Route
+                                                element={<WebPentestFindings />}
+                                                path="web-pentest/findings"
+                                            />
+                                            <Route
+                                                element={<WebPentestReports />}
+                                                path="web-pentest/reports"
+                                            />
                                         </Route>
 
                                         {/* Settings with nested routes */}
@@ -171,11 +200,11 @@ const App = () => {
 
                                     {/* other routes */}
                                     <Route
-                                        element={<Navigate to="/flows" />}
+                                        element={<Navigate to="/web-pentest/phases" replace />}
                                         path="/"
                                     />
                                     <Route
-                                        element={<Navigate to="/flows" />}
+                                        element={<Navigate to="/web-pentest/phases" replace />}
                                         path="*"
                                     />
                                 </Routes>

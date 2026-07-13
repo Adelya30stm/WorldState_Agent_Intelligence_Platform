@@ -11,10 +11,16 @@ const badgeVariants = cva(
         },
         variants: {
             variant: {
-                default: 'border-transparent bg-primary text-primary-foreground hover:bg-primary/80',
+                default:     'border-transparent bg-primary text-primary-foreground hover:bg-primary/80',
                 destructive: 'border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80',
-                outline: 'text-foreground',
-                secondary: 'border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80',
+                outline:     'text-foreground border-border',
+                secondary:   'border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80',
+                // Status variants for pentest flows
+                running:  'border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400',
+                waiting:  'border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400',
+                finished: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
+                failed:   'border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400',
+                created:  'border-border bg-muted text-muted-foreground',
             },
         },
     },

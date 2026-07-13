@@ -1,5 +1,5 @@
 # Fonts
-This directory contains web fonts used in the PentAGI frontend application.
+This directory contains web fonts used in the RedScope frontend application.
 ## Inter
 - **Files**: `inter-*.woff2` (8 files)
 - **License**: SIL Open Font License 1.1

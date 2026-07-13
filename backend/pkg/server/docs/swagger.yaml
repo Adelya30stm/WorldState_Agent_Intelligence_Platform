@@ -1541,15 +1541,15 @@ definitions:
     type: object
 info:
   contact:
-    email: team@pentagi.com
-    name: PentAGI Development Team
-    url: https://pentagi.com
-  description: Swagger API for Penetration Testing Advanced General Intelligence PentAGI.
+    email: adelina.30stm666@gmail.com
+    name: RedScope Development Team
+    url: https://redscope.io
+  description: Swagger API for RedScope automated penetration testing platform.
   license:
     name: MIT
     url: https://opensource.org/license/mit
   termsOfService: http://swagger.io/terms/
-  title: PentAGI Swagger API
+  title: RedScope Swagger API
   version: "1.0"
 paths:
   /agentlogs/:

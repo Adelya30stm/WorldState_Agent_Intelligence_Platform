@@ -40,7 +40,7 @@ func main() {
 	)
 	defer cancelOnSignal()
 
-	logrus.Infof("Starting PentAGI %s", version.GetBinaryVersion())
+	logrus.Infof("Starting RedScope %s", version.GetBinaryVersion())
 
 	cfg, err := config.NewConfig()
 	if err != nil {

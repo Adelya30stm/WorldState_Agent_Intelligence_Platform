@@ -16,7 +16,7 @@ import (
 	"github.com/vxcontrol/cloud/sdk"
 )
 
-// ServerSettingsFormModel represents the PentAGI server settings configuration form
+// ServerSettingsFormModel represents the RedScope server settings configuration form
 type ServerSettingsFormModel struct {
 	*BaseScreen
 }

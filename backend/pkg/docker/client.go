@@ -335,7 +335,7 @@ func (dc *dockerClient) RunContainer(
 			Force:         true,
 		}
 		for _, container := range containers {
-			// containerName is unique for PentAGI environment, so we can use it to find the container
+			// containerName is unique for RedScope environment, so we can use it to find the container
 			if len(container.Names) > 0 && container.Names[0] == containerName {
 				_ = dc.client.ContainerRemove(ctx, container.ID, options)
 			}

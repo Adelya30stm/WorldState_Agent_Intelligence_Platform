@@ -12,9 +12,9 @@ const docTemplate = `{
         "title": "{{.Title}}",
         "termsOfService": "http://swagger.io/terms/",
         "contact": {
-            "name": "PentAGI Development Team",
-            "url": "https://pentagi.com",
-            "email": "team@pentagi.com"
+            "name": "RedScope Development Team",
+            "url": "https://redscope.io",
+            "email": "adelina.30stm666@gmail.com"
         },
         "license": {
             "name": "MIT",
@@ -7746,8 +7746,8 @@ var SwaggerInfo = &swag.Spec{
 	Host:             "",
 	BasePath:         "/api/v1",
 	Schemes:          []string{},
-	Title:            "PentAGI Swagger API",
-	Description:      "Swagger API for Penetration Testing Advanced General Intelligence PentAGI.",
+	Title:            "RedScope Swagger API",
+	Description:      "Swagger API for RedScope automated penetration testing platform.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 }

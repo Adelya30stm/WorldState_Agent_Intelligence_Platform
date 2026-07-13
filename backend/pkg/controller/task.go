@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 
 	"pentagi/pkg/database"
@@ -11,6 +12,14 @@ import (
 	"pentagi/pkg/providers"
 	"pentagi/pkg/tools"
 )
+
+// webPentestReportMarker is a unique phrase that the Phases UI injects into every
+// "Reporting" phase prompt. We use it to detect reporting tasks without a DB migration.
+const webPentestReportMarker = "penetration tester writing the final report"
+
+func isWebPentestReportingTask(input string) bool {
+	return strings.Contains(strings.ToLower(input), webPentestReportMarker)
+}
 
 type FlowUpdater interface {
 	SetStatus(ctx context.Context, status database.FlowStatus) error
@@ -310,7 +319,15 @@ func (tw *taskWorker) Run(ctx context.Context) error {
 		}
 	}
 
-	jobResult, err := tw.taskCtx.Provider.GetTaskResult(ctx, tw.taskCtx.TaskID)
+	var (
+		jobResult *tools.TaskResult
+		err       error
+	)
+	if isWebPentestReportingTask(tw.taskCtx.TaskInput) {
+		jobResult, err = tw.taskCtx.Provider.GetWebPentestReport(ctx, tw.taskCtx.TaskID)
+	} else {
+		jobResult, err = tw.taskCtx.Provider.GetTaskResult(ctx, tw.taskCtx.TaskID)
+	}
 	if err != nil {
 		return fmt.Errorf("failed to get task %d result: %w", tw.taskCtx.TaskID, err)
 	}

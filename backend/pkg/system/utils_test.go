@@ -87,7 +87,7 @@ func generateTestCerts() (*testCerts, error) {
 		SerialNumber: rootSerial,
 		Subject: pkix.Name{
 			CommonName:   "Test Root CA",
-			Organization: []string{"PentAGI Test"},
+			Organization: []string{"RedScope Test"},
 		},
 		NotBefore:             time.Now(),
 		NotAfter:              time.Now().Add(24 * time.Hour),
@@ -122,7 +122,7 @@ func generateTestCerts() (*testCerts, error) {
 		SerialNumber: intermediateSerial,
 		Subject: pkix.Name{
 			CommonName:   "Test Intermediate CA",
-			Organization: []string{"PentAGI Test"},
+			Organization: []string{"RedScope Test"},
 		},
 		NotBefore:             time.Now(),
 		NotAfter:              time.Now().Add(24 * time.Hour),
@@ -157,7 +157,7 @@ func generateTestCerts() (*testCerts, error) {
 		SerialNumber: serverSerial,
 		Subject: pkix.Name{
 			CommonName:   "localhost",
-			Organization: []string{"PentAGI Test Server"},
+			Organization: []string{"RedScope Test Server"},
 		},
 		NotBefore:             time.Now(),
 		NotAfter:              time.Now().Add(24 * time.Hour),

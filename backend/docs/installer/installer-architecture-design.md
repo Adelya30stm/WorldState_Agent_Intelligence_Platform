@@ -1,6 +1,6 @@
-# PentAGI Installer Architecture & Design Patterns
+# RedScope Installer Architecture & Design Patterns
 
-> Architecture patterns, design decisions, and implementation strategies specific to the PentAGI installer.
+> Architecture patterns, design decisions, and implementation strategies specific to the RedScope installer.
 
 ## 🏗️ **Unified App Architecture**
 

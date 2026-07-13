@@ -95,7 +95,7 @@ This document outlines test scenarios for the installer's system checking functi
 **Setup**: Set DOCKER_HOST, DOCKER_TLS_VERIFY, DOCKER_CERT_PATH
 **Expected**: 
 - Values synchronized to .env on first run via DoSyncNetworkSettings()
-- DOCKER_CERT_PATH migrated to PENTAGI_DOCKER_CERT_PATH (host path) + DOCKER_CERT_PATH set to /opt/pentagi/docker/ssl (container path)
+- DOCKER_CERT_PATH migrated to REDSCOPE_DOCKER_CERT_PATH (host path) + DOCKER_CERT_PATH set to /opt/redscope/docker/ssl (container path)
 
 ## Edge Cases
 
@@ -142,7 +142,7 @@ export HTTPS_PROXY=http://proxy:3128
 # Test remote Docker
 export DOCKER_HOST=tcp://remote:2376
 export DOCKER_TLS_VERIFY=1
-export DOCKER_CERT_PATH=/path/to/certs  # auto-migrated to PENTAGI_DOCKER_CERT_PATH on startup
+export DOCKER_CERT_PATH=/path/to/certs  # auto-migrated to REDSCOPE_DOCKER_CERT_PATH on startup
 ```
 
 ## Verification

@@ -9,6 +9,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"fmt"
+	"time"
 )
 
 type AssistantStatus string
@@ -191,21 +192,28 @@ func (ns NullFlowStatus) Value() (driver.Value, error) {
 type MsgchainType string
 
 const (
-	MsgchainTypePrimaryAgent  MsgchainType = "primary_agent"
-	MsgchainTypeReporter      MsgchainType = "reporter"
-	MsgchainTypeGenerator     MsgchainType = "generator"
-	MsgchainTypeRefiner       MsgchainType = "refiner"
-	MsgchainTypeReflector     MsgchainType = "reflector"
-	MsgchainTypeEnricher      MsgchainType = "enricher"
-	MsgchainTypeAdviser       MsgchainType = "adviser"
-	MsgchainTypeCoder         MsgchainType = "coder"
-	MsgchainTypeMemorist      MsgchainType = "memorist"
-	MsgchainTypeSearcher      MsgchainType = "searcher"
-	MsgchainTypeInstaller     MsgchainType = "installer"
-	MsgchainTypePentester     MsgchainType = "pentester"
-	MsgchainTypeSummarizer    MsgchainType = "summarizer"
-	MsgchainTypeToolCallFixer MsgchainType = "tool_call_fixer"
-	MsgchainTypeAssistant     MsgchainType = "assistant"
+	MsgchainTypePrimaryAgent   MsgchainType = "primary_agent"
+	MsgchainTypeReporter       MsgchainType = "reporter"
+	MsgchainTypeGenerator      MsgchainType = "generator"
+	MsgchainTypeRefiner        MsgchainType = "refiner"
+	MsgchainTypeReflector      MsgchainType = "reflector"
+	MsgchainTypeEnricher       MsgchainType = "enricher"
+	MsgchainTypeAdviser        MsgchainType = "adviser"
+	MsgchainTypeCoder          MsgchainType = "coder"
+	MsgchainTypeMemorist       MsgchainType = "memorist"
+	MsgchainTypeSearcher       MsgchainType = "searcher"
+	MsgchainTypeInstaller      MsgchainType = "installer"
+	MsgchainTypePentester      MsgchainType = "pentester"
+	MsgchainTypeSummarizer     MsgchainType = "summarizer"
+	MsgchainTypeToolCallFixer  MsgchainType = "tool_call_fixer"
+	MsgchainTypeAssistant      MsgchainType = "assistant"
+	MsgchainTypeWebPlanner     MsgchainType = "web_planner"
+	MsgchainTypeWebRecon       MsgchainType = "web_recon"
+	MsgchainTypeWebMapper      MsgchainType = "web_mapper"
+	MsgchainTypeWebTester      MsgchainType = "web_tester"
+	MsgchainTypeWebValidator   MsgchainType = "web_validator"
+	MsgchainTypeWebAttackPaths MsgchainType = "web_attack_paths"
+	MsgchainTypeWebReporter    MsgchainType = "web_reporter"
 )
 
 func (e *MsgchainType) Scan(src interface{}) error {
@@ -379,6 +387,20 @@ const (
 	PromptTypeQuestionExecutionMonitor PromptType = "question_execution_monitor"
 	PromptTypeQuestionTaskPlanner      PromptType = "question_task_planner"
 	PromptTypeTaskAssignmentWrapper    PromptType = "task_assignment_wrapper"
+	PromptTypeWebPlanner               PromptType = "web_planner"
+	PromptTypeQuestionWebPlanner       PromptType = "question_web_planner"
+	PromptTypeWebRecon                 PromptType = "web_recon"
+	PromptTypeQuestionWebRecon         PromptType = "question_web_recon"
+	PromptTypeWebMapper                PromptType = "web_mapper"
+	PromptTypeQuestionWebMapper        PromptType = "question_web_mapper"
+	PromptTypeWebTester                PromptType = "web_tester"
+	PromptTypeQuestionWebTester        PromptType = "question_web_tester"
+	PromptTypeWebValidator             PromptType = "web_validator"
+	PromptTypeQuestionWebValidator     PromptType = "question_web_validator"
+	PromptTypeWebAttackPaths           PromptType = "web_attack_paths"
+	PromptTypeQuestionWebAttackPaths   PromptType = "question_web_attack_paths"
+	PromptTypeWebReporter              PromptType = "web_reporter"
+	PromptTypeQuestionWebReporter      PromptType = "question_web_reporter"
 )
 
 func (e *PromptType) Scan(src interface{}) error {
@@ -860,6 +882,53 @@ func (ns NullVecstoreActionType) Value() (driver.Value, error) {
 	return string(ns.VecstoreActionType), nil
 }
 
+type WorldStateLifecycle string
+
+const (
+	WorldStateLifecycleUnknown    WorldStateLifecycle = "unknown"
+	WorldStateLifecycleDiscovered WorldStateLifecycle = "discovered"
+	WorldStateLifecycleScanning   WorldStateLifecycle = "scanning"
+	WorldStateLifecycleAssessed   WorldStateLifecycle = "assessed"
+	WorldStateLifecycleVulnerable WorldStateLifecycle = "vulnerable"
+	WorldStateLifecycleExploited  WorldStateLifecycle = "exploited"
+	WorldStateLifecycleRemediated WorldStateLifecycle = "remediated"
+)
+
+func (e *WorldStateLifecycle) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = WorldStateLifecycle(s)
+	case string:
+		*e = WorldStateLifecycle(s)
+	default:
+		return fmt.Errorf("unsupported scan type for WorldStateLifecycle: %T", src)
+	}
+	return nil
+}
+
+type NullWorldStateLifecycle struct {
+	WorldStateLifecycle WorldStateLifecycle `json:"world_state_lifecycle"`
+	Valid               bool                `json:"valid"` // Valid is true if WorldStateLifecycle is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullWorldStateLifecycle) Scan(value interface{}) error {
+	if value == nil {
+		ns.WorldStateLifecycle, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.WorldStateLifecycle.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullWorldStateLifecycle) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.WorldStateLifecycle), nil
+}
+
 type Agentlog struct {
 	ID        int64         `json:"id"`
 	Initiator MsgchainType  `json:"initiator"`
@@ -1116,4 +1185,37 @@ type Vecstorelog struct {
 	TaskID    sql.NullInt64      `json:"task_id"`
 	SubtaskID sql.NullInt64      `json:"subtask_id"`
 	CreatedAt sql.NullTime       `json:"created_at"`
+}
+
+type WorldStateEntity struct {
+	ID          int64               `json:"id"`
+	FlowID      int64               `json:"flow_id"`
+	EntityKey   string              `json:"entity_key"`
+	Type        string              `json:"type"`
+	State       WorldStateLifecycle `json:"state"`
+	Properties  json.RawMessage     `json:"properties"`
+	Annotations json.RawMessage     `json:"annotations"`
+	Version     int32               `json:"version"`
+	CreatedAt   time.Time           `json:"created_at"`
+	UpdatedAt   time.Time           `json:"updated_at"`
+}
+
+type WorldStateLink struct {
+	ID         int64           `json:"id"`
+	FlowID     int64           `json:"flow_id"`
+	SourceID   int64           `json:"source_id"`
+	TargetID   int64           `json:"target_id"`
+	Type       string          `json:"type"`
+	Properties json.RawMessage `json:"properties"`
+	CreatedAt  time.Time       `json:"created_at"`
+}
+
+type WorldStateTransition struct {
+	ID        int64               `json:"id"`
+	EntityID  int64               `json:"entity_id"`
+	FromState WorldStateLifecycle `json:"from_state"`
+	ToState   WorldStateLifecycle `json:"to_state"`
+	Agent     string              `json:"agent"`
+	Evidence  json.RawMessage     `json:"evidence"`
+	CreatedAt time.Time           `json:"created_at"`
 }

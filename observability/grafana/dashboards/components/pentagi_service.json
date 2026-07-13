@@ -1282,7 +1282,7 @@
   "refresh": "5s",
   "schemaVersion": 40,
   "tags": [
-    "PentAGI"
+    "RedScope"
   ],
   "templating": {
     "list": [
@@ -1321,7 +1321,7 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "PentAGI Service",
+  "title": "RedScope Service",
   "uid": "ae878pmc43xfke",
   "version": 2,
   "weekStart": ""

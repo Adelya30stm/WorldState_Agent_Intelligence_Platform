@@ -1,10 +1,8 @@
-import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage } from '@/components/ui/breadcrumb';
 import { Card, CardContent } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FlowForm, type FlowFormValues } from '@/features/flows/flow-form';
 import { useFlows } from '@/providers/flows-provider';
@@ -13,6 +11,7 @@ import { useSystemSettings } from '@/providers/system-settings-provider';
 
 const NewFlow = () => {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
 
     const { selectedProvider } = useProviders();
     const { createFlow, createFlowWithAssistant } = useFlows();
@@ -20,6 +19,10 @@ const NewFlow = () => {
 
     const [isLoading, setIsLoading] = useState(false);
     const [flowType, setFlowType] = useState<'assistant' | 'automation'>('automation');
+
+    // Auto-submit when ?prompt= is provided (e.g. from Projects page)
+    const autoPrompt = searchParams.get('prompt');
+    const autoSubmittedRef = useRef(false);
 
     // Calculate default useAgents value (only for assistant type)
     const shouldUseAgents = useMemo(() => {
@@ -37,7 +40,10 @@ const NewFlow = () => {
             const flowId = flowType === 'automation' ? await createFlow(values) : await createFlowWithAssistant(values);
 
             if (flowId) {
-                // Navigate to the new flow page with tab parameter
+                const webPentestTarget = searchParams.get('webPentestTarget');
+                if (webPentestTarget) {
+                    localStorage.setItem('webPentestFlow', JSON.stringify({ flowId, target: webPentestTarget }));
+                }
                 navigate(`/flows/${flowId}?tab=${flowType}`);
             }
         } finally {
@@ -45,14 +51,34 @@ const NewFlow = () => {
         }
     };
 
+    // Auto-submit if ?prompt= is in the URL (launched from Projects page)
+    useEffect(() => {
+        if (!autoPrompt || autoSubmittedRef.current || isLoading || !selectedProvider) return;
+        autoSubmittedRef.current = true;
+        handleSubmit({
+            message: autoPrompt,
+            providerName: selectedProvider.name,
+            useAgents: shouldUseAgents,
+        });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [autoPrompt, selectedProvider, shouldUseAgents]);
+
+    // When launched with ?prompt= (e.g. from Planning / Phases), skip the form UI entirely
+    if (autoPrompt) {
+        return (
+            <div className="flex min-h-dvh items-center justify-center gap-3 text-sm text-muted-foreground">
+                <svg className="size-5 animate-spin text-blue-600" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" fill="currentColor" />
+                </svg>
+                Preparing flow…
+            </div>
+        );
+    }
+
     return (
         <>
             <header className="sticky top-0 z-10 flex h-12 shrink-0 items-center gap-2 border-b bg-background px-4">
-                <SidebarTrigger className="-ml-1" />
-                <Separator
-                    className="mr-2 h-4"
-                    orientation="vertical"
-                />
                 <Breadcrumb>
                     <BreadcrumbList>
                         <BreadcrumbItem>
@@ -66,7 +92,7 @@ const NewFlow = () => {
                     <CardContent className="flex flex-col gap-4 pt-6">
                         <div className="text-center">
                             <h1 className="text-2xl font-semibold">Create a new flow</h1>
-                            <p className="mt-2 text-muted-foreground">Describe what you would like PentAGI to test</p>
+                            <p className="mt-2 text-muted-foreground">Describe what you would like to test</p>
                         </div>
                         <Tabs
                             onValueChange={(value) => setFlowType(value as 'assistant' | 'automation')}
@@ -89,6 +115,7 @@ const NewFlow = () => {
                         </Tabs>
                         <FlowForm
                             defaultValues={{
+                                message: '',
                                 providerName: selectedProvider?.name ?? '',
                                 useAgents: shouldUseAgents,
                             }}
@@ -97,7 +124,7 @@ const NewFlow = () => {
                             placeholder={
                                 !isLoading
                                     ? flowType === 'automation'
-                                        ? 'Describe what you would like PentAGI to test...'
+                                        ? 'Describe what you would like to test...'
                                         : 'What would you like me to help you with?'
                                     : 'Creating a new flow...'
                             }

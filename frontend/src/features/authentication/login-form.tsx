@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
@@ -31,6 +31,7 @@ const formSchema = z.object({
     password: z.string().min(1, {
         message: 'Password is required',
     }),
+    rememberMe: z.boolean().default(false),
 });
 
 const errorMessage = 'Invalid login or password';
@@ -56,7 +57,7 @@ const providerActions: AuthProviderAction[] = [
 ];
 
 interface LoginFormProps {
-    providers: string[]; // OAuth providers: ['google', 'github']
+    providers: string[];
     returnUrl?: string;
 }
 
@@ -65,10 +66,12 @@ const LoginForm = ({ providers, returnUrl = '/flows/new' }: LoginFormProps) => {
         defaultValues: {
             mail: '',
             password: '',
+            rememberMe: false,
         },
         resolver: zodResolver(formSchema),
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState<null | string>(null);
     const [passwordChangeRequired, setPasswordChangeRequired] = useState(false);
     const navigate = useNavigate();
@@ -128,7 +131,6 @@ const LoginForm = ({ providers, returnUrl = '/flows/new' }: LoginFormProps) => {
 
     const handlePasswordChangeSuccess = () => {
         if (authInfo?.user) {
-            // Update auth info with password_change_required set to false
             const updatedAuthData = {
                 ...authInfo,
                 user: {
@@ -142,15 +144,6 @@ const LoginForm = ({ providers, returnUrl = '/flows/new' }: LoginFormProps) => {
         }
     };
 
-    // If password change is required, show password change form.
-    // Also check isAuthenticated() to ensure the user has a valid session.
-    // If the session expired and user refreshed the page, the old authInfo may still
-    // be in memory (race condition between clearAuth() and navigate()), but we must
-    // NOT show the password change form because:
-    //   1. The API endpoint /user/password requires authentication (returns 403 if not)
-    //   2. The user must first re-login to establish a new valid session
-    // Also check authInfo directly to handle page refresh scenarios where passwordChangeRequired
-    // local state is lost but authInfo.user.password_change_required is still true.
     const shouldShowPasswordChange =
         (passwordChangeRequired || authInfo?.user?.password_change_required) &&
         authInfo?.user?.type === 'local' &&
@@ -176,14 +169,19 @@ const LoginForm = ({ providers, returnUrl = '/flows/new' }: LoginFormProps) => {
     return (
         <Form {...form}>
             <form
-                className="mx-auto grid w-[350px] gap-8"
+                className="mx-auto flex w-full max-w-[400px] flex-col gap-6"
                 onSubmit={form.handleSubmit(handleSubmit)}
             >
-                <h1 className="text-center text-3xl font-bold">PentAGI</h1>
+                {/* Header */}
+                <div>
+                    <h1 className="text-2xl font-bold">Sign in</h1>
+                    <p className="text-muted-foreground mt-1 text-sm">Welcome back! Please sign in to your account.</p>
+                </div>
 
+                {/* OAuth providers */}
                 {providers?.length > 0 && (
                     <>
-                        <div className="flex flex-col gap-4">
+                        <div className="flex flex-col gap-3">
                             {providerActions
                                 .filter((provider) => providers.includes(provider.id))
                                 .map((provider) => (
@@ -200,17 +198,18 @@ const LoginForm = ({ providers, returnUrl = '/flows/new' }: LoginFormProps) => {
                                 ))}
                         </div>
 
-                        <div className="relative -mb-4">
+                        <div className="relative">
                             <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t border-gray-300" />
+                                <div className="w-full border-t" />
                             </div>
-                            <div className="relative flex justify-center text-sm">
-                                <span className="bg-background px-2">or</span>
+                            <div className="relative flex justify-center text-xs uppercase">
+                                <span className="bg-background text-muted-foreground px-2">or</span>
                             </div>
                         </div>
                     </>
                 )}
 
+                {/* Fields */}
                 <div className="flex flex-col gap-4">
                     <FormField
                         control={form.control}
@@ -237,19 +236,54 @@ const LoginForm = ({ providers, returnUrl = '/flows/new' }: LoginFormProps) => {
                             <FormItem>
                                 <FormLabel>Password</FormLabel>
                                 <FormControl>
-                                    <Input
-                                        {...field}
-                                        placeholder="Enter your password"
-                                        type="password"
-                                    />
+                                    <div className="relative">
+                                        <Input
+                                            {...field}
+                                            placeholder="Enter your password"
+                                            type={showPassword ? 'text' : 'password'}
+                                        />
+                                        <button
+                                            className="text-muted-foreground hover:text-foreground absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
+                                            onClick={() => setShowPassword((v) => !v)}
+                                            tabIndex={-1}
+                                            type="button"
+                                        >
+                                            {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                                        </button>
+                                    </div>
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
                         )}
                     />
 
+                    {/* Remember me + Forgot password */}
+                    <div className="flex items-center justify-between">
+                        <FormField
+                            control={form.control}
+                            name="rememberMe"
+                            render={({ field }) => (
+                                <label className="flex cursor-pointer items-center gap-2 text-sm">
+                                    <input
+                                        checked={field.value}
+                                        className="accent-primary h-4 w-4 rounded border"
+                                        onChange={field.onChange}
+                                        type="checkbox"
+                                    />
+                                    Remember me
+                                </label>
+                            )}
+                        />
+                        <button
+                            className="text-primary hover:text-primary/80 text-sm underline-offset-4 hover:underline"
+                            type="button"
+                        >
+                            Forgot password?
+                        </button>
+                    </div>
+
                     <Button
-                        className="w-full"
+                        className="w-full bg-blue-700 hover:bg-blue-800"
                         disabled={isSubmitting || (!form.formState.isValid && form.formState.isSubmitted)}
                         type="submit"
                     >
@@ -259,6 +293,14 @@ const LoginForm = ({ providers, returnUrl = '/flows/new' }: LoginFormProps) => {
 
                     {error && <FormMessage>{error}</FormMessage>}
                 </div>
+
+                {/* Footer */}
+                <p className="text-muted-foreground text-center text-xs">
+                    By signing in, you agree to our{' '}
+                    <span className="underline underline-offset-4 cursor-pointer hover:text-foreground">Terms of Service</span>{' '}
+                    and{' '}
+                    <span className="underline underline-offset-4 cursor-pointer hover:text-foreground">Privacy Policy</span>.
+                </p>
             </form>
         </Form>
     );

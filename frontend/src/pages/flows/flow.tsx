@@ -1,6 +1,8 @@
 import { ChevronDown, Copy, Download, ExternalLink, GripVertical, Loader2, NotepadText } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import WorldStateView from '@/features/world-state/world-state-view';
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { usePutUserInputMutation } from '@/graphql/types';
 import { toast } from 'sonner';
 
 import { FlowStatusIcon } from '@/components/icons/flow-status-icon';
@@ -14,8 +16,6 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
-import { Separator } from '@/components/ui/separator';
-import { SidebarTrigger } from '@/components/ui/sidebar';
 import FlowCentralTabs from '@/features/flows/flow-central-tabs';
 import FlowTabs from '@/features/flows/flow-tabs';
 import { useBreakpoint } from '@/hooks/use-breakpoint';
@@ -143,9 +143,10 @@ const FlowReportDropdown = () => {
 const Flow = () => {
     const { isDesktop } = useBreakpoint();
     const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
 
     // Get flow data from FlowProvider
-    const { flowData, flowError, isLoading: isFlowLoading } = useFlow();
+    const { flowData, flowError, isLoading: isFlowLoading, flowId } = useFlow();
 
     // Redirect to flows list if there's an error loading flow data or flow not found
     useEffect(() => {
@@ -154,8 +155,21 @@ const Flow = () => {
         }
     }, [flowError, flowData, isFlowLoading, navigate]);
 
-    // State for preserving active tabs when switching flows
+    // Auto-send phase prompt when navigated from web-pentest with ?prompt=
+    const [putUserInput] = usePutUserInputMutation();
+    const autoPromptRef = useRef(false);
+    useEffect(() => {
+        const prompt = searchParams.get('prompt');
+        if (!prompt || !flowId || autoPromptRef.current) return;
+        autoPromptRef.current = true;
+        putUserInput({ variables: { flowId, input: prompt } });
+        setSearchParams({}, { replace: true });
+    }, [flowId, searchParams, setSearchParams, putUserInput]);
+
     const [activeTabsTab, setActiveTabsTab] = useState<string>(!isDesktop ? 'automation' : 'terminal');
+    const [leftTab, setLeftTab] = useState<string>('automation');
+
+    const isWorldState = isDesktop && leftTab === 'world-state';
 
     const tabsCard = (
         <div className="flex h-[calc(100dvh-3rem)] max-w-full flex-col rounded-none border-0">
@@ -168,40 +182,78 @@ const Flow = () => {
         </div>
     );
 
+    const header = (
+        <header className="sticky top-0 z-10 flex h-12 w-full shrink-0 items-center gap-2 border-b bg-background transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+            <div className="flex w-full items-center justify-between gap-2 px-4">
+                <div className="flex items-center gap-2">
+                    <Breadcrumb>
+                        <BreadcrumbList>
+                            <BreadcrumbItem className="gap-2">
+                                {flowData?.flow && (
+                                    <>
+                                        <FlowStatusIcon
+                                            status={flowData.flow.status}
+                                            tooltip={formatName(flowData.flow.status)}
+                                        />
+                                        <ProviderIcon
+                                            provider={flowData.flow.provider}
+                                            tooltip={formatName(flowData.flow.provider.name)}
+                                        />
+                                    </>
+                                )}
+                                <BreadcrumbPage>{flowData?.flow?.title || 'Select a flow'}</BreadcrumbPage>
+                            </BreadcrumbItem>
+                        </BreadcrumbList>
+                    </Breadcrumb>
+                </div>
+                {!!(flowData?.tasks ?? [])?.length && <FlowReportDropdown />}
+            </div>
+        </header>
+    );
+
+    // ── World State full-width mode ────────────────────────────────────────────
+    if (isWorldState) {
+        return (
+            <>
+                {header}
+                <div className="relative flex h-[calc(100dvh-3rem)] w-full max-w-full flex-1">
+                    {isFlowLoading && (
+                        <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/50">
+                            <Loader2 className="size-16 animate-spin" />
+                        </div>
+                    )}
+                    {/* Tab strip at top so user can switch back */}
+                    <div className="flex h-full w-full flex-col">
+                        <div className="shrink-0 px-4 pt-3 pb-0 border-b">
+                            <div className="flex gap-1">
+                                {['automation', 'assistant', 'world-state'].map((tab) => (
+                                    <button
+                                        className={`rounded-t-md px-3 py-1.5 text-sm font-medium transition-colors border-b-2 ${
+                                            tab === 'world-state'
+                                                ? 'border-primary text-foreground'
+                                                : 'border-transparent text-muted-foreground hover:text-foreground'
+                                        }`}
+                                        key={tab}
+                                        onClick={() => setLeftTab(tab)}
+                                    >
+                                        {tab === 'world-state' ? 'World State' : tab.charAt(0).toUpperCase() + tab.slice(1)}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="flex-1 overflow-hidden">
+                            <WorldStateView onBack={() => setLeftTab('automation')} />
+                        </div>
+                    </div>
+                </div>
+            </>
+        );
+    }
+
+    // ── Normal split layout ───────────────────────────────────────────────────
     return (
         <>
-            <header className="sticky top-0 z-10 flex h-12 w-full shrink-0 items-center gap-2 border-b bg-background transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
-                <div className="flex w-full items-center justify-between gap-2 px-4">
-                    <div className="flex items-center gap-2">
-                        <SidebarTrigger className="-ml-1" />
-                        <Separator
-                            className="mr-2 h-4"
-                            orientation="vertical"
-                        />
-                        <Breadcrumb>
-                            <BreadcrumbList>
-                                <BreadcrumbItem className="gap-2">
-                                    {flowData?.flow && (
-                                        <>
-                                            <FlowStatusIcon
-                                                status={flowData.flow.status}
-                                                tooltip={formatName(flowData.flow.status)}
-                                            />
-
-                                            <ProviderIcon
-                                                provider={flowData.flow.provider}
-                                                tooltip={formatName(flowData.flow.provider.name)}
-                                            />
-                                        </>
-                                    )}
-                                    <BreadcrumbPage>{flowData?.flow?.title || 'Select a flow'}</BreadcrumbPage>
-                                </BreadcrumbItem>
-                            </BreadcrumbList>
-                        </Breadcrumb>
-                    </div>
-                    {!!(flowData?.tasks ?? [])?.length && <FlowReportDropdown />}
-                </div>
-            </header>
+            {header}
             <div className="relative flex h-[calc(100dvh-3rem)] w-full max-w-full flex-1">
                 {isFlowLoading && (
                     <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/50">
@@ -209,27 +261,21 @@ const Flow = () => {
                     </div>
                 )}
                 {isDesktop ? (
-                    <ResizablePanelGroup
-                        className="w-full"
-                        direction="horizontal"
-                    >
-                        <ResizablePanel
-                            defaultSize={50}
-                            minSize={30}
-                        >
+                    <ResizablePanelGroup className="w-full" direction="horizontal">
+                        <ResizablePanel defaultSize={50} minSize={30}>
                             <div className="flex h-[calc(100dvh-3rem)] max-w-full flex-col rounded-none border-0">
                                 <div className="flex-1 overflow-auto py-4 pl-4 pr-0">
-                                    <FlowCentralTabs />
+                                    <FlowCentralTabs
+                                        onTabChange={setLeftTab}
+                                        value={leftTab}
+                                    />
                                 </div>
                             </div>
                         </ResizablePanel>
                         <ResizableHandle withHandle>
                             <GripVertical className="size-4" />
                         </ResizableHandle>
-                        <ResizablePanel
-                            defaultSize={50}
-                            minSize={30}
-                        >
+                        <ResizablePanel defaultSize={50} minSize={30}>
                             {tabsCard}
                         </ResizablePanel>
                     </ResizablePanelGroup>

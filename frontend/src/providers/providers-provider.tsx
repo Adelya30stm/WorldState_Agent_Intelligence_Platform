@@ -30,9 +30,14 @@ export const ProvidersProvider = ({ children }: ProvidersProviderProps) => {
     // Create sorted providers list to ensure consistent order
     const providers = sortProviders(providersData?.providers || []);
 
-    // Store selected provider name instead of the provider object
+    // Store selected provider name instead of the provider object.
+    // Default to OpenAI; migrate away from a previously saved Anthropic default.
     const [selectedProviderName, setSelectedProviderName] = useState<null | string>(() => {
-        return localStorage.getItem(SELECTED_PROVIDER_KEY);
+        const saved = localStorage.getItem(SELECTED_PROVIDER_KEY);
+        if (!saved || saved === 'anthropic') {
+            return 'openai';
+        }
+        return saved;
     });
 
     // Compute selected provider from providers list and selected name
@@ -50,8 +55,8 @@ export const ProvidersProvider = ({ children }: ProvidersProviderProps) => {
             }
         }
 
-        // If no saved provider or not found, return first provider
-        return providers[0] ?? null;
+        // Prefer OpenAI when available
+        return findProviderByName('openai', providers) ?? providers[0] ?? null;
     }, [providers, selectedProviderName]);
 
     // Save to localStorage when selected provider changes

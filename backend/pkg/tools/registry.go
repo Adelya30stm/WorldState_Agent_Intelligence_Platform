@@ -39,6 +39,8 @@ const (
 	SearchCodeToolName        = "search_code"
 	StoreCodeToolName         = "store_code"
 	GraphitiSearchToolName    = "graphiti_search"
+	WorldStateQueryToolName   = "world_state_query"
+	WorldStateUpdateToolName  = "world_state_update"
 	ReportResultToolName      = "report_result"
 	SubtaskListToolName       = "subtask_list"
 	SubtaskPatchToolName      = "subtask_patch"
@@ -119,6 +121,8 @@ var toolsTypeMapping = map[string]ToolType{
 	SearchCodeToolName:        SearchVectorDbToolType,
 	StoreCodeToolName:         StoreVectorDbToolType,
 	GraphitiSearchToolName:    SearchVectorDbToolType,
+	WorldStateQueryToolName:   SearchVectorDbToolType,
+	WorldStateUpdateToolName:  StoreVectorDbToolType,
 	ReportResultToolName:      StoreAgentResultToolType,
 	SubtaskListToolName:       StoreAgentResultToolType,
 	SubtaskPatchToolName:      StoreAgentResultToolType,
@@ -317,6 +321,23 @@ var registryDefinitions = map[string]llms.FunctionDefinition{
 			"and build on previous findings within the same penetration testing engagement.",
 		Parameters: reflector.Reflect(&GraphitiSearchAction{}),
 	},
+	WorldStateQueryToolName: {
+		Name: WorldStateQueryToolName,
+		Description: "Query the authoritative World State entity store for this engagement. " +
+			"Call BEFORE choosing recon/exploit targets to avoid duplicate work. " +
+			"Optional filters: type (host|endpoint|credential|finding) and lifecycle state " +
+			"(unknown|discovered|scanning|assessed|vulnerable|exploited|remediated).",
+		Parameters: reflector.Reflect(&WorldStateQueryAction{}),
+	},
+	WorldStateUpdateToolName: {
+		Name: WorldStateUpdateToolName,
+		Description: "Create or update a World State entity after a meaningful observation. " +
+			"Use after discovering hosts/endpoints/credentials/findings or advancing lifecycle. " +
+			"Lifecycle transitions must be valid one-step moves: " +
+			"unknown→discovered→scanning→assessed→vulnerable→exploited→remediated " +
+			"(discovered may skip to assessed; assessed/vulnerable may go to remediated).",
+		Parameters: reflector.Reflect(&WorldStateUpdateAction{}),
+	},
 	MemoristToolName: {
 		Name:        MemoristToolName,
 		Description: "Call to Archivist team member who remember all the information about the past work and made tasks and can answer your question about it",
@@ -384,7 +405,8 @@ func getMessageType(name string) database.MsglogType {
 		return database.MsglogTypeBrowser
 	case MemoristToolName, SearchToolName, GoogleToolName, DuckDuckGoToolName, TavilyToolName, TraversaalToolName,
 		PerplexityToolName, SearxngToolName, SploitusToolName,
-		SearchGuideToolName, SearchAnswerToolName, SearchCodeToolName, SearchInMemoryToolName, GraphitiSearchToolName:
+		SearchGuideToolName, SearchAnswerToolName, SearchCodeToolName, SearchInMemoryToolName, GraphitiSearchToolName,
+		WorldStateQueryToolName, WorldStateUpdateToolName:
 		return database.MsglogTypeSearch
 	case AdviceToolName:
 		return database.MsglogTypeAdvice

@@ -160,7 +160,7 @@ type LLMProviderConfig struct {
 	Region       loader.EnvVar // BEDROCK_REGION
 	// Ollama and Custom specific fields
 	ConfigPath        loader.EnvVar // OLLAMA_SERVER_CONFIG_PATH | LLM_SERVER_CONFIG_PATH
-	HostConfigPath    loader.EnvVar // PENTAGI_OLLAMA_SERVER_CONFIG_PATH | PENTAGI_LLM_SERVER_CONFIG_PATH
+	HostConfigPath    loader.EnvVar // REDSCOPE_OLLAMA_SERVER_CONFIG_PATH | REDSCOPE_LLM_SERVER_CONFIG_PATH
 	LegacyReasoning   loader.EnvVar // LLM_SERVER_LEGACY_REASONING
 	PreserveReasoning loader.EnvVar // LLM_SERVER_PRESERVE_REASONING
 	// Custom specific fields
@@ -252,7 +252,7 @@ func (c *controller) GetLLMProviderConfig(providerID string) *LLMProviderConfig 
 		providerConfig.BaseURL, _ = c.GetVar("OLLAMA_SERVER_URL")
 		providerConfig.APIKey, _ = c.GetVar("OLLAMA_SERVER_API_KEY")
 		providerConfig.ConfigPath, _ = c.GetVar("OLLAMA_SERVER_CONFIG_PATH")
-		providerConfig.HostConfigPath, _ = c.GetVar("PENTAGI_OLLAMA_SERVER_CONFIG_PATH")
+		providerConfig.HostConfigPath, _ = c.GetVar("REDSCOPE_OLLAMA_SERVER_CONFIG_PATH")
 		if slices.Contains(providersConfigsPath, providerConfig.ConfigPath.Value) {
 			providerConfig.HostConfigPath.Value = providerConfig.ConfigPath.Value
 		}
@@ -296,7 +296,7 @@ func (c *controller) GetLLMProviderConfig(providerID string) *LLMProviderConfig 
 		providerConfig.APIKey, _ = c.GetVar("LLM_SERVER_KEY")
 		providerConfig.Model, _ = c.GetVar("LLM_SERVER_MODEL")
 		providerConfig.ConfigPath, _ = c.GetVar("LLM_SERVER_CONFIG_PATH")
-		providerConfig.HostConfigPath, _ = c.GetVar("PENTAGI_LLM_SERVER_CONFIG_PATH")
+		providerConfig.HostConfigPath, _ = c.GetVar("REDSCOPE_LLM_SERVER_CONFIG_PATH")
 		if slices.Contains(providersConfigsPath, providerConfig.ConfigPath.Value) {
 			providerConfig.HostConfigPath.Value = providerConfig.ConfigPath.Value
 		}
@@ -509,7 +509,7 @@ func (c *controller) ResetLLMProviderConfig(providerID string) map[string]*LLMPr
 			"OLLAMA_SERVER_PULL_MODELS_TIMEOUT",
 			"OLLAMA_SERVER_PULL_MODELS_ENABLED",
 			"OLLAMA_SERVER_LOAD_MODELS_ENABLED",
-			"PENTAGI_OLLAMA_SERVER_CONFIG_PATH",
+			"REDSCOPE_OLLAMA_SERVER_CONFIG_PATH",
 		}
 	case "deepseek":
 		vars = []string{"DEEPSEEK_API_KEY", "DEEPSEEK_SERVER_URL", "DEEPSEEK_PROVIDER"}
@@ -524,7 +524,7 @@ func (c *controller) ResetLLMProviderConfig(providerID string) map[string]*LLMPr
 			"LLM_SERVER_URL", "LLM_SERVER_KEY", "LLM_SERVER_MODEL",
 			"LLM_SERVER_CONFIG_PATH", "LLM_SERVER_LEGACY_REASONING",
 			"LLM_SERVER_PRESERVE_REASONING", "LLM_SERVER_PROVIDER",
-			"PENTAGI_LLM_SERVER_CONFIG_PATH", // local path to the LLM config file
+			"REDSCOPE_LLM_SERVER_CONFIG_PATH", // local path to the LLM config file
 		}
 	}
 
@@ -1788,7 +1788,7 @@ type DockerConfig struct {
 	// TLS connection settings (optional)
 	DockerHost         loader.EnvVar // DOCKER_HOST
 	DockerTLSVerify    loader.EnvVar // DOCKER_TLS_VERIFY
-	HostDockerCertPath loader.EnvVar // PENTAGI_DOCKER_CERT_PATH
+	HostDockerCertPath loader.EnvVar // REDSCOPE_DOCKER_CERT_PATH
 
 	// computed fields (not directly mapped to env vars)
 	Configured bool
@@ -1807,7 +1807,7 @@ func (c *controller) GetDockerConfig() *DockerConfig {
 		"DOCKER_DEFAULT_IMAGE_FOR_PENTEST",
 		"DOCKER_HOST",
 		"DOCKER_TLS_VERIFY",
-		"PENTAGI_DOCKER_CERT_PATH",
+		"REDSCOPE_DOCKER_CERT_PATH",
 	})
 
 	config := &DockerConfig{
@@ -1821,7 +1821,7 @@ func (c *controller) GetDockerConfig() *DockerConfig {
 		DockerDefaultImageForPentest: vars["DOCKER_DEFAULT_IMAGE_FOR_PENTEST"],
 		DockerHost:                   vars["DOCKER_HOST"],
 		DockerTLSVerify:              vars["DOCKER_TLS_VERIFY"],
-		HostDockerCertPath:           vars["PENTAGI_DOCKER_CERT_PATH"],
+		HostDockerCertPath:           vars["REDSCOPE_DOCKER_CERT_PATH"],
 	}
 
 	// patch docker host default value
@@ -1851,16 +1851,16 @@ func (c *controller) UpdateDockerConfig(config *DockerConfig) error {
 		"DOCKER_DEFAULT_IMAGE_FOR_PENTEST": config.DockerDefaultImageForPentest.Value,
 		"DOCKER_HOST":                      config.DockerHost.Value,
 		"DOCKER_TLS_VERIFY":                config.DockerTLSVerify.Value,
-		"PENTAGI_DOCKER_CERT_PATH":         config.HostDockerCertPath.Value,
+		"REDSCOPE_DOCKER_CERT_PATH":         config.HostDockerCertPath.Value,
 	}
 
 	dockerHost := config.DockerHost.Value
 	if strings.HasPrefix(dockerHost, "unix://") && !config.DockerHost.IsDefault() {
 		// mount custom docker socket to the pentagi container
-		updates["PENTAGI_DOCKER_SOCKET"] = strings.TrimPrefix(dockerHost, "unix://")
+		updates["REDSCOPE_DOCKER_SOCKET"] = strings.TrimPrefix(dockerHost, "unix://")
 	} else {
 		// ensure previous custom socket mapping is cleared when not using unix socket
-		updates["PENTAGI_DOCKER_SOCKET"] = ""
+		updates["REDSCOPE_DOCKER_SOCKET"] = ""
 	}
 
 	if config.HostDockerCertPath.Value != "" {
@@ -1891,8 +1891,8 @@ func (c *controller) ResetDockerConfig() *DockerConfig {
 		"DOCKER_TLS_VERIFY",
 		"DOCKER_CERT_PATH",
 		// Volume mapping for docker socket
-		"PENTAGI_DOCKER_SOCKET",
-		"PENTAGI_DOCKER_CERT_PATH",
+		"REDSCOPE_DOCKER_SOCKET",
+		"REDSCOPE_DOCKER_CERT_PATH",
 	}
 
 	if err := c.ResetVars(vars); err != nil {
@@ -1902,12 +1902,12 @@ func (c *controller) ResetDockerConfig() *DockerConfig {
 	return c.GetDockerConfig()
 }
 
-// ServerSettingsConfig represents PentAGI server settings configuration
+// ServerSettingsConfig represents RedScope server settings configuration
 type ServerSettingsConfig struct {
 	// direct form field mappings using loader.EnvVar
 	LicenseKey          loader.EnvVar // LICENSE_KEY
-	ListenIP            loader.EnvVar // PENTAGI_LISTEN_IP
-	ListenPort          loader.EnvVar // PENTAGI_LISTEN_PORT
+	ListenIP            loader.EnvVar // REDSCOPE_LISTEN_IP
+	ListenPort          loader.EnvVar // REDSCOPE_LISTEN_PORT
 	PublicURL           loader.EnvVar // PUBLIC_URL
 	CorsOrigins         loader.EnvVar // CORS_ORIGINS
 	CookieSigningSalt   loader.EnvVar // COOKIE_SIGNING_SALT
@@ -1915,8 +1915,8 @@ type ServerSettingsConfig struct {
 	HTTPClientTimeout   loader.EnvVar // HTTP_CLIENT_TIMEOUT
 	ExternalSSLCAPath   loader.EnvVar // EXTERNAL_SSL_CA_PATH
 	ExternalSSLInsecure loader.EnvVar // EXTERNAL_SSL_INSECURE
-	SSLDir              loader.EnvVar // PENTAGI_SSL_DIR
-	DataDir             loader.EnvVar // PENTAGI_DATA_DIR
+	SSLDir              loader.EnvVar // REDSCOPE_SSL_DIR
+	DataDir             loader.EnvVar // REDSCOPE_DATA_DIR
 
 	// parsed credentials for proxy server (extracted from URLs)
 	ProxyUsername string
@@ -1927,8 +1927,8 @@ type ServerSettingsConfig struct {
 func (c *controller) GetServerSettingsConfig() *ServerSettingsConfig {
 	vars, _ := c.GetVars([]string{
 		"LICENSE_KEY",
-		"PENTAGI_LISTEN_IP",
-		"PENTAGI_LISTEN_PORT",
+		"REDSCOPE_LISTEN_IP",
+		"REDSCOPE_LISTEN_PORT",
 		"PUBLIC_URL",
 		"CORS_ORIGINS",
 		"COOKIE_SIGNING_SALT",
@@ -1936,18 +1936,18 @@ func (c *controller) GetServerSettingsConfig() *ServerSettingsConfig {
 		"HTTP_CLIENT_TIMEOUT",
 		"EXTERNAL_SSL_CA_PATH",
 		"EXTERNAL_SSL_INSECURE",
-		"PENTAGI_SSL_DIR",
-		"PENTAGI_DATA_DIR",
+		"REDSCOPE_SSL_DIR",
+		"REDSCOPE_DATA_DIR",
 	})
 
 	defaults := map[string]string{
 		"LICENSE_KEY":           "",
-		"PENTAGI_LISTEN_IP":     "127.0.0.1",
-		"PENTAGI_LISTEN_PORT":   "8443",
+		"REDSCOPE_LISTEN_IP":     "127.0.0.1",
+		"REDSCOPE_LISTEN_PORT":   "8443",
 		"PUBLIC_URL":            "https://localhost:8443",
 		"CORS_ORIGINS":          "https://localhost:8443",
-		"PENTAGI_DATA_DIR":      "pentagi-data",
-		"PENTAGI_SSL_DIR":       "pentagi-ssl",
+		"REDSCOPE_DATA_DIR":      "pentagi-data",
+		"REDSCOPE_SSL_DIR":       "pentagi-ssl",
 		"HTTP_CLIENT_TIMEOUT":   "600",
 		"EXTERNAL_SSL_INSECURE": "false",
 	}
@@ -1961,8 +1961,8 @@ func (c *controller) GetServerSettingsConfig() *ServerSettingsConfig {
 
 	cfg := &ServerSettingsConfig{
 		LicenseKey:          vars["LICENSE_KEY"],
-		ListenIP:            vars["PENTAGI_LISTEN_IP"],
-		ListenPort:          vars["PENTAGI_LISTEN_PORT"],
+		ListenIP:            vars["REDSCOPE_LISTEN_IP"],
+		ListenPort:          vars["REDSCOPE_LISTEN_PORT"],
 		PublicURL:           vars["PUBLIC_URL"],
 		CorsOrigins:         vars["CORS_ORIGINS"],
 		CookieSigningSalt:   vars["COOKIE_SIGNING_SALT"],
@@ -1970,8 +1970,8 @@ func (c *controller) GetServerSettingsConfig() *ServerSettingsConfig {
 		HTTPClientTimeout:   vars["HTTP_CLIENT_TIMEOUT"],
 		ExternalSSLCAPath:   vars["EXTERNAL_SSL_CA_PATH"],
 		ExternalSSLInsecure: vars["EXTERNAL_SSL_INSECURE"],
-		SSLDir:              vars["PENTAGI_SSL_DIR"],
-		DataDir:             vars["PENTAGI_DATA_DIR"],
+		SSLDir:              vars["REDSCOPE_SSL_DIR"],
+		DataDir:             vars["REDSCOPE_DATA_DIR"],
 	}
 
 	// split proxy URL into credentials + naked URL for UI
@@ -2000,8 +2000,8 @@ func (c *controller) UpdateServerSettingsConfig(config *ServerSettingsConfig) er
 
 	updates := map[string]string{
 		"LICENSE_KEY":           config.LicenseKey.Value,
-		"PENTAGI_LISTEN_IP":     config.ListenIP.Value,
-		"PENTAGI_LISTEN_PORT":   config.ListenPort.Value,
+		"REDSCOPE_LISTEN_IP":     config.ListenIP.Value,
+		"REDSCOPE_LISTEN_PORT":   config.ListenPort.Value,
 		"PUBLIC_URL":            config.PublicURL.Value,
 		"CORS_ORIGINS":          config.CorsOrigins.Value,
 		"COOKIE_SIGNING_SALT":   config.CookieSigningSalt.Value,
@@ -2009,8 +2009,8 @@ func (c *controller) UpdateServerSettingsConfig(config *ServerSettingsConfig) er
 		"HTTP_CLIENT_TIMEOUT":   config.HTTPClientTimeout.Value,
 		"EXTERNAL_SSL_CA_PATH":  config.ExternalSSLCAPath.Value,
 		"EXTERNAL_SSL_INSECURE": config.ExternalSSLInsecure.Value,
-		"PENTAGI_SSL_DIR":       config.SSLDir.Value,
-		"PENTAGI_DATA_DIR":      config.DataDir.Value,
+		"REDSCOPE_SSL_DIR":       config.SSLDir.Value,
+		"REDSCOPE_DATA_DIR":      config.DataDir.Value,
 	}
 
 	if err := c.SetVars(updates); err != nil {
@@ -2024,8 +2024,8 @@ func (c *controller) UpdateServerSettingsConfig(config *ServerSettingsConfig) er
 func (c *controller) ResetServerSettingsConfig() *ServerSettingsConfig {
 	vars := []string{
 		"LICENSE_KEY",
-		"PENTAGI_LISTEN_IP",
-		"PENTAGI_LISTEN_PORT",
+		"REDSCOPE_LISTEN_IP",
+		"REDSCOPE_LISTEN_PORT",
 		"PUBLIC_URL",
 		"CORS_ORIGINS",
 		"COOKIE_SIGNING_SALT",
@@ -2033,8 +2033,8 @@ func (c *controller) ResetServerSettingsConfig() *ServerSettingsConfig {
 		"HTTP_CLIENT_TIMEOUT",
 		"EXTERNAL_SSL_CA_PATH",
 		"EXTERNAL_SSL_INSECURE",
-		"PENTAGI_SSL_DIR",
-		"PENTAGI_DATA_DIR",
+		"REDSCOPE_SSL_DIR",
+		"REDSCOPE_DATA_DIR",
 	}
 
 	if err := c.ResetVars(vars); err != nil {
@@ -2055,7 +2055,7 @@ type ChangeInfo struct {
 // ApplyChangesConfig contains information about pending changes and installation status
 type ApplyChangesConfig struct {
 	// installation state
-	IsInstalled bool // whether PentAGI is currently installed
+	IsInstalled bool // whether RedScope is currently installed
 
 	// deployment selections
 	LangfuseEnabled      bool // whether Langfuse embedded deployment is selected
@@ -2262,20 +2262,20 @@ func (c *controller) getVariableDescription(varName string) string {
 		"DOCKER_CERT_PATH":                 locale.EnvDesc_DOCKER_CERT_PATH,
 
 		"LICENSE_KEY":                       locale.EnvDesc_LICENSE_KEY,
-		"PENTAGI_LISTEN_IP":                 locale.EnvDesc_PENTAGI_LISTEN_IP,
-		"PENTAGI_LISTEN_PORT":               locale.EnvDesc_PENTAGI_LISTEN_PORT,
+		"REDSCOPE_LISTEN_IP":                 locale.EnvDesc_REDSCOPE_LISTEN_IP,
+		"REDSCOPE_LISTEN_PORT":               locale.EnvDesc_REDSCOPE_LISTEN_PORT,
 		"PUBLIC_URL":                        locale.EnvDesc_PUBLIC_URL,
 		"CORS_ORIGINS":                      locale.EnvDesc_CORS_ORIGINS,
 		"COOKIE_SIGNING_SALT":               locale.EnvDesc_COOKIE_SIGNING_SALT,
 		"PROXY_URL":                         locale.EnvDesc_PROXY_URL,
 		"EXTERNAL_SSL_CA_PATH":              locale.EnvDesc_EXTERNAL_SSL_CA_PATH,
 		"EXTERNAL_SSL_INSECURE":             locale.EnvDesc_EXTERNAL_SSL_INSECURE,
-		"PENTAGI_SSL_DIR":                   locale.EnvDesc_PENTAGI_SSL_DIR,
-		"PENTAGI_DATA_DIR":                  locale.EnvDesc_PENTAGI_DATA_DIR,
-		"PENTAGI_DOCKER_SOCKET":             locale.EnvDesc_PENTAGI_DOCKER_SOCKET,
-		"PENTAGI_DOCKER_CERT_PATH":          locale.EnvDesc_PENTAGI_DOCKER_CERT_PATH,
-		"PENTAGI_LLM_SERVER_CONFIG_PATH":    locale.EnvDesc_PENTAGI_LLM_SERVER_CONFIG_PATH,
-		"PENTAGI_OLLAMA_SERVER_CONFIG_PATH": locale.EnvDesc_PENTAGI_OLLAMA_SERVER_CONFIG_PATH,
+		"REDSCOPE_SSL_DIR":                   locale.EnvDesc_REDSCOPE_SSL_DIR,
+		"REDSCOPE_DATA_DIR":                  locale.EnvDesc_REDSCOPE_DATA_DIR,
+		"REDSCOPE_DOCKER_SOCKET":             locale.EnvDesc_REDSCOPE_DOCKER_SOCKET,
+		"REDSCOPE_DOCKER_CERT_PATH":          locale.EnvDesc_REDSCOPE_DOCKER_CERT_PATH,
+		"REDSCOPE_LLM_SERVER_CONFIG_PATH":    locale.EnvDesc_REDSCOPE_LLM_SERVER_CONFIG_PATH,
+		"REDSCOPE_OLLAMA_SERVER_CONFIG_PATH": locale.EnvDesc_REDSCOPE_OLLAMA_SERVER_CONFIG_PATH,
 
 		"STATIC_DIR":     locale.EnvDesc_STATIC_DIR,
 		"STATIC_URL":     locale.EnvDesc_STATIC_URL,
@@ -2298,7 +2298,7 @@ func (c *controller) getVariableDescription(varName string) string {
 		"NEO4J_USER":          locale.EnvDesc_NEO4J_USER,
 		"NEO4J_DATABASE":      locale.EnvDesc_NEO4J_DATABASE,
 
-		"PENTAGI_POSTGRES_PASSWORD": locale.EnvDesc_PENTAGI_POSTGRES_PASSWORD,
+		"REDSCOPE_POSTGRES_PASSWORD": locale.EnvDesc_REDSCOPE_POSTGRES_PASSWORD,
 		"NEO4J_PASSWORD":            locale.EnvDesc_NEO4J_PASSWORD,
 	}
 	if desc, ok := envVarDescriptions[varName]; ok {
@@ -2351,7 +2351,7 @@ var maskedVariables = map[string]bool{
 	"LANGFUSE_EE_LICENSE_KEY": true,
 
 	// postgres password for pentagi service (pgvector binds on localhost)
-	"PENTAGI_POSTGRES_PASSWORD": true,
+	"REDSCOPE_POSTGRES_PASSWORD": true,
 
 	// neo4j password for graphiti service (neo4j binds on localhost)
 	"NEO4J_PASSWORD": true,
@@ -2439,8 +2439,8 @@ var criticalVariables = map[string]bool{
 	"SEARXNG_TIMEOUT":         true,
 
 	// mounting custom LLM server config into pentagi container changes volume mapping
-	"PENTAGI_LLM_SERVER_CONFIG_PATH":    true,
-	"PENTAGI_OLLAMA_SERVER_CONFIG_PATH": true,
+	"REDSCOPE_LLM_SERVER_CONFIG_PATH":    true,
+	"REDSCOPE_OLLAMA_SERVER_CONFIG_PATH": true,
 
 	// Embedding provider changes
 	"EMBEDDING_PROVIDER":        true,
@@ -2461,7 +2461,7 @@ var criticalVariables = map[string]bool{
 	"DOCKER_HOST":                      true,
 	"DOCKER_TLS_VERIFY":                true,
 	"DOCKER_CERT_PATH":                 true,
-	"PENTAGI_DOCKER_SOCKET":            true,
+	"REDSCOPE_DOCKER_SOCKET":            true,
 
 	// observability changes
 	"OTEL_HOST": true,
@@ -2481,8 +2481,8 @@ var criticalVariables = map[string]bool{
 	"AGENT_PLANNING_STEP_ENABLED":        true,
 
 	"LICENSE_KEY":           true,
-	"PENTAGI_LISTEN_IP":     true,
-	"PENTAGI_LISTEN_PORT":   true,
+	"REDSCOPE_LISTEN_IP":     true,
+	"REDSCOPE_LISTEN_PORT":   true,
 	"PUBLIC_URL":            true,
 	"CORS_ORIGINS":          true,
 	"COOKIE_SIGNING_SALT":   true,
@@ -2496,8 +2496,8 @@ var criticalVariables = map[string]bool{
 	"SERVER_SSL_CRT":        true,
 	"SERVER_SSL_KEY":        true,
 	"SERVER_USE_SSL":        true,
-	"PENTAGI_SSL_DIR":       true,
-	"PENTAGI_DATA_DIR":      true,
+	"REDSCOPE_SSL_DIR":       true,
+	"REDSCOPE_DATA_DIR":      true,
 
 	// scraper settings
 	"SCRAPER_PUBLIC_URL":  true,

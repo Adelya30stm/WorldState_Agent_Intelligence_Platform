@@ -43,7 +43,7 @@ func main() {
 		subtaskID = nil
 	}
 
-	logrus.Infof("Starting PentAGI Function Tester %s", version.GetBinaryVersion())
+	logrus.Infof("Starting RedScope Function Tester %s", version.GetBinaryVersion())
 
 	err := godotenv.Load(*envFile)
 	if err != nil {

@@ -49,7 +49,7 @@ export const generateCertificates = (): void => {
     // Generate CA certificate
     executeCommand(
         `openssl req -new -x509 -days 3650 -key ${SSL_PATHS.caKey} \
-    -subj "/C=US/ST=NY/L=NY/O=PentAGI/OU=Project/CN=PentAGI CA" \
+    -subj "/C=US/ST=NY/L=NY/O=RedScope/OU=Project/CN=RedScope CA" \
     -out ${SSL_PATHS.caCert}`,
     );
 
@@ -57,7 +57,7 @@ export const generateCertificates = (): void => {
     executeCommand(
         `openssl req -newkey rsa:4096 -sha256 -nodes \
     -keyout ${SSL_PATHS.serverKey} \
-    -subj "/C=US/ST=NY/L=NY/O=PentAGI/OU=Project/CN=localhost" \
+    -subj "/C=US/ST=NY/L=NY/O=RedScope/OU=Project/CN=localhost" \
     -out ${SSL_PATHS.serverCsr}`,
     );
 

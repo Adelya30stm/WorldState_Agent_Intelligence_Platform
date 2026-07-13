@@ -684,7 +684,7 @@ func TestApplyChanges_StateMachine_PhaseErrors(t *testing.T) {
 			},
 			setupError: func(p *processor) {
 				_ = p.state.SetVar("OTEL_HOST", checker.DefaultObservabilityEndpoint)
-				_ = p.state.SetVar("PENTAGI_VERSION", version.GetBinaryVersion()) // make state dirty
+				_ = p.state.SetVar("REDSCOPE_VERSION", version.GetBinaryVersion()) // make state dirty
 				injectFSError(p, map[string]error{
 					"ensureStackIntegrity": fmt.Errorf("fs error"),
 				})
@@ -700,7 +700,7 @@ func TestApplyChanges_StateMachine_PhaseErrors(t *testing.T) {
 			},
 			setupError: func(p *processor) {
 				_ = p.state.SetVar("LANGFUSE_BASE_URL", checker.DefaultLangfuseEndpoint)
-				_ = p.state.SetVar("PENTAGI_VERSION", version.GetBinaryVersion()) // make state dirty
+				_ = p.state.SetVar("REDSCOPE_VERSION", version.GetBinaryVersion()) // make state dirty
 				injectFSError(p, map[string]error{
 					"ensureStackIntegrity": fmt.Errorf("langfuse error"),
 				})
@@ -716,7 +716,7 @@ func TestApplyChanges_StateMachine_PhaseErrors(t *testing.T) {
 			},
 			setupError: func(p *processor) {
 				_ = p.state.SetVar("GRAPHITI_URL", checker.DefaultGraphitiEndpoint)
-				_ = p.state.SetVar("PENTAGI_VERSION", version.GetBinaryVersion()) // make state dirty
+				_ = p.state.SetVar("REDSCOPE_VERSION", version.GetBinaryVersion()) // make state dirty
 				injectFSError(p, map[string]error{
 					"ensureStackIntegrity": fmt.Errorf("graphiti error"),
 				})
@@ -730,7 +730,7 @@ func TestApplyChanges_StateMachine_PhaseErrors(t *testing.T) {
 			},
 			setupError: func(p *processor) {
 				// make state dirty so applyChanges proceeds
-				_ = p.state.SetVar("PENTAGI_VERSION", version.GetBinaryVersion())
+				_ = p.state.SetVar("REDSCOPE_VERSION", version.GetBinaryVersion())
 				injectFSError(p, map[string]error{
 					"ensureStackIntegrity_pentagi": fmt.Errorf("pentagi error"),
 					"ensureStackIntegrity":         fmt.Errorf("general error"), // fallback to catch any call

@@ -14,6 +14,7 @@ import (
 	obs "pentagi/pkg/observability"
 	"pentagi/pkg/observability/langfuse"
 	"pentagi/pkg/schema"
+	"pentagi/pkg/worldstate"
 
 	"github.com/vxcontrol/langchaingo/documentloaders"
 	"github.com/vxcontrol/langchaingo/llms"
@@ -352,6 +353,9 @@ func (ce *customExecutor) Execute(
 		if err != nil {
 			return "", resultFormat, fmt.Errorf("failed to update toolcall result: %w", err)
 		}
+
+		// Best-effort World State ingest — never fails the tool call.
+		worldstate.IngestToolResult(ctx, ce.db, ce.flowID, name, result)
 
 		return result, resultFormat, nil
 	}

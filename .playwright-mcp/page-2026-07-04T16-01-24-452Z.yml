@@ -1,0 +1,36 @@
+- generic [ref=f2e2]:
+  - region "Notifications alt+T"
+  - generic [ref=f2e3]:
+    - generic [ref=f2e4]:
+      - generic [ref=f2e9]:
+        - img [ref=f2e10]:
+          - generic [ref=f2e12]: </>
+        - paragraph [ref=f2e13]: Security Platform
+      - generic [ref=f2e14]:
+        - heading "Secure. Test. Protect." [level=2] [ref=f2e15]
+        - paragraph [ref=f2e16]:
+          - text: Automated web application
+          - text: security testing platform
+    - generic [ref=f2e18]:
+      - generic [ref=f2e19]:
+        - heading "Sign in" [level=1] [ref=f2e20]
+        - paragraph [ref=f2e21]: Welcome back! Please sign in to your account.
+      - generic [ref=f2e22]:
+        - generic [ref=f2e23]:
+          - generic [ref=f2e24]: Login
+          - textbox "Login" [active] [ref=f2e25]:
+            - /placeholder: Enter your email
+        - generic [ref=f2e26]:
+          - generic [ref=f2e27]: Password
+          - generic [ref=f2e28]:
+            - textbox "Enter your password" [ref=f2e29]
+            - button [ref=f2e30] [cursor=pointer]:
+              - img [ref=f2e31]
+        - generic [ref=f2e34]:
+          - generic [ref=f2e35] [cursor=pointer]:
+            - checkbox "Remember me" [ref=f2e36]
+            - text: Remember me
+          - button "Forgot password?" [ref=f2e37] [cursor=pointer]
+        - button "Sign in" [ref=f2e38] [cursor=pointer]:
+          - generic [ref=f2e39]: Sign in
+      - paragraph [ref=f2e40]: By signing in, you agree to our Terms of Service and Privacy Policy.

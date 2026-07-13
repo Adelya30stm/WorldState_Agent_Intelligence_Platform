@@ -16,7 +16,7 @@ import (
 
 var (
 	InstallerVersion = version.GetBinaryVersion()
-	UserAgent        = "PentAGI-Installer/" + InstallerVersion
+	UserAgent        = "RedScope-Installer/" + InstallerVersion
 )
 
 const (
@@ -26,7 +26,7 @@ const (
 	ObservabilityComposeFile     = "docker-compose-observability.yml"
 	ExampleCustomConfigLLMFile   = "example.custom.provider.yml"
 	ExampleOllamaConfigLLMFile   = "example.ollama.provider.yml"
-	PentagiScriptFile            = "/usr/local/bin/pentagi"
+	PentagiScriptFile            = "/usr/local/bin/redscope"
 	PentagiContainerName         = "pentagi"
 	GraphitiContainerName        = "graphiti"
 	Neo4jContainerName           = "neo4j"
@@ -40,7 +40,7 @@ const (
 	DefaultLangfuseEndpoint      = "http://langfuse-web:3000"
 	DefaultObservabilityEndpoint = "otelcol:8148"
 	DefaultLangfuseOtelEndpoint  = "http://otelcol:4318"
-	DefaultUpdateServerEndpoint  = "https://update.pentagi.com"
+	DefaultUpdateServerEndpoint  = "https://update.redscope.io"
 	UpdatesCheckEndpoint         = "/api/v1/updates/check"
 	MinFreeMemGB                 = 0.5
 	MinFreeMemGBForPentagi       = 0.5
@@ -275,7 +275,7 @@ func (c *CheckResult) CanRemoveAll() bool { return c.CanFactoryReset() }
 // CanPurgeAll returns true when any compose stack is installed
 func (c *CheckResult) CanPurgeAll() bool { return c.CanFactoryReset() }
 
-// CanResetPassword returns true when PentAGI is running
+// CanResetPassword returns true when RedScope is running
 func (c *CheckResult) CanResetPassword() bool { return c.PentagiRunning }
 
 // CanInstallAll returns true when main stack is not installed yet
@@ -365,7 +365,7 @@ func (h *defaultCheckHandler) GatherWorkerInfo(ctx context.Context, c *CheckResu
 	defer h.mx.Unlock()
 
 	dockerHost := getEnvVar(h.appState, "DOCKER_HOST", "")
-	dockerCertPath := getEnvVar(h.appState, "PENTAGI_DOCKER_CERT_PATH", "")
+	dockerCertPath := getEnvVar(h.appState, "REDSCOPE_DOCKER_CERT_PATH", "")
 	dockerTLSVerify := getEnvVar(h.appState, "DOCKER_TLS_VERIFY", "") != ""
 
 	cli, err := createDockerClient(dockerHost, dockerCertPath, dockerTLSVerify)
@@ -571,7 +571,7 @@ func (h *defaultCheckHandler) GatherUpdatesInfo(ctx context.Context, c *CheckRes
 		ObservabilityInstalled: c.ObservabilityInstalled,
 	}
 
-	// get PentAGI container image info
+	// get RedScope container image info
 	if h.dockerClient != nil && c.PentagiInstalled {
 		if imageInfo := getContainerImageInfo(ctx, h.dockerClient, PentagiContainerName); imageInfo != nil {
 			request.PentagiImageName = &imageInfo.Name

@@ -1,0 +1,5 @@
+node_modules
+dist
+*.tsbuildinfo
+.certs
+.auth.local.json

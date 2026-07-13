@@ -13,7 +13,7 @@ func ExampleEnvFile_workflow() {
 	defer os.RemoveAll(tmpDir)
 
 	envPath := filepath.Join(tmpDir, ".env")
-	initialContent := `# PentAGI Configuration
+	initialContent := `# RedScope Configuration
 DATABASE_URL=postgres://localhost:5432/db
 DEBUG=false
 # API Settings
@@ -64,7 +64,7 @@ API_KEY=old_key`
 
 	// Output:
 	// Current configuration:
-	// DATABASE_URL = postgres://localhost:5432/db (default: postgres://pentagiuser:pentagipass@pgvector:5432/pentagidb?sslmode=disable)
+	// DATABASE_URL = postgres://localhost:5432/db (default: postgres://redscopeuser:redscopepass@pgvector:5432/redscopedb?sslmode=disable)
 	// DEBUG = false
 	// API_KEY = old_key
 	//
