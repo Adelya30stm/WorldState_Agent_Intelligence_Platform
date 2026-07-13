@@ -1,9 +1,10 @@
-# RedScope (PentAGI)
-Secure Autonomous Pentest Agent with Policy-Aware Reasoning
+# WorldState — Agent State Intelligence Platform
 
-AI-powered platform for automated security testing workflows.
+## Core Idea
 
-RedScope combines a Go backend, a React frontend, and a multi-agent execution pipeline to run penetration testing flows with isolated tooling, persistent memory, and real-time updates.
+A dedicated standalone application, separate from the main PentAGI pentest platform, focused on observing, recording, and understanding AI agent behavior during a penetration test.
+
+While PentAGI is the execution engine (creates flows, runs tools, generates reports), WorldState is the intelligence layer: a real-time window into what agents know, what state they are in, and how they transition.
 
 ## PentAGI vs This Fork (At a Glance)
 
@@ -29,37 +30,29 @@ RedScope combines a Go backend, a React frontend, and a multi-agent execution pi
 ![World State after: world state graph](./docs/images/worldstate-after-graph-latest.png)
 ![World State after: transitions view](./docs/images/worldstate-after-transitions.png)
 
-## World State Vision (Agent State Intelligence Platform)
-
-### Core Idea
-
-World State is a dedicated standalone application layered around the main PentAGI pentest platform, focused on observing, recording, and understanding AI agent behavior during penetration testing.
-
-- **PentAGI** remains the execution engine (flows, tool runs, reports).
-- **World State** is the intelligence layer (what agents know, what state they are in, and how they transition in real time).
-
-### What This Platform Is Building Toward
+## What You Were Building Toward
 
 1. **World State Graph**  
-   A live force-directed graph of discovered hosts, services, vulnerabilities, credentials, and networks, including relationships between entities. As agents work, the graph grows as their shared operational mental model.
+   A live force-directed graph that visualizes what agents have discovered: hosts, services, vulnerabilities, credentials, networks, and their relationships. As agents work, the graph grows as their shared mental model of the target.
 2. **Agent State Machine Recorder**  
-   End-to-end lifecycle tracking for Researcher, Developer, Executor, and PenTester agents: `created -> waiting -> running -> finished/failed`, with timestamps and transition reasons for audit-grade observability.
+   Every agent (Researcher, Developer, Executor, PenTester) moves through states: `created -> waiting -> running -> finished/failed`. WorldState records each transition with timestamps and reasons, not only the final result.
 3. **Directive Feed**  
-   A terminal-style operational feed for live agent messages, tool activity, and operator directives to agent containers.
+   A terminal-style interface for sending commands to agent containers and watching live message streams: what agents are saying, what tools they run, and what they find.
 4. **AI Next Step**  
-   AI recommendations derived from current world state to suggest the highest-impact next action.
+   An AI recommendations panel that analyzes the current world state and suggests the most impactful next actions.
 
-### Deeper Vision
+## The Deeper Vision
 
-PentAGI is powerful, but traditionally opaque: agents execute actions while internal state is hard to inspect. World State makes that intelligence visible, recordable, and interactive, so humans can work alongside agents rather than only receiving final output.
+PentAGI is powerful but opaque: agents act, yet their internal process is hard to inspect. WorldState makes agent intelligence visible, recordable, and interactive.
 
-The white rabbit identity is intentional: *follow the white rabbit* into the agent's internal reasoning path, state transitions, and exploration flow.
+The white rabbit identity is deliberate: *follow the white rabbit* into the system, see what the agent sees, and track where it goes.
 
 ## Contents
 
 - [What You Get](#what-you-get)
 - [System Architecture](#system-architecture)
-- [World State Vision (Agent State Intelligence Platform)](#world-state-vision-agent-state-intelligence-platform)
+- [What You Were Building Toward](#what-you-were-building-toward)
+- [The Deeper Vision](#the-deeper-vision)
 - [What Is Improved In This Fork](#what-is-improved-in-this-fork)
 - [In Progress: World State](#in-progress-world-state)
 - [Quick Start (Docker)](#quick-start-docker)
