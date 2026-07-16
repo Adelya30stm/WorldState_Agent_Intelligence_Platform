@@ -44,7 +44,7 @@ It is a platform for humans who want to work alongside AI agents, not just recei
 
 ![PentAGI before: new flow screen](./docs/images/pentagi-before-new-flow.png)
 
-**After: your World State direction**
+**After: Structured Phase-by-Phase Orchestration»**
 
 ![World State after: world state graph](./docs/images/worldstate-after-graph-latest.png)
 ![World State after: transitions view](./docs/images/worldstate-after-transitions.png)
@@ -93,7 +93,9 @@ Execution flow:
 
 ## What Is Improved In This Fork
 
-This repository is an actively improved version of PentAGI, focused on better visibility into agent execution and operator control.
+This repository is an actively improved, production-ready version of PentAGI. Rather than just wrapping the original project in a friendlier UI, we have **deeply integrated the World State engine** directly into the core execution pipeline. 
+
+This shifts the entire system from a chaotic, black-box agent run to a **structured, phase-driven orchestration framework**.
 
 Key improvements already implemented:
 
@@ -110,10 +112,10 @@ Current visual direction:
 
 ## In Progress: World State
 
-**World State** is being built as a dedicated intelligence layer around PentAGI.
+**World State** 
+While currently integrated with PentAGI as the execution engine (handling flows, tools, and reporting), **World State is designed as a universal, engine-agnostic intelligence layer**. 
 
-- PentAGI remains the execution engine (flows, tools, reports)
-- World State becomes the real-time agent intelligence layer (state, context, transitions, recommendations)
+The phase-driven state-machine approach, entity tracking, and structured transition validation are fundamentally decoupled from security-specific tooling. This paradigm can be effortlessly adapted to any complex multi-agent system requiring high auditability, predictable phase-to-phase transitions, and structured persistent memory (e.g., automated software engineering, multi-step research, or complex DevOps pipelines).
 
 Core capabilities under active development:
 
