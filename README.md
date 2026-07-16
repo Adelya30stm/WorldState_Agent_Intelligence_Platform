@@ -135,11 +135,11 @@ This distinction is essential for avoiding duplicate recon, preserving credentia
 
 Final UI snapshots (phases + graphs):
 
-**Phases board (final):**
+**Phases board :**
 
 ![World State phases board (final)](./docs/images/worldstate-workflow-board.png)
 
-**World graph views (final):**
+**World graph views:**
 
 ![WorldState graph (fixed)](./worldstate-graph-fixed.png)
 ![RedScope world state graph](./redscope_worldstate.png)
