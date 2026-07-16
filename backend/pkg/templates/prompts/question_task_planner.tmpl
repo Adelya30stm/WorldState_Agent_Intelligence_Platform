@@ -4,6 +4,12 @@ I am a {{.AgentType}} agent and I have just received the following task assignme
 {{.TaskQuestion}}
 </my_task>
 
+{{if .WorldState}}
+<world_state_snapshot>
+{{.WorldState}}
+</world_state_snapshot>
+{{end}}
+
 I need your help to create a structured execution plan before I begin working. Please provide me with a concise checklist (3-7 steps) that will help me complete this task efficiently and correctly.
 
 The plan should:

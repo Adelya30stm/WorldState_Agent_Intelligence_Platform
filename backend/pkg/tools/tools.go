@@ -696,6 +696,8 @@ func (fte *flowToolsExecutor) GetAssistantExecutor(cfg AssistantExecutorConfig) 
 		summarizer:  cfg.Summarizer,
 	}
 
+	fte.appendWorldStateTools(&ce.definitions, ce.handlers)
+
 	return ce, nil
 }
 
@@ -765,6 +767,8 @@ func (fte *flowToolsExecutor) GetPrimaryExecutor(cfg PrimaryExecutorConfig) (Con
 		ce.handlers[AskUserToolName] = cfg.Barrier
 		ce.barriers[AskUserToolName] = struct{}{}
 	}
+
+	fte.appendWorldStateTools(&ce.definitions, ce.handlers)
 
 	return ce, nil
 }
@@ -860,6 +864,8 @@ func (fte *flowToolsExecutor) GetInstallerExecutor(cfg InstallerExecutorConfig) 
 		ce.handlers[SearchGuideToolName] = guide.Handle
 	}
 
+	fte.appendWorldStateTools(&ce.definitions, ce.handlers)
+
 	return ce, nil
 }
 
@@ -951,6 +957,8 @@ func (fte *flowToolsExecutor) GetCoderExecutor(cfg CoderExecutorConfig) (Context
 		ce.definitions = append(ce.definitions, registryDefinitions[GraphitiSearchToolName])
 		ce.handlers[GraphitiSearchToolName] = graphitiSearch.Handle
 	}
+
+	fte.appendWorldStateTools(&ce.definitions, ce.handlers)
 
 	return ce, nil
 }
@@ -1080,6 +1088,8 @@ func (fte *flowToolsExecutor) GetPentesterExecutor(cfg PentesterExecutorConfig) 
 		ce.definitions = append(ce.definitions, registryDefinitions[SploitusToolName])
 		ce.handlers[SploitusToolName] = sploitus.Handle
 	}
+
+	fte.appendWorldStateTools(&ce.definitions, ce.handlers)
 
 	return ce, nil
 }
@@ -1231,6 +1241,8 @@ func (fte *flowToolsExecutor) GetSearcherExecutor(cfg SearcherExecutorConfig) (C
 		ce.handlers[StoreAnswerToolName] = search.Handle
 	}
 
+	fte.appendWorldStateTools(&ce.definitions, ce.handlers)
+
 	return ce, nil
 }
 
@@ -1296,6 +1308,8 @@ func (fte *flowToolsExecutor) GetGeneratorExecutor(cfg GeneratorExecutorConfig) 
 		ce.handlers[BrowserToolName] = browser.Handle
 	}
 
+	fte.appendWorldStateTools(&ce.definitions, ce.handlers)
+
 	return ce, nil
 }
 
@@ -1360,6 +1374,8 @@ func (fte *flowToolsExecutor) GetRefinerExecutor(cfg RefinerExecutorConfig) (Con
 		ce.definitions = append(ce.definitions, registryDefinitions[BrowserToolName])
 		ce.handlers[BrowserToolName] = browser.Handle
 	}
+
+	fte.appendWorldStateTools(&ce.definitions, ce.handlers)
 
 	return ce, nil
 }
@@ -1428,6 +1444,8 @@ func (fte *flowToolsExecutor) GetMemoristExecutor(cfg MemoristExecutorConfig) (C
 		ce.definitions = append(ce.definitions, registryDefinitions[GraphitiSearchToolName])
 		ce.handlers[GraphitiSearchToolName] = graphitiSearch.Handle
 	}
+
+	fte.appendWorldStateTools(&ce.definitions, ce.handlers)
 
 	return ce, nil
 }
@@ -1511,6 +1529,8 @@ func (fte *flowToolsExecutor) GetEnricherExecutor(cfg EnricherExecutorConfig) (C
 		ce.handlers[BrowserToolName] = browser.Handle
 	}
 
+	fte.appendWorldStateTools(&ce.definitions, ce.handlers)
+
 	return ce, nil
 }
 
@@ -1547,4 +1567,21 @@ func enrichLogrusFields(flowID int64, taskID, subtaskID *int64, fields logrus.Fi
 	}
 
 	return fields
+}
+
+func (fte *flowToolsExecutor) appendWorldStateTools(
+	definitions *[]llms.FunctionDefinition,
+	handlers map[string]ExecutorHandler,
+) {
+	ws := NewWorldStateTool(fte.flowID, fte.db)
+	if !ws.IsAvailable() {
+		return
+	}
+
+	*definitions = append(*definitions,
+		registryDefinitions[WorldStateQueryToolName],
+		registryDefinitions[WorldStateUpdateToolName],
+	)
+	handlers[WorldStateQueryToolName] = ws.Handle
+	handlers[WorldStateUpdateToolName] = ws.Handle
 }

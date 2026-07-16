@@ -1,6 +1,7 @@
 package tools
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -119,6 +120,22 @@ type SearchAction struct {
 type SearchResult struct {
 	Result  string `json:"result" jsonschema:"required,title=Search result" jsonschema_description:"Fully detailed report or error message of the search result and as a answer for the user question in English"`
 	Message string `json:"message" jsonschema:"required,title=Search result message" jsonschema_description:"Not so long message with the result and short answer to send to the user in user's language only"`
+}
+
+type WorldStateQueryAction struct {
+	Type    string `json:"type,omitempty" jsonschema_description:"Optional entity type filter: host|service|credential|finding|network|etc"`
+	State   string `json:"state,omitempty" jsonschema_description:"Optional lifecycle state filter: unknown|discovered|scanning|assessed|vulnerable|exploited|remediated"`
+	Near    string `json:"near,omitempty" jsonschema_description:"Optional hint for future relation-aware queries (currently metadata only)"`
+	Message string `json:"message" jsonschema:"required,title=World state query message" jsonschema_description:"Short message for the user about what world-state facts are being queried (in user's language)"`
+}
+
+type WorldStateUpdateAction struct {
+	EntityKey  string          `json:"entity_key" jsonschema:"required" jsonschema_description:"Stable entity key, e.g. host:10.0.0.5"`
+	Type       string          `json:"type" jsonschema:"required" jsonschema_description:"Entity type, e.g. host|service|credential|finding"`
+	ToState    string          `json:"to_state" jsonschema:"required" jsonschema_description:"Target lifecycle state: unknown|discovered|scanning|assessed|vulnerable|exploited|remediated"`
+	Properties json.RawMessage `json:"properties,omitempty" jsonschema_description:"Entity attributes as JSON object"`
+	Links      json.RawMessage `json:"links,omitempty" jsonschema_description:"Optional relation hints as JSON object/array"`
+	Message    string          `json:"message" jsonschema:"required,title=World state update message" jsonschema_description:"Short message for the user about what was updated in world state (in user's language)"`
 }
 
 type SploitusAction struct {

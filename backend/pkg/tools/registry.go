@@ -39,6 +39,8 @@ const (
 	SearchCodeToolName        = "search_code"
 	StoreCodeToolName         = "store_code"
 	GraphitiSearchToolName    = "graphiti_search"
+	WorldStateQueryToolName   = "world_state_query"
+	WorldStateUpdateToolName  = "world_state_update"
 	ReportResultToolName      = "report_result"
 	SubtaskListToolName       = "subtask_list"
 	SubtaskPatchToolName      = "subtask_patch"
@@ -119,6 +121,8 @@ var toolsTypeMapping = map[string]ToolType{
 	SearchCodeToolName:        SearchVectorDbToolType,
 	StoreCodeToolName:         StoreVectorDbToolType,
 	GraphitiSearchToolName:    SearchVectorDbToolType,
+	WorldStateQueryToolName:   EnvironmentToolType,
+	WorldStateUpdateToolName:  EnvironmentToolType,
 	ReportResultToolName:      StoreAgentResultToolType,
 	SubtaskListToolName:       StoreAgentResultToolType,
 	SubtaskPatchToolName:      StoreAgentResultToolType,
@@ -317,6 +321,16 @@ var registryDefinitions = map[string]llms.FunctionDefinition{
 			"and build on previous findings within the same penetration testing engagement.",
 		Parameters: reflector.Reflect(&GraphitiSearchAction{}),
 	},
+	WorldStateQueryToolName: {
+		Name:        WorldStateQueryToolName,
+		Description: "Read current persisted World State entities for this flow by optional type/state filters",
+		Parameters:  reflector.Reflect(&WorldStateQueryAction{}),
+	},
+	WorldStateUpdateToolName: {
+		Name:        WorldStateUpdateToolName,
+		Description: "Write World State update with FSM-validated transition and transition audit record",
+		Parameters:  reflector.Reflect(&WorldStateUpdateAction{}),
+	},
 	MemoristToolName: {
 		Name:        MemoristToolName,
 		Description: "Call to Archivist team member who remember all the information about the past work and made tasks and can answer your question about it",
@@ -386,6 +400,8 @@ func getMessageType(name string) database.MsglogType {
 		PerplexityToolName, SearxngToolName, SploitusToolName,
 		SearchGuideToolName, SearchAnswerToolName, SearchCodeToolName, SearchInMemoryToolName, GraphitiSearchToolName:
 		return database.MsglogTypeSearch
+	case WorldStateQueryToolName, WorldStateUpdateToolName:
+		return database.MsglogTypeThoughts
 	case AdviceToolName:
 		return database.MsglogTypeAdvice
 	case AskUserToolName:

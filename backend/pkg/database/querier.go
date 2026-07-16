@@ -32,6 +32,8 @@ type Querier interface {
 	CreateUserPreferences(ctx context.Context, arg CreateUserPreferencesParams) (UserPreference, error)
 	CreateUserPrompt(ctx context.Context, arg CreateUserPromptParams) (Prompt, error)
 	CreateVectorStoreLog(ctx context.Context, arg CreateVectorStoreLogParams) (Vecstorelog, error)
+	CreateWorldStateEntity(ctx context.Context, arg CreateWorldStateEntityParams) (WorldStateEntity, error)
+	CreateWorldStateTransition(ctx context.Context, arg CreateWorldStateTransitionParams) (WorldStateTransition, error)
 	DeleteAPIToken(ctx context.Context, id int64) (ApiToken, error)
 	DeleteAssistant(ctx context.Context, id int64) (Assistant, error)
 	DeleteFavoriteFlow(ctx context.Context, arg DeleteFavoriteFlowParams) (UserPreference, error)
@@ -164,6 +166,7 @@ type Querier interface {
 	GetToolcallsStatsByFunction(ctx context.Context, userID int64) ([]GetToolcallsStatsByFunctionRow, error)
 	// Get toolcalls stats grouped by function name for a specific flow
 	GetToolcallsStatsByFunctionForFlow(ctx context.Context, flowID int64) ([]GetToolcallsStatsByFunctionForFlowRow, error)
+	GetWorldStateEntityByFlowAndKey(ctx context.Context, arg GetWorldStateEntityByFlowAndKeyParams) (WorldStateEntity, error)
 	GetUsageStatsByDayLast3Months(ctx context.Context, userID int64) ([]GetUsageStatsByDayLast3MonthsRow, error)
 	GetUsageStatsByDayLastMonth(ctx context.Context, userID int64) ([]GetUsageStatsByDayLastMonthRow, error)
 	GetUsageStatsByDayLastWeek(ctx context.Context, userID int64) ([]GetUsageStatsByDayLastWeekRow, error)
@@ -171,6 +174,8 @@ type Querier interface {
 	GetUsageStatsByProvider(ctx context.Context, userID int64) ([]GetUsageStatsByProviderRow, error)
 	GetUsageStatsByType(ctx context.Context, userID int64) ([]GetUsageStatsByTypeRow, error)
 	GetUsageStatsByTypeForFlow(ctx context.Context, flowID int64) ([]GetUsageStatsByTypeForFlowRow, error)
+	ListRecentWorldStateTransitionsByFlow(ctx context.Context, arg ListRecentWorldStateTransitionsByFlowParams) ([]ListRecentWorldStateTransitionsByFlowRow, error)
+	ListWorldStateEntities(ctx context.Context, arg ListWorldStateEntitiesParams) ([]WorldStateEntity, error)
 	GetUser(ctx context.Context, id int64) (GetUserRow, error)
 	GetUserAPIToken(ctx context.Context, arg GetUserAPITokenParams) (ApiToken, error)
 	GetUserAPITokenByTokenID(ctx context.Context, arg GetUserAPITokenByTokenIDParams) (ApiToken, error)
@@ -253,7 +258,9 @@ type Querier interface {
 	UpdateUserProvider(ctx context.Context, arg UpdateUserProviderParams) (Provider, error)
 	UpdateUserRole(ctx context.Context, arg UpdateUserRoleParams) (User, error)
 	UpdateUserStatus(ctx context.Context, arg UpdateUserStatusParams) (User, error)
+	UpdateWorldStateEntity(ctx context.Context, arg UpdateWorldStateEntityParams) (WorldStateEntity, error)
 	UpsertUserPreferences(ctx context.Context, arg UpsertUserPreferencesParams) (UserPreference, error)
+	CountWorldStateEntitiesByState(ctx context.Context, flowID int64) ([]CountWorldStateEntitiesByStateRow, error)
 }
 
 var _ Querier = (*Queries)(nil)

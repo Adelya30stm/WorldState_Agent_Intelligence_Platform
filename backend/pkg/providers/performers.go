@@ -14,6 +14,7 @@ import (
 	"pentagi/pkg/providers/pconfig"
 	"pentagi/pkg/templates"
 	"pentagi/pkg/tools"
+	"pentagi/pkg/worldstate"
 
 	"github.com/sirupsen/logrus"
 	"github.com/vxcontrol/langchaingo/llms"
@@ -833,6 +834,7 @@ func (fp *flowProvider) performPlanner(
 	planQuestionData := map[string]any{
 		"AgentType":    string(opt),
 		"TaskQuestion": question,
+		"WorldState":   worldstate.BuildPlannerSnapshot(ctx, fp.db, fp.flowID, 5),
 	}
 
 	planQuestion, err := fp.prompter.RenderTemplate(templates.PromptTypeQuestionTaskPlanner, planQuestionData)
