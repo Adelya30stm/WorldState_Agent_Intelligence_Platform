@@ -33,6 +33,20 @@ interface FlowsContextValue {
 
 const FlowsContext = createContext<FlowsContextValue | undefined>(undefined);
 
+const isProviderQuotaError = (message: string) => /insufficient_quota|exceeded your current quota|status code:\s*429/i.test(message);
+
+const getFlowCreationErrorDescription = (error: unknown, providerName: string, kind: 'assistant' | 'flow') => {
+    const fallback =
+        kind === 'assistant' ? 'An error occurred while creating assistant' : 'An error occurred while creating flow';
+    const message = error instanceof Error ? error.message : fallback;
+
+    if (isProviderQuotaError(message)) {
+        return `Provider "${providerName}" quota is exceeded (429). Choose another provider or update billing/API key in Settings -> Providers.`;
+    }
+
+    return message;
+};
+
 interface FlowsProviderProps {
     children: React.ReactNode;
 }
@@ -96,7 +110,7 @@ export const FlowsProvider = ({ children }: FlowsProviderProps) => {
 
                 return null;
             } catch (error) {
-                const description = error instanceof Error ? error.message : 'An error occurred while creating flow';
+                const description = getFlowCreationErrorDescription(error, modelProvider, 'flow');
                 toast.error('Failed to create flow', {
                     description,
                 });
@@ -135,8 +149,7 @@ export const FlowsProvider = ({ children }: FlowsProviderProps) => {
 
                 return null;
             } catch (error) {
-                const description =
-                    error instanceof Error ? error.message : 'An error occurred while creating assistant';
+                const description = getFlowCreationErrorDescription(error, modelProvider, 'assistant');
                 toast.error('Failed to create assistant', {
                     description,
                 });
