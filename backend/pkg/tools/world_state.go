@@ -71,7 +71,7 @@ func (w *worldStateTool) Handle(ctx context.Context, name string, args json.RawM
 			action.Type,
 			worldstate.State(action.ToState),
 			defaultJSONObject(action.Properties),
-			"agent",
+			resolveWorldStateActor(ctx),
 			evidence,
 		)
 		if err != nil {
@@ -101,4 +101,30 @@ func defaultJSONObject(raw json.RawMessage) json.RawMessage {
 		return json.RawMessage(`{}`)
 	}
 	return raw
+}
+
+func resolveWorldStateActor(ctx context.Context) string {
+	agentCtx, ok := GetAgentContext(ctx)
+	if !ok {
+		return "human"
+	}
+
+	switch agentCtx.CurrentAgentType {
+	case database.MsgchainTypeSearcher,
+		database.MsgchainTypeMemorist,
+		database.MsgchainTypeEnricher,
+		database.MsgchainTypeGenerator,
+		database.MsgchainTypeRefiner:
+		return "researcher"
+
+	case database.MsgchainTypePentester,
+		database.MsgchainTypeCoder,
+		database.MsgchainTypeInstaller,
+		database.MsgchainTypeAssistant,
+		database.MsgchainTypePrimaryAgent:
+		return "executor"
+
+	default:
+		return "agent"
+	}
 }
