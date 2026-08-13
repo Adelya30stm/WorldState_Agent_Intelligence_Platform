@@ -22,11 +22,11 @@ networks:
     name: langfuse-network
 
 services:
-  pentagi:
+  redscope:
     image: ${PENTAGI_IMAGE:-ghcr.io/adelya30stm/pentest_solution:latest}
     restart: unless-stopped
-    container_name: pentagi
-    hostname: pentagi
+    container_name: redscope
+    hostname: redscope
     expose:
       - 8443/tcp
     ports:
