@@ -28,22 +28,19 @@ func IngestToolResult(ctx context.Context, db database.Querier, flowID int64, to
 	hostIDs := map[string]int64{}
 
 	for _, c := range candidates {
+		entityKey := safeEntityKey(c.Key)
 		evidence := map[string]any{
 			"tool":   toolName,
 			"source": "tool_result",
 		}
-		entity, err := store.Observe(ctx, flowID, c.Type, c.Key, agent, c.Properties, evidence)
+		entity, err := store.Observe(ctx, flowID, c.Type, entityKey, agent, c.Properties, evidence)
 		if err != nil {
-			logrus.WithContext(ctx).WithError(err).WithFields(logrus.Fields{
-				"flow_id":    flowID,
-				"entity_key": c.Key,
-				"tool":       toolName,
-			}).Warn("worldstate: observe failed")
+			logrus.WithContext(ctx).WithError(err).WithFields(ingestionFailureFields(flowID, entityKey, toolName)).Warn("worldstate: observe failed")
 			continue
 		}
 
 		if c.Type == EntityTypeHost {
-			hostIDs[c.Key] = entity.ID
+			hostIDs[entityKey] = entity.ID
 			if active {
 				if err := store.PromoteScanning(ctx, entity.ID, agent, evidence); err != nil {
 					logrus.WithContext(ctx).WithError(err).WithField("entity_id", entity.ID).
@@ -85,5 +82,13 @@ func IngestToolResult(ctx context.Context, db database.Querier, flowID int64, to
 		}); err != nil {
 			logrus.WithContext(ctx).WithError(err).Warn("worldstate: link failed")
 		}
+	}
+}
+
+func ingestionFailureFields(flowID int64, entityKey, toolName string) logrus.Fields {
+	return logrus.Fields{
+		"flow_id":    flowID,
+		"entity_key": safeEntityKey(entityKey),
+		"tool":       toolName,
 	}
 }

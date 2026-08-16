@@ -156,6 +156,7 @@ type flowProvider struct {
 	maxGACallsLimit int
 	maxLACallsLimit int
 	buildMonitor    executionMonitorBuilder
+	worldState      primaryWorldStateTurnInjector
 
 	provider.Provider
 }
@@ -710,24 +711,24 @@ func (fp *flowProvider) PrepareAgentChain(ctx context.Context, taskID, subtaskID
 	}
 
 	systemAgentTmpl, err := fp.prompter.RenderTemplate(templates.PromptTypePrimaryAgent, map[string]any{
-		"FinalyToolName":            tools.FinalyToolName,
-		"SearchToolName":            tools.SearchToolName,
-		"PentesterToolName":         tools.PentesterToolName,
-		"CoderToolName":             tools.CoderToolName,
-		"AdviceToolName":            tools.AdviceToolName,
-		"MemoristToolName":          tools.MemoristToolName,
-		"MaintenanceToolName":       tools.MaintenanceToolName,
-		"WorldStateQueryToolName":   tools.WorldStateQueryToolName,
-		"WorldStateUpdateToolName":  tools.WorldStateUpdateToolName,
-		"SummarizationToolName":     cast.SummarizationToolName,
-		"SummarizedContentPrefix":   strings.ReplaceAll(csum.SummarizedContentPrefix, "\n", "\\n"),
-		"AskUserToolName":           tools.AskUserToolName,
-		"AskUserEnabled":            fp.askUser,
-		"ExecutionContext":          executionContext,
-		"Lang":                      fp.language,
-		"DockerImage":               fp.image,
-		"CurrentTime":               getCurrentTime(),
-		"ToolPlaceholder":           ToolPlaceholder,
+		"FinalyToolName":           tools.FinalyToolName,
+		"SearchToolName":           tools.SearchToolName,
+		"PentesterToolName":        tools.PentesterToolName,
+		"CoderToolName":            tools.CoderToolName,
+		"AdviceToolName":           tools.AdviceToolName,
+		"MemoristToolName":         tools.MemoristToolName,
+		"MaintenanceToolName":      tools.MaintenanceToolName,
+		"WorldStateQueryToolName":  tools.WorldStateQueryToolName,
+		"WorldStateUpdateToolName": tools.WorldStateUpdateToolName,
+		"SummarizationToolName":    cast.SummarizationToolName,
+		"SummarizedContentPrefix":  strings.ReplaceAll(csum.SummarizedContentPrefix, "\n", "\\n"),
+		"AskUserToolName":          tools.AskUserToolName,
+		"AskUserEnabled":           fp.askUser,
+		"ExecutionContext":         executionContext,
+		"Lang":                     fp.language,
+		"DockerImage":              fp.image,
+		"CurrentTime":              getCurrentTime(),
+		"ToolPlaceholder":          ToolPlaceholder,
 	})
 	if err != nil {
 		logger.WithError(err).Error("failed to get system prompt for primary agent template")
@@ -973,6 +974,15 @@ func (fp *flowProvider) PutInputToAgentChain(ctx context.Context, msgChainID int
 		"msg_chain_id": msgChainID,
 		"input":        input[:min(len(input), 1000)],
 	})
+	if db, ok := fp.db.(worldstate.TransactionDB); ok {
+		handled, err := worldstate.ResolvePrimaryWaitWithUser(ctx, db, msgChainID, input)
+		if err != nil {
+			return fmt.Errorf("failed to resolve primary ask wait: %w", err)
+		}
+		if handled {
+			return nil
+		}
+	}
 
 	return fp.processChain(ctx, msgChainID, logger, func(chain []llms.MessageContent) ([]llms.MessageContent, error) {
 		return fp.updateMsgChainResult(chain, tools.AskUserToolName, input)

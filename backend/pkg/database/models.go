@@ -12,6 +12,177 @@ import (
 	"time"
 )
 
+type AgentChainWaitKind string
+
+const (
+	AgentChainWaitKindTool AgentChainWaitKind = "tool"
+	AgentChainWaitKindIdle AgentChainWaitKind = "idle"
+)
+
+func (e *AgentChainWaitKind) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = AgentChainWaitKind(s)
+	case string:
+		*e = AgentChainWaitKind(s)
+	default:
+		return fmt.Errorf("unsupported scan type for AgentChainWaitKind: %T", src)
+	}
+	return nil
+}
+
+type NullAgentChainWaitKind struct {
+	AgentChainWaitKind AgentChainWaitKind `json:"agent_chain_wait_kind"`
+	Valid              bool               `json:"valid"` // Valid is true if AgentChainWaitKind is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullAgentChainWaitKind) Scan(value interface{}) error {
+	if value == nil {
+		ns.AgentChainWaitKind, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.AgentChainWaitKind.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullAgentChainWaitKind) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.AgentChainWaitKind), nil
+}
+
+type AgentChainWaitState string
+
+const (
+	AgentChainWaitStatePending  AgentChainWaitState = "pending"
+	AgentChainWaitStateResolved AgentChainWaitState = "resolved"
+)
+
+func (e *AgentChainWaitState) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = AgentChainWaitState(s)
+	case string:
+		*e = AgentChainWaitState(s)
+	default:
+		return fmt.Errorf("unsupported scan type for AgentChainWaitState: %T", src)
+	}
+	return nil
+}
+
+type NullAgentChainWaitState struct {
+	AgentChainWaitState AgentChainWaitState `json:"agent_chain_wait_state"`
+	Valid               bool                `json:"valid"` // Valid is true if AgentChainWaitState is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullAgentChainWaitState) Scan(value interface{}) error {
+	if value == nil {
+		ns.AgentChainWaitState, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.AgentChainWaitState.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullAgentChainWaitState) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.AgentChainWaitState), nil
+}
+
+type AgentTaskTargetType string
+
+const (
+	AgentTaskTargetTypeTask       AgentTaskTargetType = "task"
+	AgentTaskTargetTypeSubtask    AgentTaskTargetType = "subtask"
+	AgentTaskTargetTypeSpecialist AgentTaskTargetType = "specialist"
+	AgentTaskTargetTypeAssistant  AgentTaskTargetType = "assistant"
+)
+
+func (e *AgentTaskTargetType) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = AgentTaskTargetType(s)
+	case string:
+		*e = AgentTaskTargetType(s)
+	default:
+		return fmt.Errorf("unsupported scan type for AgentTaskTargetType: %T", src)
+	}
+	return nil
+}
+
+type NullAgentTaskTargetType struct {
+	AgentTaskTargetType AgentTaskTargetType `json:"agent_task_target_type"`
+	Valid               bool                `json:"valid"` // Valid is true if AgentTaskTargetType is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullAgentTaskTargetType) Scan(value interface{}) error {
+	if value == nil {
+		ns.AgentTaskTargetType, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.AgentTaskTargetType.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullAgentTaskTargetType) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.AgentTaskTargetType), nil
+}
+
+type AgentTaskUpdateState string
+
+const (
+	AgentTaskUpdateStatePending   AgentTaskUpdateState = "pending"
+	AgentTaskUpdateStateDelivered AgentTaskUpdateState = "delivered"
+	AgentTaskUpdateStateRejected  AgentTaskUpdateState = "rejected"
+)
+
+func (e *AgentTaskUpdateState) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = AgentTaskUpdateState(s)
+	case string:
+		*e = AgentTaskUpdateState(s)
+	default:
+		return fmt.Errorf("unsupported scan type for AgentTaskUpdateState: %T", src)
+	}
+	return nil
+}
+
+type NullAgentTaskUpdateState struct {
+	AgentTaskUpdateState AgentTaskUpdateState `json:"agent_task_update_state"`
+	Valid                bool                 `json:"valid"` // Valid is true if AgentTaskUpdateState is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullAgentTaskUpdateState) Scan(value interface{}) error {
+	if value == nil {
+		ns.AgentTaskUpdateState, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.AgentTaskUpdateState.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullAgentTaskUpdateState) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.AgentTaskUpdateState), nil
+}
+
 type AssistantStatus string
 
 const (
@@ -882,6 +1053,49 @@ func (ns NullVecstoreActionType) Value() (driver.Value, error) {
 	return string(ns.VecstoreActionType), nil
 }
 
+type WorldStateEventKind string
+
+const (
+	WorldStateEventKindEntityUpserted     WorldStateEventKind = "entity_upserted"
+	WorldStateEventKindEntityTransitioned WorldStateEventKind = "entity_transitioned"
+	WorldStateEventKindLinkUpserted       WorldStateEventKind = "link_upserted"
+)
+
+func (e *WorldStateEventKind) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = WorldStateEventKind(s)
+	case string:
+		*e = WorldStateEventKind(s)
+	default:
+		return fmt.Errorf("unsupported scan type for WorldStateEventKind: %T", src)
+	}
+	return nil
+}
+
+type NullWorldStateEventKind struct {
+	WorldStateEventKind WorldStateEventKind `json:"world_state_event_kind"`
+	Valid               bool                `json:"valid"` // Valid is true if WorldStateEventKind is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullWorldStateEventKind) Scan(value interface{}) error {
+	if value == nil {
+		ns.WorldStateEventKind, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.WorldStateEventKind.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullWorldStateEventKind) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.WorldStateEventKind), nil
+}
+
 type WorldStateLifecycle string
 
 const (
@@ -927,6 +1141,47 @@ func (ns NullWorldStateLifecycle) Value() (driver.Value, error) {
 		return nil, nil
 	}
 	return string(ns.WorldStateLifecycle), nil
+}
+
+type AgentChainWait struct {
+	MsgchainID        int64               `json:"msgchain_id"`
+	FlowID            int64               `json:"flow_id"`
+	WaitKind          AgentChainWaitKind  `json:"wait_kind"`
+	PendingToolCallID sql.NullString      `json:"pending_tool_call_id"`
+	State             AgentChainWaitState `json:"state"`
+	ResolutionWinner  sql.NullString      `json:"resolution_winner"`
+	ResolutionRef     sql.NullInt64       `json:"resolution_ref"`
+	ResolvedAt        sql.NullTime        `json:"resolved_at"`
+	LeaseOwner        sql.NullString      `json:"lease_owner"`
+	LeaseExpiresAt    sql.NullTime        `json:"lease_expires_at"`
+	RetryCount        int32               `json:"retry_count"`
+	NextAttemptAt     time.Time           `json:"next_attempt_at"`
+	ResumePending     bool                `json:"resume_pending"`
+	ResumeIntent      json.RawMessage     `json:"resume_intent"`
+	CreatedAt         time.Time           `json:"created_at"`
+	UpdatedAt         time.Time           `json:"updated_at"`
+}
+
+type AgentTaskUpdate struct {
+	ID                  int64                `json:"id"`
+	FlowID              int64                `json:"flow_id"`
+	SenderMsgchainID    sql.NullInt64        `json:"sender_msgchain_id"`
+	TargetType          AgentTaskTargetType  `json:"target_type"`
+	TargetTaskID        sql.NullInt64        `json:"target_task_id"`
+	TargetSubtaskID     sql.NullInt64        `json:"target_subtask_id"`
+	TargetAssistantID   sql.NullInt64        `json:"target_assistant_id"`
+	TargetRole          sql.NullString       `json:"target_role"`
+	TargetMsgchainID    sql.NullInt64        `json:"target_msgchain_id"`
+	Instruction         string               `json:"instruction"`
+	SelectedFacts       json.RawMessage      `json:"selected_facts"`
+	SourceRevisions     []int64              `json:"source_revisions"`
+	State               AgentTaskUpdateState `json:"state"`
+	RecipientMsgchainID sql.NullInt64        `json:"recipient_msgchain_id"`
+	DeliveredAt         sql.NullTime         `json:"delivered_at"`
+	RejectedAt          sql.NullTime         `json:"rejected_at"`
+	RejectionReason     sql.NullString       `json:"rejection_reason"`
+	CreatedAt           time.Time            `json:"created_at"`
+	UpdatedAt           time.Time            `json:"updated_at"`
 }
 
 type Agentlog struct {
@@ -1187,6 +1442,12 @@ type Vecstorelog struct {
 	CreatedAt sql.NullTime       `json:"created_at"`
 }
 
+type WorldStateChainCursor struct {
+	MsgchainID int64     `json:"msgchain_id"`
+	Revision   int64     `json:"revision"`
+	UpdatedAt  time.Time `json:"updated_at"`
+}
+
 type WorldStateEntity struct {
 	ID          int64               `json:"id"`
 	FlowID      int64               `json:"flow_id"`
@@ -1198,6 +1459,17 @@ type WorldStateEntity struct {
 	Version     int32               `json:"version"`
 	CreatedAt   time.Time           `json:"created_at"`
 	UpdatedAt   time.Time           `json:"updated_at"`
+}
+
+type WorldStateEvent struct {
+	Revision        int64               `json:"revision"`
+	FlowID          int64               `json:"flow_id"`
+	Kind            WorldStateEventKind `json:"kind"`
+	Facts           json.RawMessage     `json:"facts"`
+	Actor           string              `json:"actor"`
+	ActorMsgchainID sql.NullInt64       `json:"actor_msgchain_id"`
+	Provenance      json.RawMessage     `json:"provenance"`
+	CreatedAt       time.Time           `json:"created_at"`
 }
 
 type WorldStateLink struct {

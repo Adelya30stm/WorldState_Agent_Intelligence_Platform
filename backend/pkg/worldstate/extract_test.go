@@ -48,3 +48,43 @@ func TestLooksLikeActiveScan(t *testing.T) {
 		t.Fatal("did not expect active scan")
 	}
 }
+
+func TestCredentialIdentifiersUseStableNonSecretKeys(t *testing.T) {
+	result := `username=analyst password=synthetic-password-sentinel
+token=synthetic-token-sentinel
+api_key=synthetic-api-key-sentinel
+Authorization: Bearer synthetic-bearer-sentinel
+Cookie: session=synthetic-cookie-sentinel`
+	candidates := ExtractCandidates("terminal", result)
+	wantKeys := map[string]bool{
+		"credential:analyst":  false,
+		"credential:password": false,
+		"credential:token":    false,
+		"credential:api_key":  false,
+		"credential:bearer":   false,
+		"credential:cookie":   false,
+	}
+	for _, candidate := range candidates {
+		if candidate.Type != EntityTypeCredential {
+			continue
+		}
+		if strings.Contains(candidate.Key, "synthetic-") {
+			t.Fatalf("credential key contains secret material")
+		}
+		if _, ok := wantKeys[candidate.Key]; ok {
+			wantKeys[candidate.Key] = true
+		}
+	}
+	for key, found := range wantKeys {
+		if !found {
+			t.Fatalf("missing stable credential identity %q", key)
+		}
+	}
+}
+
+func TestIngestionFailureFieldsSanitizeCredentialIdentifiers(t *testing.T) {
+	fields := ingestionFailureFields(17, "credential:password:synthetic-password-sentinel", "terminal")
+	if fields["entity_key"] != "credential:password" {
+		t.Fatalf("unexpected ingestion entity key: %v", fields["entity_key"])
+	}
+}

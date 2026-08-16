@@ -32,6 +32,17 @@ func TestProjectionTextWithFrontier(t *testing.T) {
 	}
 }
 
+func TestProjectionTextSanitizesCredentialIdentifiers(t *testing.T) {
+	p := &Projection{
+		Frontier:          []FrontierItem{{Key: "credential:cookie:synthetic-cookie-sentinel", Type: EntityTypeCredential, State: StateDiscovered}},
+		RecentTransitions: []TransitionItem{{EntityKey: "credential:password:synthetic-password-sentinel", From: StateUnknown, To: StateDiscovered}},
+	}
+	text := p.Text()
+	if containsAll(text, "synthetic-cookie-sentinel") || containsAll(text, "synthetic-password-sentinel") {
+		t.Fatalf("projection leaked credential identifier material")
+	}
+}
+
 func containsAll(s string, parts ...string) bool {
 	for _, p := range parts {
 		if !stringContains(s, p) {

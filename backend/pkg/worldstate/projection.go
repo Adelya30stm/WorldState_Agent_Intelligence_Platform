@@ -16,13 +16,13 @@ const (
 
 // Projection is a compact, planner-facing snapshot of World State.
 type Projection struct {
-	FlowID             int64
-	TotalEntities      int
-	CountsByState      map[State]int
-	CountsByType       map[string]int
-	Frontier           []FrontierItem // actionable now
-	RecentTransitions  []TransitionItem
-	Empty              bool
+	FlowID            int64
+	TotalEntities     int
+	CountsByState     map[State]int
+	CountsByType      map[string]int
+	Frontier          []FrontierItem // actionable now
+	RecentTransitions []TransitionItem
+	Empty             bool
 }
 
 type FrontierItem struct {
@@ -76,7 +76,7 @@ func BuildProjection(ctx context.Context, db database.Querier, flowID int64) (*P
 	}
 	for _, t := range trs {
 		p.RecentTransitions = append(p.RecentTransitions, TransitionItem{
-			EntityKey: t.EntityKey,
+			EntityKey: safeEntityKey(t.EntityKey),
 			From:      State(t.FromState),
 			To:        State(t.ToState),
 			Agent:     t.Agent,
@@ -116,7 +116,7 @@ func buildFrontier(entities []database.WorldStateEntity) []FrontierItem {
 		}
 		_ = pr
 		items = append(items, FrontierItem{
-			Key:   e.EntityKey,
+			Key:   safeEntityKey(e.EntityKey),
 			Type:  e.Type,
 			State: st,
 			Why:   why[st],
@@ -177,14 +177,14 @@ func (p *Projection) Text() string {
 	b.WriteString("  <frontier>\n")
 	b.WriteString("    <instruction>Prefer work on frontier items. Do NOT re-enumerate entities already in scanning/assessed/vulnerable unless new evidence requires it.</instruction>\n")
 	for _, f := range p.Frontier {
-		fmt.Fprintf(&b, "    <entity key=%q type=%q state=%q why=%q/>\n", f.Key, f.Type, f.State, f.Why)
+		fmt.Fprintf(&b, "    <entity key=%q type=%q state=%q why=%q/>\n", safeEntityKey(f.Key), f.Type, f.State, f.Why)
 	}
 	b.WriteString("  </frontier>\n")
 
 	if len(p.RecentTransitions) > 0 {
 		b.WriteString("  <recent_transitions>\n")
 		for _, t := range p.RecentTransitions {
-			fmt.Fprintf(&b, "    <transition entity=%q from=%q to=%q agent=%q/>\n", t.EntityKey, t.From, t.To, t.Agent)
+			fmt.Fprintf(&b, "    <transition entity=%q from=%q to=%q agent=%q/>\n", safeEntityKey(t.EntityKey), t.From, t.To, t.Agent)
 		}
 		b.WriteString("  </recent_transitions>\n")
 	}
