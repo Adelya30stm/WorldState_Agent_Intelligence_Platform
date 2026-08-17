@@ -155,6 +155,25 @@ agent runtime
   -> UI and CLI/curl clients
 ```
 
+### Snapshot and Event Delivery Architecture
+
+The existing compact World State snapshot remains the current-world-state
+representation assembled for execution context and planner prompts. It is still
+supported for compatibility and describes what is true now.
+
+World State mutations additionally append ordered, flow-scoped events in the same
+transaction as the entity, link, and transition changes. The event journal records
+committed changes; it is additive and is not a general broadcast stream.
+
+For primary-agent chains, delivery starts with a baseline projection. A chain with
+an existing cursor receives bounded deltas for revisions after that cursor, or a
+checkpoint projection when event or payload limits would be exceeded. Each primary
+chain uses a durable per-chain cursor that advances atomically with the delivered
+envelope. Delivery is injected before
+the next provider model turn, so an in-flight LLM call is not interrupted. It is
+primary-only: events are not automatically delivered to subagents or other agent
+chains.
+
 Example GraphQL query for live message logs:
 
 ```bash
