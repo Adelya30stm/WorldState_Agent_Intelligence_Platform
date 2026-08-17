@@ -228,6 +228,229 @@ func (ns NullAssistantStatus) Value() (driver.Value, error) {
 	return string(ns.AssistantStatus), nil
 }
 
+type AttackPlanEdgeKind string
+
+const (
+	AttackPlanEdgeKindAnd        AttackPlanEdgeKind = "and"
+	AttackPlanEdgeKindOr         AttackPlanEdgeKind = "or"
+	AttackPlanEdgeKindDependency AttackPlanEdgeKind = "dependency"
+)
+
+func (e *AttackPlanEdgeKind) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = AttackPlanEdgeKind(s)
+	case string:
+		*e = AttackPlanEdgeKind(s)
+	default:
+		return fmt.Errorf("unsupported scan type for AttackPlanEdgeKind: %T", src)
+	}
+	return nil
+}
+
+type NullAttackPlanEdgeKind struct {
+	AttackPlanEdgeKind AttackPlanEdgeKind `json:"attack_plan_edge_kind"`
+	Valid              bool               `json:"valid"` // Valid is true if AttackPlanEdgeKind is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullAttackPlanEdgeKind) Scan(value interface{}) error {
+	if value == nil {
+		ns.AttackPlanEdgeKind, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.AttackPlanEdgeKind.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullAttackPlanEdgeKind) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.AttackPlanEdgeKind), nil
+}
+
+type AttackPlanNodeKind string
+
+const (
+	AttackPlanNodeKindGoal   AttackPlanNodeKind = "goal"
+	AttackPlanNodeKindAction AttackPlanNodeKind = "action"
+)
+
+func (e *AttackPlanNodeKind) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = AttackPlanNodeKind(s)
+	case string:
+		*e = AttackPlanNodeKind(s)
+	default:
+		return fmt.Errorf("unsupported scan type for AttackPlanNodeKind: %T", src)
+	}
+	return nil
+}
+
+type NullAttackPlanNodeKind struct {
+	AttackPlanNodeKind AttackPlanNodeKind `json:"attack_plan_node_kind"`
+	Valid              bool               `json:"valid"` // Valid is true if AttackPlanNodeKind is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullAttackPlanNodeKind) Scan(value interface{}) error {
+	if value == nil {
+		ns.AttackPlanNodeKind, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.AttackPlanNodeKind.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullAttackPlanNodeKind) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.AttackPlanNodeKind), nil
+}
+
+type AttackPlanNodeStatus string
+
+const (
+	AttackPlanNodeStatusPending   AttackPlanNodeStatus = "pending"
+	AttackPlanNodeStatusReady     AttackPlanNodeStatus = "ready"
+	AttackPlanNodeStatusRunning   AttackPlanNodeStatus = "running"
+	AttackPlanNodeStatusSucceeded AttackPlanNodeStatus = "succeeded"
+	AttackPlanNodeStatusFailed    AttackPlanNodeStatus = "failed"
+	AttackPlanNodeStatusBlocked   AttackPlanNodeStatus = "blocked"
+	AttackPlanNodeStatusSkipped   AttackPlanNodeStatus = "skipped"
+	AttackPlanNodeStatusCancelled AttackPlanNodeStatus = "cancelled"
+)
+
+func (e *AttackPlanNodeStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = AttackPlanNodeStatus(s)
+	case string:
+		*e = AttackPlanNodeStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for AttackPlanNodeStatus: %T", src)
+	}
+	return nil
+}
+
+type NullAttackPlanNodeStatus struct {
+	AttackPlanNodeStatus AttackPlanNodeStatus `json:"attack_plan_node_status"`
+	Valid                bool                 `json:"valid"` // Valid is true if AttackPlanNodeStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullAttackPlanNodeStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.AttackPlanNodeStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.AttackPlanNodeStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullAttackPlanNodeStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.AttackPlanNodeStatus), nil
+}
+
+type AttackPlanRunStatus string
+
+const (
+	AttackPlanRunStatusRunning   AttackPlanRunStatus = "running"
+	AttackPlanRunStatusSucceeded AttackPlanRunStatus = "succeeded"
+	AttackPlanRunStatusFailed    AttackPlanRunStatus = "failed"
+	AttackPlanRunStatusCancelled AttackPlanRunStatus = "cancelled"
+)
+
+func (e *AttackPlanRunStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = AttackPlanRunStatus(s)
+	case string:
+		*e = AttackPlanRunStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for AttackPlanRunStatus: %T", src)
+	}
+	return nil
+}
+
+type NullAttackPlanRunStatus struct {
+	AttackPlanRunStatus AttackPlanRunStatus `json:"attack_plan_run_status"`
+	Valid               bool                `json:"valid"` // Valid is true if AttackPlanRunStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullAttackPlanRunStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.AttackPlanRunStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.AttackPlanRunStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullAttackPlanRunStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.AttackPlanRunStatus), nil
+}
+
+type AttackPlanStatus string
+
+const (
+	AttackPlanStatusDraft      AttackPlanStatus = "draft"
+	AttackPlanStatusActive     AttackPlanStatus = "active"
+	AttackPlanStatusCompleted  AttackPlanStatus = "completed"
+	AttackPlanStatusFailed     AttackPlanStatus = "failed"
+	AttackPlanStatusCancelled  AttackPlanStatus = "cancelled"
+	AttackPlanStatusSuperseded AttackPlanStatus = "superseded"
+)
+
+func (e *AttackPlanStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = AttackPlanStatus(s)
+	case string:
+		*e = AttackPlanStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for AttackPlanStatus: %T", src)
+	}
+	return nil
+}
+
+type NullAttackPlanStatus struct {
+	AttackPlanStatus AttackPlanStatus `json:"attack_plan_status"`
+	Valid            bool             `json:"valid"` // Valid is true if AttackPlanStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullAttackPlanStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.AttackPlanStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.AttackPlanStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullAttackPlanStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.AttackPlanStatus), nil
+}
+
 type ContainerStatus string
 
 const (
@@ -1238,6 +1461,80 @@ type Assistantlog struct {
 	AssistantID  int64              `json:"assistant_id"`
 	CreatedAt    sql.NullTime       `json:"created_at"`
 	Thinking     sql.NullString     `json:"thinking"`
+}
+
+type AttackPlan struct {
+	ID           int64            `json:"id"`
+	FlowID       int64            `json:"flow_id"`
+	ObjectiveKey string           `json:"objective_key"`
+	Objective    string           `json:"objective"`
+	Status       AttackPlanStatus `json:"status"`
+	Version      int64            `json:"version"`
+	Planner      string           `json:"planner"`
+	CreatedAt    time.Time        `json:"created_at"`
+	UpdatedAt    time.Time        `json:"updated_at"`
+}
+
+type AttackPlanBinding struct {
+	ID        int64         `json:"id"`
+	PlanID    int64         `json:"plan_id"`
+	FlowID    int64         `json:"flow_id"`
+	NodeID    sql.NullInt64 `json:"node_id"`
+	TaskID    sql.NullInt64 `json:"task_id"`
+	SubtaskID sql.NullInt64 `json:"subtask_id"`
+	CreatedAt time.Time     `json:"created_at"`
+}
+
+type AttackPlanEdge struct {
+	ID         int64              `json:"id"`
+	PlanID     int64              `json:"plan_id"`
+	FlowID     int64              `json:"flow_id"`
+	FromNodeID int64              `json:"from_node_id"`
+	ToNodeID   int64              `json:"to_node_id"`
+	Kind       AttackPlanEdgeKind `json:"kind"`
+	CreatedAt  time.Time          `json:"created_at"`
+}
+
+type AttackPlanEvidence struct {
+	ID           int64           `json:"id"`
+	PlanID       int64           `json:"plan_id"`
+	FlowID       int64           `json:"flow_id"`
+	NodeID       sql.NullInt64   `json:"node_id"`
+	RunID        sql.NullInt64   `json:"run_id"`
+	RevisionFrom int64           `json:"revision_from"`
+	RevisionTo   int64           `json:"revision_to"`
+	Provenance   json.RawMessage `json:"provenance"`
+	CreatedAt    time.Time       `json:"created_at"`
+}
+
+type AttackPlanNode struct {
+	ID          int64                `json:"id"`
+	PlanID      int64                `json:"plan_id"`
+	FlowID      int64                `json:"flow_id"`
+	NodeKey     string               `json:"node_key"`
+	Kind        AttackPlanNodeKind   `json:"kind"`
+	Status      AttackPlanNodeStatus `json:"status"`
+	Title       string               `json:"title"`
+	Description string               `json:"description"`
+	Payload     json.RawMessage      `json:"payload"`
+	Version     int64                `json:"version"`
+	CreatedAt   time.Time            `json:"created_at"`
+	UpdatedAt   time.Time            `json:"updated_at"`
+}
+
+type AttackPlanRun struct {
+	ID                 int64               `json:"id"`
+	PlanID             int64               `json:"plan_id"`
+	FlowID             int64               `json:"flow_id"`
+	Status             AttackPlanRunStatus `json:"status"`
+	RequestedVersion   int64               `json:"requested_version"`
+	ResultingVersion   sql.NullInt64       `json:"resulting_version"`
+	WorldStateRevision int64               `json:"world_state_revision"`
+	IdempotencyKey     string              `json:"idempotency_key"`
+	Planner            string              `json:"planner"`
+	Error              json.RawMessage     `json:"error"`
+	StartedAt          time.Time           `json:"started_at"`
+	FinishedAt         sql.NullTime        `json:"finished_at"`
 }
 
 type Container struct {

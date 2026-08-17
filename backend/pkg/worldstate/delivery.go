@@ -1,11 +1,13 @@
 package worldstate
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"sort"
 	"strings"
 	"unicode/utf8"
@@ -108,7 +110,7 @@ func (b *PrimaryDeliveryBuilder) beginSnapshot(ctx context.Context) (PrimaryDeli
 	}
 	queries, ok := b.reader.(*database.Queries)
 	if !ok {
-		return b.reader, func() error { return nil }, nil
+		return nil, nil, fmt.Errorf("worldstate: reader does not provide a consistent snapshot")
 	}
 	tx, err := queries.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelRepeatableRead, ReadOnly: true})
 	if err != nil {
@@ -204,13 +206,16 @@ type projectionOmitted struct {
 }
 
 type projectedEntity struct {
+	ID         int64          `json:"-"`
 	Key        string         `json:"key"`
 	Type       string         `json:"type"`
 	State      string         `json:"state"`
+	Version    int32          `json:"-"`
 	Properties map[string]any `json:"properties,omitempty"`
 }
 
 type projectedLink struct {
+	ID         int64          `json:"-"`
 	Source     string         `json:"source"`
 	Target     string         `json:"target"`
 	Type       string         `json:"type"`
@@ -309,7 +314,7 @@ func canonicalProjection(flowID int64, entities []database.WorldStateEntity, lin
 		keys[entity.ID] = key
 		p.Summary.ByState[state]++
 		p.Summary.ByType[typ]++
-		p.Entities = append(p.Entities, projectedEntity{Key: key, Type: typ, State: state, Properties: properties})
+		p.Entities = append(p.Entities, projectedEntity{ID: entity.ID, Key: key, Type: typ, State: state, Version: entity.Version, Properties: properties})
 	}
 	for _, link := range links {
 		if link.FlowID != flowID {
@@ -324,7 +329,7 @@ func canonicalProjection(flowID int64, entities []database.WorldStateEntity, lin
 		if err != nil {
 			return deliveryProjection{}, fmt.Errorf("worldstate: malformed properties for link %d: %w", link.ID, err)
 		}
-		p.Links = append(p.Links, projectedLink{Source: source, Target: target, Type: safeUTF8(link.Type), Properties: properties})
+		p.Links = append(p.Links, projectedLink{ID: link.ID, Source: source, Target: target, Type: safeUTF8(link.Type), Properties: properties})
 	}
 	sort.Slice(p.Entities, func(i, j int) bool {
 		if p.Entities[i].Key != p.Entities[j].Key {
@@ -333,7 +338,10 @@ func canonicalProjection(flowID int64, entities []database.WorldStateEntity, lin
 		if p.Entities[i].Type != p.Entities[j].Type {
 			return p.Entities[i].Type < p.Entities[j].Type
 		}
-		return p.Entities[i].State < p.Entities[j].State
+		if p.Entities[i].State != p.Entities[j].State {
+			return p.Entities[i].State < p.Entities[j].State
+		}
+		return p.Entities[i].ID < p.Entities[j].ID
 	})
 	sort.Slice(p.Links, func(i, j int) bool {
 		if p.Links[i].Source != p.Links[j].Source {
@@ -342,7 +350,10 @@ func canonicalProjection(flowID int64, entities []database.WorldStateEntity, lin
 		if p.Links[i].Target != p.Links[j].Target {
 			return p.Links[i].Target < p.Links[j].Target
 		}
-		return p.Links[i].Type < p.Links[j].Type
+		if p.Links[i].Type != p.Links[j].Type {
+			return p.Links[i].Type < p.Links[j].Type
+		}
+		return p.Links[i].ID < p.Links[j].ID
 	})
 	return p, nil
 }
@@ -389,8 +400,8 @@ func fitProjectionEnvelope(envelope deliveryEnvelope, maxBytes int) ([]byte, err
 }
 
 func decodeRedactedObject(raw json.RawMessage) (map[string]any, error) {
-	var value any
-	if err := json.Unmarshal(raw, &value); err != nil {
+	value, err := decodeJSONValue(raw)
+	if err != nil {
 		return nil, err
 	}
 	object, ok := value.(map[string]any)
@@ -405,8 +416,8 @@ func decodeRedactedObject(raw json.RawMessage) (map[string]any, error) {
 }
 
 func decodeProjectedProperties(raw json.RawMessage) (map[string]any, error) {
-	var value any
-	if err := json.Unmarshal(raw, &value); err != nil {
+	value, err := decodeJSONValue(raw)
+	if err != nil {
 		return nil, err
 	}
 	object, ok := value.(map[string]any)
@@ -418,6 +429,23 @@ func decodeProjectedProperties(raw json.RawMessage) (map[string]any, error) {
 		return nil, fmt.Errorf("expected normalized JSON object")
 	}
 	return projectJournalProperties(normalized), nil
+}
+
+func decodeJSONValue(raw json.RawMessage) (any, error) {
+	var value any
+	decoder := json.NewDecoder(bytes.NewReader(raw))
+	decoder.UseNumber()
+	if err := decoder.Decode(&value); err != nil {
+		return nil, err
+	}
+	var trailing any
+	if err := decoder.Decode(&trailing); err != io.EOF {
+		if err == nil {
+			return nil, fmt.Errorf("expected one JSON value")
+		}
+		return nil, err
+	}
+	return value, nil
 }
 
 func normalizeDeliveryValue(value any) any {

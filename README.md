@@ -105,6 +105,15 @@ Key improvements already implemented:
 - Initial world-state data layer (`entities`, `transitions`) to reduce repeated recon and improve cross-agent memory
 - Stronger observability foundation for agent handoffs, tool calls, and timeline reconstruction
 
+### Latest Verified Attack-Planner Upgrades
+
+- **Persistent attack-plan domain:** flow-scoped attack-plan DAGs and repository invariants cover typed goal/action nodes, AND/OR/dependency edges, lifecycle transitions, optimistic versions, revision provenance, and flow isolation.
+- **Planner Evidence:** deterministic, bounded evidence is recursively redacted, property-allowlisted, revision-bounded, and isolated to its flow.
+- **Frontier search:** deterministic search provides typed feasibility, AND/OR/dependency semantics, stable tie-breaking, fixed node/depth/beam/cost/risk/time budgets, and auditable exclusion reasons.
+- **Binding hardening:** active-binding checks serialize on the flow, bindings enforce action-node targets, historical bindings across plans remain allowed, and guarded missing-row results map to `ErrNotFound`.
+
+**Current boundary:** planner evidence/search and persistence are implemented as reusable primitives. Candidate expansion, replanning, orchestration, and task materialization are later work; no production call sites are claimed. Go/PostgreSQL/Docker runtime verification is currently environment-blocked, so this section makes no runtime-pass claim.
+
 Current visual direction:
 
 ![RedScope pentest workflow board](./docs/images/fresh-dashboard.png)

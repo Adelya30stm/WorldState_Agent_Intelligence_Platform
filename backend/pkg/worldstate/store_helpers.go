@@ -6,8 +6,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/url"
 	"reflect"
 	"sort"
+	"strings"
 
 	"pentagi/pkg/database"
 )
@@ -156,9 +158,12 @@ func projectJournalProperties(properties map[string]any) map[string]any {
 func journalPropertyValue(value any) (any, bool) {
 	value = redactValue(value)
 	switch value := value.(type) {
-	case nil, bool, float64:
+	case nil, bool, float64, json.Number:
 		return value, true
 	case string:
+		if credentialBearingURL(value) {
+			return nil, false
+		}
 		return value, len(value) <= maxJournalPropertyStringBytes
 	default:
 		return nil, false
@@ -196,7 +201,7 @@ func safePropertyMap(properties map[string]any) (map[string]any, json.RawMessage
 	if properties == nil {
 		properties = map[string]any{}
 	}
-	raw, err := marshalSafeJSON(properties)
+	raw, err := marshalSafeJSON(redactCredentialBearingURLs(properties))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -205,4 +210,55 @@ func safePropertyMap(properties map[string]any) (map[string]any, json.RawMessage
 		return nil, nil, fmt.Errorf("worldstate: decode safe properties: %w", err)
 	}
 	return safe, raw, nil
+}
+
+func credentialBearingURL(value string) bool {
+	trimmed := strings.TrimSpace(value)
+	parsed, err := url.Parse(trimmed)
+	if err != nil {
+		return malformedCredentialBearingURL(trimmed)
+	}
+	if parsed.Scheme == "" || parsed.Host == "" || parsed.User == nil {
+		return false
+	}
+	_, hasPassword := parsed.User.Password()
+	return hasPassword
+}
+
+func malformedCredentialBearingURL(value string) bool {
+	schemeEnd := strings.Index(value, "://")
+	if schemeEnd <= 0 {
+		return false
+	}
+	authority := value[schemeEnd+3:]
+	if end := strings.IndexAny(authority, "/?#"); end >= 0 {
+		authority = authority[:end]
+	}
+	userinfoEnd := strings.LastIndexByte(authority, '@')
+	if userinfoEnd <= 0 {
+		return false
+	}
+	return strings.Contains(authority[:userinfoEnd], ":")
+}
+
+func redactCredentialBearingURLs(value any) any {
+	switch typed := value.(type) {
+	case map[string]any:
+		out := make(map[string]any, len(typed))
+		for key, child := range typed {
+			out[key] = redactCredentialBearingURLs(child)
+		}
+		return out
+	case []any:
+		out := make([]any, len(typed))
+		for i, child := range typed {
+			out[i] = redactCredentialBearingURLs(child)
+		}
+		return out
+	case string:
+		if credentialBearingURL(typed) {
+			return redactedValue
+		}
+	}
+	return value
 }

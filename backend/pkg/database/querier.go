@@ -21,6 +21,13 @@ type Querier interface {
 	CreateAgentTaskUpdate(ctx context.Context, arg CreateAgentTaskUpdateParams) (AgentTaskUpdate, error)
 	CreateAssistant(ctx context.Context, arg CreateAssistantParams) (Assistant, error)
 	CreateAssistantLog(ctx context.Context, arg CreateAssistantLogParams) (Assistantlog, error)
+	CreateAttackPlan(ctx context.Context, arg CreateAttackPlanParams) (AttackPlan, error)
+	CreateAttackPlanActionSubtaskBinding(ctx context.Context, arg CreateAttackPlanActionSubtaskBindingParams) (AttackPlanBinding, error)
+	CreateAttackPlanBinding(ctx context.Context, arg CreateAttackPlanBindingParams) (AttackPlanBinding, error)
+	CreateAttackPlanEdge(ctx context.Context, arg CreateAttackPlanEdgeParams) (AttackPlanEdge, error)
+	CreateAttackPlanEvidence(ctx context.Context, arg CreateAttackPlanEvidenceParams) (AttackPlanEvidence, error)
+	CreateAttackPlanNode(ctx context.Context, arg CreateAttackPlanNodeParams) (AttackPlanNode, error)
+	CreateAttackPlanRun(ctx context.Context, arg CreateAttackPlanRunParams) (AttackPlanRun, error)
 	CreateContainer(ctx context.Context, arg CreateContainerParams) (Container, error)
 	CreateFlow(ctx context.Context, arg CreateFlowParams) (Flow, error)
 	CreateMsgChain(ctx context.Context, arg CreateMsgChainParams) (Msgchain, error)
@@ -44,6 +51,10 @@ type Querier interface {
 	DeleteAcceptedPrimaryWorldStateWait(ctx context.Context, msgchainID int64) (AgentChainWait, error)
 	DeleteAgentChainWait(ctx context.Context, msgchainID int64) error
 	DeleteAssistant(ctx context.Context, id int64) (Assistant, error)
+	DeleteAttackPlanEdge(ctx context.Context, arg DeleteAttackPlanEdgeParams) error
+	DeleteAttackPlanEdges(ctx context.Context, arg DeleteAttackPlanEdgesParams) error
+	DeleteAttackPlanNode(ctx context.Context, arg DeleteAttackPlanNodeParams) error
+	DeleteAttackPlanNodes(ctx context.Context, arg DeleteAttackPlanNodesParams) error
 	DeleteFavoriteFlow(ctx context.Context, arg DeleteFavoriteFlowParams) (UserPreference, error)
 	DeleteFlow(ctx context.Context, id int64) (Flow, error)
 	DeleteFlowAssistantLog(ctx context.Context, id int64) error
@@ -60,6 +71,7 @@ type Querier interface {
 	GetAPIToken(ctx context.Context, id int64) (ApiToken, error)
 	GetAPITokenByTokenID(ctx context.Context, tokenID string) (ApiToken, error)
 	GetAPITokens(ctx context.Context) ([]ApiToken, error)
+	GetActiveAttackPlanByObjective(ctx context.Context, arg GetActiveAttackPlanByObjectiveParams) (AttackPlan, error)
 	GetAgentChainWait(ctx context.Context, msgchainID int64) (AgentChainWait, error)
 	GetAgentTaskUpdate(ctx context.Context, arg GetAgentTaskUpdateParams) (AgentTaskUpdate, error)
 	// Get toolcalls stats for all flows
@@ -69,6 +81,10 @@ type Querier interface {
 	GetAssistantUseAgents(ctx context.Context, id int64) (bool, error)
 	// Get total count of assistants for a specific flow
 	GetAssistantsCountForFlow(ctx context.Context, flowID int64) (int64, error)
+	GetAttackPlan(ctx context.Context, arg GetAttackPlanParams) (AttackPlan, error)
+	GetAttackPlanNode(ctx context.Context, arg GetAttackPlanNodeParams) (AttackPlanNode, error)
+	GetAttackPlanNodeByKey(ctx context.Context, arg GetAttackPlanNodeByKeyParams) (AttackPlanNode, error)
+	GetAttackPlanRunByIdempotencyKey(ctx context.Context, arg GetAttackPlanRunByIdempotencyKeyParams) (AttackPlanRun, error)
 	GetCallToolcall(ctx context.Context, callID string) (Toolcall, error)
 	GetClaimedPrimaryWorldStateResume(ctx context.Context, arg GetClaimedPrimaryWorldStateResumeParams) (AgentChainWait, error)
 	GetContainerTermLogs(ctx context.Context, containerID int64) ([]Termlog, error)
@@ -238,6 +254,12 @@ type Querier interface {
 	LeaseAgentChainWaits(ctx context.Context, arg LeaseAgentChainWaitsParams) ([]AgentChainWait, error)
 	LeasePrimaryWorldStateResumeWaits(ctx context.Context, arg LeasePrimaryWorldStateResumeWaitsParams) ([]AgentChainWait, error)
 	LeasePrimaryWorldStateWaits(ctx context.Context, arg LeasePrimaryWorldStateWaitsParams) ([]AgentChainWait, error)
+	ListAttackPlanBindings(ctx context.Context, arg ListAttackPlanBindingsParams) ([]AttackPlanBinding, error)
+	ListAttackPlanEdges(ctx context.Context, arg ListAttackPlanEdgesParams) ([]AttackPlanEdge, error)
+	ListAttackPlanEvidence(ctx context.Context, arg ListAttackPlanEvidenceParams) ([]AttackPlanEvidence, error)
+	ListAttackPlanEvidenceForRun(ctx context.Context, arg ListAttackPlanEvidenceForRunParams) ([]AttackPlanEvidence, error)
+	ListAttackPlanNodes(ctx context.Context, arg ListAttackPlanNodesParams) ([]AttackPlanNode, error)
+	ListAttackPlans(ctx context.Context, flowID int64) ([]AttackPlan, error)
 	LockAgentAssistantTargetLifecycle(ctx context.Context, arg LockAgentAssistantTargetLifecycleParams) (Assistant, error)
 	LockAgentChainWait(ctx context.Context, msgchainID int64) (AgentChainWait, error)
 	// Specialist routing also locks the task/subtask lifecycle row above. When a
@@ -247,6 +269,9 @@ type Querier interface {
 	// Routing and terminal completion must call the matching lifecycle lock first,
 	// then insert or run the guarded terminal update in the same transaction.
 	LockAgentTaskTargetLifecycle(ctx context.Context, arg LockAgentTaskTargetLifecycleParams) (Task, error)
+	LockAttackPlan(ctx context.Context, arg LockAttackPlanParams) (AttackPlan, error)
+	LockAttackPlanFlow(ctx context.Context, id int64) (int64, error)
+	LockAttackPlanRunByIdempotencyKey(ctx context.Context, arg LockAttackPlanRunByIdempotencyKeyParams) (AttackPlanRun, error)
 	LockMsgChain(ctx context.Context, id int64) (Msgchain, error)
 	LockPendingAgentTaskUpdatesForTarget(ctx context.Context, arg LockPendingAgentTaskUpdatesForTargetParams) ([]AgentTaskUpdate, error)
 	LockWorldStateEntityByID(ctx context.Context, id int64) (WorldStateEntity, error)
@@ -261,6 +286,7 @@ type Querier interface {
 	RenewAgentChainWaitLease(ctx context.Context, arg RenewAgentChainWaitLeaseParams) (AgentChainWait, error)
 	ResolveAgentChainWait(ctx context.Context, arg ResolveAgentChainWaitParams) (AgentChainWait, error)
 	ResolveLeasedPrimaryWorldStateWait(ctx context.Context, arg ResolveLeasedPrimaryWorldStateWaitParams) (AgentChainWait, error)
+	TransitionAttackPlanRun(ctx context.Context, arg TransitionAttackPlanRunParams) (AttackPlanRun, error)
 	TrySetAgentAssistantTargetTerminal(ctx context.Context, arg TrySetAgentAssistantTargetTerminalParams) (Assistant, error)
 	TrySetAgentSubtaskTargetTerminal(ctx context.Context, arg TrySetAgentSubtaskTargetTerminalParams) (Subtask, error)
 	TrySetAgentTaskTargetTerminal(ctx context.Context, arg TrySetAgentTaskTargetTerminalParams) (Task, error)
@@ -275,6 +301,8 @@ type Querier interface {
 	UpdateAssistantTitle(ctx context.Context, arg UpdateAssistantTitleParams) (Assistant, error)
 	UpdateAssistantToolCallIDTemplate(ctx context.Context, arg UpdateAssistantToolCallIDTemplateParams) (Assistant, error)
 	UpdateAssistantUseAgents(ctx context.Context, arg UpdateAssistantUseAgentsParams) (Assistant, error)
+	UpdateAttackPlanNodeVersion(ctx context.Context, arg UpdateAttackPlanNodeVersionParams) (AttackPlanNode, error)
+	UpdateAttackPlanVersion(ctx context.Context, arg UpdateAttackPlanVersionParams) (AttackPlan, error)
 	UpdateContainerImage(ctx context.Context, arg UpdateContainerImageParams) (Container, error)
 	UpdateContainerStatus(ctx context.Context, arg UpdateContainerStatusParams) (Container, error)
 	UpdateContainerStatusLocalID(ctx context.Context, arg UpdateContainerStatusLocalIDParams) (Container, error)
