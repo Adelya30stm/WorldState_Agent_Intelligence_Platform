@@ -183,6 +183,104 @@ func TestWorldStateDeliveryAppendsAtPendingHumanBoundary(t *testing.T) {
 	}
 }
 
+func TestWorldStateDeliveryRepairsPendingToolCallBeforeAppend(t *testing.T) {
+	store := newPrimaryStore(nil)
+	injector := &databasePrimaryWorldStateTurnInjector{
+		flowID: 7,
+		store:  store,
+		builder: primaryDeliveryBuilderFunc(func(context.Context, int64, *int64) (worldstate.PrimaryDelivery, error) {
+			return delivery(worldstate.DeliveryBaseline, 1), nil
+		}),
+	}
+	original := pendingToolCallChain()
+	got, delivered, err := injector.Inject(t.Context(), 11, original)
+	if err != nil || !delivered {
+		t.Fatalf("delivery failed: delivered=%v err=%v", delivered, err)
+	}
+	if len(got) != len(original)+2 {
+		t.Fatalf("unexpected chain length after repair: got=%d want=%d", len(got), len(original)+2)
+	}
+	if got[len(got)-2].Role != llms.ChatMessageTypeTool || got[len(got)-1].Role != llms.ChatMessageTypeHuman {
+		t.Fatalf("repaired chain has invalid ending: %#v", got)
+	}
+	responseFound := false
+	for _, part := range got[len(got)-2].Parts {
+		response, ok := part.(llms.ToolCallResponse)
+		if ok && response.ToolCallID == "call-pending" {
+			responseFound = true
+			break
+		}
+	}
+	if !responseFound {
+		t.Fatalf("missing fallback tool response for pending tool call: %#v", got[len(got)-2])
+	}
+	if _, err := cast.NewChainAST(got, false); err != nil {
+		t.Fatalf("repaired chain is invalid: %v", err)
+	}
+}
+
+func TestWorldStateDeliveryKeepsToolUseIDsUnique(t *testing.T) {
+	store := newPrimaryStore(nil)
+	injector := &databasePrimaryWorldStateTurnInjector{
+		flowID: 7,
+		store:  store,
+		builder: primaryDeliveryBuilderFunc(func(context.Context, int64, *int64) (worldstate.PrimaryDelivery, error) {
+			return delivery(worldstate.DeliveryBaseline, 1), nil
+		}),
+	}
+	original := []llms.MessageContent{
+		llms.TextParts(llms.ChatMessageTypeSystem, "system"),
+		llms.TextParts(llms.ChatMessageTypeHuman, "request"),
+		{Role: llms.ChatMessageTypeAI, Parts: []llms.ContentPart{
+			llms.TextContent{Text: "one"},
+			llms.TextContent{Text: "two"},
+			llms.ToolCall{ID: "dup", Type: "function", FunctionCall: &llms.FunctionCall{Name: "query", Arguments: `{}`}},
+			llms.ToolCall{ID: "call-2", Type: "function", FunctionCall: &llms.FunctionCall{Name: "search", Arguments: `{}`}},
+			llms.TextContent{Text: "three"},
+			llms.ToolCall{ID: "dup", Type: "function", FunctionCall: &llms.FunctionCall{Name: "query", Arguments: `{}`}},
+		}},
+		{Role: llms.ChatMessageTypeTool, Parts: []llms.ContentPart{
+			llms.ToolCallResponse{ToolCallID: "dup", Name: "query", Content: "first"},
+			llms.ToolCallResponse{ToolCallID: "call-2", Name: "search", Content: "ok"},
+			llms.ToolCallResponse{ToolCallID: "dup", Name: "query", Content: "again"},
+		}},
+	}
+	got, delivered, err := injector.Inject(t.Context(), 11, original)
+	if err != nil || !delivered {
+		t.Fatalf("delivery failed: delivered=%v err=%v", delivered, err)
+	}
+	assertUniqueToolUseIDs(t, got)
+	if _, err := cast.NewChainAST(got, false); err != nil {
+		t.Fatalf("delivered chain is invalid: %v", err)
+	}
+	if !chainContains(got, "<world_state>") {
+		t.Fatalf("missing tagged delivery: %#v", got)
+	}
+}
+
+func TestWorldStateDeliveryDedupesIDsOnPendingHumanBoundary(t *testing.T) {
+	original := []llms.MessageContent{
+		llms.TextParts(llms.ChatMessageTypeSystem, "system"),
+		{Role: llms.ChatMessageTypeHuman, Parts: []llms.ContentPart{llms.TextContent{Text: "request"}}},
+		{Role: llms.ChatMessageTypeAI, Parts: []llms.ContentPart{
+			llms.ToolCall{ID: "dup", Type: "function", FunctionCall: &llms.FunctionCall{Name: "query", Arguments: `{}`}},
+			llms.ToolCall{ID: "dup", Type: "function", FunctionCall: &llms.FunctionCall{Name: "query", Arguments: `{}`}},
+		}},
+		{Role: llms.ChatMessageTypeTool, Parts: []llms.ContentPart{
+			llms.ToolCallResponse{ToolCallID: "dup", Name: "query", Content: "ok"},
+		}},
+		llms.TextParts(llms.ChatMessageTypeHuman, "continue"),
+	}
+	got, err := appendWorldStateEnvelope(original, "<world_state>\n{}\n</world_state>")
+	if err != nil {
+		t.Fatalf("append failed: %v", err)
+	}
+	assertUniqueToolUseIDs(t, got)
+	if _, err := cast.NewChainAST(got, false); err != nil {
+		t.Fatalf("human-boundary chain is invalid: %v", err)
+	}
+}
+
 func TestWorldStateDeliveryNoChangeAndChainTypeGuard(t *testing.T) {
 	for _, msgChain := range []database.Msgchain{
 		{ID: 11, FlowID: 7, Type: database.MsgchainTypeAssistant},
@@ -661,8 +759,18 @@ func completedToolChain() []llms.MessageContent {
 	return []llms.MessageContent{
 		llms.TextParts(llms.ChatMessageTypeSystem, "system"),
 		llms.TextParts(llms.ChatMessageTypeHuman, "request"),
-		{Role: llms.ChatMessageTypeAI, Parts: []llms.ContentPart{llms.ToolCall{ID: "call-1", FunctionCall: &llms.FunctionCall{Name: "query", Arguments: `{}`}}}},
+		{Role: llms.ChatMessageTypeAI, Parts: []llms.ContentPart{llms.ToolCall{ID: "call-1", Type: "function", FunctionCall: &llms.FunctionCall{Name: "query", Arguments: `{}`}}}},
 		{Role: llms.ChatMessageTypeTool, Parts: []llms.ContentPart{llms.ToolCallResponse{ToolCallID: "call-1", Name: "query", Content: "result"}}},
+	}
+}
+
+func pendingToolCallChain() []llms.MessageContent {
+	return []llms.MessageContent{
+		llms.TextParts(llms.ChatMessageTypeSystem, "system"),
+		llms.TextParts(llms.ChatMessageTypeHuman, "request"),
+		{Role: llms.ChatMessageTypeAI, Parts: []llms.ContentPart{
+			llms.ToolCall{ID: "call-pending", Type: "function", FunctionCall: &llms.FunctionCall{Name: "query", Arguments: `{}`}},
+		}},
 	}
 }
 
@@ -679,6 +787,34 @@ func chainContains(chain []llms.MessageContent, want string) bool {
 		}
 	}
 	return false
+}
+
+func assertUniqueToolUseIDs(t *testing.T, chain []llms.MessageContent) {
+	t.Helper()
+	seen := map[string]struct{}{}
+	for msgIdx, message := range chain {
+		if message.Role != llms.ChatMessageTypeAI {
+			continue
+		}
+		here := map[string]struct{}{}
+		for partIdx, part := range message.Parts {
+			toolCall, ok := part.(llms.ToolCall)
+			if !ok || toolCall.FunctionCall == nil {
+				continue
+			}
+			if toolCall.ID == "" {
+				t.Fatalf("empty tool_use id at message %d part %d", msgIdx, partIdx)
+			}
+			if _, dup := here[toolCall.ID]; dup {
+				t.Fatalf("duplicate tool_use id %q in message %d", toolCall.ID, msgIdx)
+			}
+			here[toolCall.ID] = struct{}{}
+			if _, dup := seen[toolCall.ID]; dup {
+				t.Fatalf("duplicate tool_use id %q across chain at message %d", toolCall.ID, msgIdx)
+			}
+			seen[toolCall.ID] = struct{}{}
+		}
+	}
 }
 
 func worldStateTestLogger() *logrus.Entry {

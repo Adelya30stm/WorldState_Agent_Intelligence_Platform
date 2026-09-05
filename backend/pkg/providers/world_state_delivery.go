@@ -126,14 +126,88 @@ func appendWorldStateEnvelope(chain []llms.MessageContent, envelope string) ([]l
 	if len(chainCopy) > 0 && chainCopy[len(chainCopy)-1].Role == llms.ChatMessageTypeHuman {
 		last := &chainCopy[len(chainCopy)-1]
 		last.Parts = append(last.Parts, llms.TextContent{Text: envelope})
-		return chainCopy, nil
+		return uniqueToolUseIDs(chainCopy), nil
 	}
-	ast, err := cast.NewChainAST(chainCopy, false)
+	// Force normalization here so delivery can be appended even when the stored
+	// chain has an unfinished tool-call pair. Without this, injection fails and
+	// the next model turn receives a malformed history.
+	ast, err := cast.NewChainAST(chainCopy, true)
 	if err != nil {
 		return nil, fmt.Errorf("prepare chain for World State delivery: %w", err)
 	}
 	ast.AppendHumanMessage(envelope)
-	return ast.Messages(), nil
+	return uniqueToolUseIDs(ast.Messages()), nil
+}
+
+// uniqueToolUseIDs drops or renames duplicate tool_use IDs so Anthropic will
+// accept the chain after World State delivery. Extra tool results for the same
+// ID are dropped; IDs reused across assistant turns are renamed and remapped.
+func uniqueToolUseIDs(chain []llms.MessageContent) []llms.MessageContent {
+	out := make([]llms.MessageContent, 0, len(chain))
+	used := make(map[string]struct{})
+	remap := map[string]string{}
+	answered := make(map[string]struct{})
+	for msgIdx, msg := range chain {
+		msg.Parts = append([]llms.ContentPart(nil), msg.Parts...)
+		switch msg.Role {
+		case llms.ChatMessageTypeAI:
+			remap = map[string]string{}
+			answered = make(map[string]struct{})
+			parts := make([]llms.ContentPart, 0, len(msg.Parts))
+			seenHere := make(map[string]struct{})
+			for partIdx, part := range msg.Parts {
+				toolCall, ok := part.(llms.ToolCall)
+				if !ok || toolCall.FunctionCall == nil {
+					parts = append(parts, part)
+					continue
+				}
+				id := toolCall.ID
+				if id == "" {
+					id = fmt.Sprintf("toolu_dedup_%d_%d", msgIdx, partIdx)
+					toolCall.ID = id
+					part = toolCall
+				}
+				if _, dup := seenHere[id]; dup {
+					continue
+				}
+				if _, exists := used[id]; exists {
+					newID := fmt.Sprintf("toolu_dedup_%d_%d", msgIdx, partIdx)
+					remap[id] = newID
+					id = newID
+					toolCall.ID = newID
+					part = toolCall
+				}
+				seenHere[id] = struct{}{}
+				used[id] = struct{}{}
+				parts = append(parts, part)
+			}
+			msg.Parts = parts
+		case llms.ChatMessageTypeTool:
+			parts := make([]llms.ContentPart, 0, len(msg.Parts))
+			for _, part := range msg.Parts {
+				resp, ok := part.(llms.ToolCallResponse)
+				if !ok {
+					parts = append(parts, part)
+					continue
+				}
+				if newID, ok := remap[resp.ToolCallID]; ok {
+					resp.ToolCallID = newID
+					part = resp
+				}
+				if _, dup := answered[resp.ToolCallID]; dup {
+					continue
+				}
+				answered[resp.ToolCallID] = struct{}{}
+				parts = append(parts, part)
+			}
+			if len(parts) == 0 {
+				continue
+			}
+			msg.Parts = parts
+		}
+		out = append(out, msg)
+	}
+	return out
 }
 
 type databasePrimaryWorldStateDeliveryStore struct {
