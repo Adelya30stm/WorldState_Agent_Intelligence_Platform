@@ -38,14 +38,6 @@ It is a platform for humans who want to work alongside AI agents, not just recei
 | Auditability | Action traces exist across multiple logs | Stronger reconstruction of handoffs, tool calls, transitions, and timeline |
 | Strategic direction | Pentesting automation | Pentesting automation + **World State** as an intelligence platform |
 
-### Visual Comparison 
-
-**After: Structured Phase-by-Phase Orchestration»**
-
-![World State after: world state graph](./docs/images/worldstate-after-graph-latest.png)
-![World State after: transitions view](./docs/images/worldstate-after-transitions.png)
-
-
 ## System Architecture
 
 Main components:
