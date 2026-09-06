@@ -38,42 +38,13 @@ It is a platform for humans who want to work alongside AI agents, not just recei
 | Auditability | Action traces exist across multiple logs | Stronger reconstruction of handoffs, tool calls, transitions, and timeline |
 | Strategic direction | Pentesting automation | Pentesting automation + **World State** as an intelligence platform |
 
-### Visual Comparison (Before vs After)
-
-**Before: PentAGI (original workflow UI)**
-
-![PentAGI before: new flow screen](./docs/images/pentagi-before-new-flow.png)
+### Visual Comparison 
 
 **After: Structured Phase-by-Phase Orchestration»**
 
 ![World State after: world state graph](./docs/images/worldstate-after-graph-latest.png)
 ![World State after: transitions view](./docs/images/worldstate-after-transitions.png)
 
-## Contents
-
-- [What You Get](#what-you-get)
-- [System Architecture](#system-architecture)
-- [What You Were Building Toward](#what-you-were-building-toward)
-- [The Deeper Vision](#the-deeper-vision)
-- [What Is Improved In This Fork](#what-is-improved-in-this-fork)
-- [In Progress: World State](#in-progress-world-state)
-- [Quick Start (Docker)](#quick-start-docker)
-- [Configuration](#configuration)
-- [Local Development](#local-development)
-- [Optional Stacks](#optional-stacks)
-- [Helper Binaries](#helper-binaries)
-- [API Endpoints](#api-endpoints)
-- [Security and Legal](#security-and-legal)
-
-## What You Get
-
-- Multi-agent workflow (research, planning, execution)
-- Isolated command execution in Docker environments
-- Backend APIs: REST + GraphQL + subscriptions
-- Frontend UI for flow control and live execution updates
-- Persistent memory based on PostgreSQL + pgvector
-- Optional observability (OpenTelemetry/Grafana) and Langfuse analytics
-- Optional Graphiti knowledge graph integration
 
 ## System Architecture
 
@@ -114,10 +85,6 @@ Key improvements already implemented:
 
 **Current boundary:** planner evidence/search and persistence are implemented as reusable primitives. Candidate expansion, replanning, orchestration, and task materialization are later work; no production call sites are claimed. Go/PostgreSQL/Docker runtime verification is currently environment-blocked, so this section makes no runtime-pass claim.
 
-Current visual direction:
-
-![RedScope pentest workflow board](./docs/images/fresh-dashboard.png)
-![World State workflow board (latest screenshot)](./docs/images/worldstate-workflow-board.png)
 
 ## In Progress: World State
 
