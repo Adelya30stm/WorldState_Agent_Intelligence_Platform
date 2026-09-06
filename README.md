@@ -123,3 +123,153 @@ A primary ask persists `agent_chain_waits`. The first committed winner is either
 | **Planning input** | Existing planner/context mechanisms | Structured World State evidence available to subsequent planning |
 | **Observability** | Execution-oriented logs and UI | World State graph, transitions, revisions, and execution correlation |
 | **Architectural role** | Pentest execution engine | State-intelligence and feedback layer |
+## Quick Start (Docker)
+
+### Prerequisites
+
+- Docker + Docker Compose
+- 4+ GB RAM recommended
+- 20+ GB free disk space recommended
+
+### 1. Prepare environment
+
+```bash
+cp .env.example .env
+```
+
+If needed, copy provider examples:
+
+```bash
+cp examples/configs/custom-openai.provider.yml example.custom.provider.yml
+cp examples/configs/ollama-llama318b.provider.yml example.ollama.provider.yml
+```
+
+### 2. Configure at least one LLM provider
+
+Set one of the following in `.env`:
+
+- `OPEN_AI_KEY`
+- `ANTHROPIC_API_KEY`
+- `GEMINI_API_KEY`
+- other supported provider credentials
+
+### 3. Start core stack
+
+```bash
+docker compose up -d
+```
+
+### 4. Open application
+
+- Main UI: `https://localhost:8443`
+- GraphQL: `https://localhost:8443/api/v1/graphql`
+- Swagger: `https://localhost:8443/api/v1/swagger/index.html`
+
+## Configuration
+
+Important variable groups in `.env`:
+
+- **Server**: `PUBLIC_URL`, `SERVER_HOST`, `SERVER_PORT`, `SERVER_USE_SSL`
+- **Database**: `DATABASE_URL`
+- **LLM providers**: `OPEN_AI_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, `BEDROCK_*`, `OLLAMA_*`, etc.
+- **Search providers (optional)**: `DUCKDUCKGO_ENABLED`, `GOOGLE_API_KEY`, `GOOGLE_CX_KEY`, `TAVILY_API_KEY`, `TRAVERSAAL_API_KEY`, `PERPLEXITY_API_KEY`, `SEARXNG_URL`
+- **OAuth (optional)**: `OAUTH_GOOGLE_CLIENT_ID`, `OAUTH_GOOGLE_CLIENT_SECRET`, `OAUTH_GITHUB_CLIENT_ID`, `OAUTH_GITHUB_CLIENT_SECRET`
+
+For full variable details, see project docs in `backend/docs/`.
+
+## Local Development
+
+### Backend (`backend/`)
+
+```bash
+go mod download
+go build -trimpath -o pentagi ./cmd/pentagi
+go test ./...
+```
+
+Generate GraphQL resolvers (after schema changes):
+
+```bash
+go run github.com/99designs/gqlgen --config ./gqlgen/gqlgen.yml
+```
+
+Generate Swagger docs (after REST annotation changes):
+
+```bash
+swag init -g ../../pkg/server/router.go -o pkg/server/docs/ --parseDependency --parseInternal --parseDepth 2 -d cmd/pentagi
+```
+
+### Frontend (`frontend/`)
+
+```bash
+npm ci
+npm run dev
+npm run build
+npm run lint
+npm run test
+```
+
+Regenerate GraphQL types after `.graphql` changes:
+
+```bash
+npm run graphql:generate
+```
+
+## Optional Stacks
+
+Observability:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose-observability.yml up -d
+```
+
+Langfuse:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose-langfuse.yml up -d
+```
+
+Graphiti:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose-graphiti.yml up -d
+```
+
+All optional stacks:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose-langfuse.yml -f docker-compose-graphiti.yml -f docker-compose-observability.yml up -d
+```
+
+## Helper Binaries
+
+Located in `backend/cmd/`:
+
+- `ctester`: container/tool execution checks
+- `ftester`: function/tool-calling tests
+- `etester`: embedding provider tests
+- `installer`: interactive setup wizard
+
+Examples:
+
+```bash
+cd backend && go test ./...
+cd backend && go run cmd/ctester/*.go -verbose
+```
+
+## API Endpoints
+
+- GraphQL: `/api/v1/graphql`
+- Swagger UI: `/api/v1/swagger/index.html`
+
+For API authentication, use bearer tokens from the Settings UI (`API Tokens`).
+
+## Security and Legal
+
+- Use only on systems you are explicitly authorized to test.
+- Never commit secrets (`.env`, API keys, private credentials).
+- Rotate keys and tokens regularly.
+- Review TLS, network exposure, and access control before production deployment.
+
+License: MIT. See `LICENSE`, `NOTICE`, and `EULA.md`.
+
