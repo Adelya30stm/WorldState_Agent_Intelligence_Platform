@@ -8,6 +8,13 @@ However, the World State architecture is not conceptually tied to PentAGI: any a
 
 World State is still a persistent structured representation of the pentest environment. It is also an event-driven control loop: committed mutations become ordered revisions, those revisions are delivered only to the primary agent, and the planner chooses the next action from that evidence.
 
+<p align="center">
+  <img src="./docs/images/agent-world-state.png" alt="Penetration Testing — Agent World State" width="100%">
+</p>
+<p align="center">
+  <em>Propose → validate lifecycle → commit journal + snapshot → deliver delta → replan</em>
+</p>
+
 ## Agent World State
 
 The design was motivated by the World Models framework introduced by Yang et al., which characterizes a world model through representations of environment dynamics, task structure, and reward. We adapt this idea to autonomous penetration testing, where the environment continuously changes as agents discover hosts, services, vulnerabilities, and exploitation outcomes. Building on this framework, we introduce a revisioned Event Journal and cursor-based state-delivery mechanism to make changes in the persistent World State observable to subsequent agent reasoning.
