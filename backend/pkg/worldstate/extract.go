@@ -21,14 +21,16 @@ type Candidate struct {
 }
 
 var (
-	urlRE        = regexp.MustCompile(`https?://[^\s'"` + "`" + `,<>)\]]+`)
-	ipv4RE       = regexp.MustCompile(`\b(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\b`)
-	hostRE       = regexp.MustCompile(`\b([a-zA-Z0-9](?:[a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z]{2,})+)\b`)
-	cveRE        = regexp.MustCompile(`(?i)\bCVE-\d{4}-\d{4,7}\b`)
-	passwordRE   = regexp.MustCompile(`(?i)(?:password|passwd|pwd)\s*[=:]\s*([^\s"'\\,]{3,64})`)
-	basicAuthRE  = regexp.MustCompile(`(?i)Authorization:\s*Basic\s+([A-Za-z0-9+/=]+)`)
-	userPassRE   = regexp.MustCompile(`(?i)\b(?:user(?:name)?|login)\s*[=:]\s*([^\s"'\\,]{2,64}).{0,80}?(?:password|passwd|pwd)\s*[=:]\s*([^\s"'\\,]{3,64})`)
-	findingHintRE = regexp.MustCompile(`(?i)\b(SQL injection|XSS|CSRF|RCE|SSRF|IDOR|path traversal|remote code execution|authentication bypass)\b`)
+	urlRE           = regexp.MustCompile(`https?://[^\s'"` + "`" + `,<>)\]]+`)
+	ipv4RE          = regexp.MustCompile(`\b(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\b`)
+	hostRE          = regexp.MustCompile(`\b([a-zA-Z0-9](?:[a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z]{2,})+)\b`)
+	cveRE           = regexp.MustCompile(`(?i)\bCVE-\d{4}-\d{4,7}\b`)
+	passwordRE      = regexp.MustCompile(`(?i)(?:password|passwd|pwd)\s*[=:]\s*([^\s"'\\,]{3,64})`)
+	authorizationRE = regexp.MustCompile(`(?i)\bAuthorization:\s*(Basic|Bearer|Digest|Token)\s+([A-Za-z0-9+/=._~-]+)`)
+	cookieHeaderRE  = regexp.MustCompile(`(?i)\b(?:Cookie|Set-Cookie):\s*([^\r\n]+)`)
+	secretFieldRE   = regexp.MustCompile(`(?i)\b(access[_-]?token|refresh[_-]?token|token|api[_-]?key|apikey|client[_-]?secret|private[_-]?key|authorization|auth|secret|cookie|session(?:[_-]?id)?)\s*[=:]\s*([^\s"'\\,;]{3,128})`)
+	userPassRE      = regexp.MustCompile(`(?i)\b(?:user(?:name)?|login)\s*[=:]\s*([^\s"'\\,]{2,64}).{0,80}?(?:password|passwd|pwd)\s*[=:]\s*([^\s"'\\,]{3,64})`)
+	findingHintRE   = regexp.MustCompile(`(?i)\b(SQL injection|XSS|CSRF|RCE|SSRF|IDOR|path traversal|remote code execution|authentication bypass)\b`)
 )
 
 var noiseHosts = map[string]bool{
@@ -44,6 +46,7 @@ var noiseHosts = map[string]bool{
 func ExtractCandidates(toolName, result string) []Candidate {
 	seen := map[string]bool{}
 	out := make([]Candidate, 0, 8)
+	safeResult := maskCredentialMaterial(result)
 
 	add := func(c Candidate) {
 		if c.Key == "" || seen[c.Key] {
@@ -53,7 +56,7 @@ func ExtractCandidates(toolName, result string) []Candidate {
 		out = append(out, c)
 	}
 
-	for _, raw := range urlRE.FindAllString(result, -1) {
+	for _, raw := range urlRE.FindAllString(safeResult, -1) {
 		raw = strings.TrimRight(raw, ".,;:)]}\"'>")
 		u, err := url.Parse(raw)
 		if err != nil || u.Host == "" {
@@ -88,7 +91,7 @@ func ExtractCandidates(toolName, result string) []Candidate {
 		})
 	}
 
-	for _, ip := range ipv4RE.FindAllString(result, -1) {
+	for _, ip := range ipv4RE.FindAllString(safeResult, -1) {
 		if isPrivateOrNoiseIP(ip) {
 			continue
 		}
@@ -104,7 +107,7 @@ func ExtractCandidates(toolName, result string) []Candidate {
 
 	// Bare hostnames (skip if already covered via URL).
 	if looksLikeReconTool(toolName) {
-		for _, h := range hostRE.FindAllString(result, -1) {
+		for _, h := range hostRE.FindAllString(safeResult, -1) {
 			host := canonicalHost(h)
 			if host == "" || noiseHosts[host] {
 				continue
@@ -120,7 +123,7 @@ func ExtractCandidates(toolName, result string) []Candidate {
 		}
 	}
 
-	for _, cve := range cveRE.FindAllString(result, -1) {
+	for _, cve := range cveRE.FindAllString(safeResult, -1) {
 		cve = strings.ToUpper(cve)
 		add(Candidate{
 			Type: EntityTypeFinding,
@@ -132,7 +135,7 @@ func ExtractCandidates(toolName, result string) []Candidate {
 		})
 	}
 
-	for _, m := range findingHintRE.FindAllString(result, -1) {
+	for _, m := range findingHintRE.FindAllString(safeResult, -1) {
 		slug := strings.ToLower(strings.ReplaceAll(m, " ", "_"))
 		add(Candidate{
 			Type: EntityTypeFinding,
@@ -175,7 +178,7 @@ func ExtractCandidates(toolName, result string) []Candidate {
 		}
 		add(Candidate{
 			Type: EntityTypeCredential,
-			Key:  "credential:password:" + truncateKey(pass),
+			Key:  credentialEntityKey("password"),
 			Properties: map[string]any{
 				"password": pass,
 				"source":   "password_field",
@@ -183,21 +186,59 @@ func ExtractCandidates(toolName, result string) []Candidate {
 		})
 	}
 
-	for _, m := range basicAuthRE.FindAllStringSubmatch(result, -1) {
-		if len(m) < 2 {
+	for _, m := range authorizationRE.FindAllStringSubmatch(result, -1) {
+		if len(m) < 3 {
 			continue
 		}
-		token := strings.TrimSpace(m[1])
+		scheme := strings.ToLower(strings.TrimSpace(m[1]))
+		token := strings.TrimSpace(m[2])
 		if token == "" {
 			continue
 		}
 		add(Candidate{
 			Type: EntityTypeCredential,
-			Key:  "credential:basic:" + truncateKey(token),
+			Key:  credentialEntityKey(scheme),
 			Properties: map[string]any{
-				"auth":   "basic",
+				"auth":   scheme,
 				"token":  token,
 				"source": "authorization_header",
+			},
+		})
+	}
+
+	for _, m := range secretFieldRE.FindAllStringSubmatch(result, -1) {
+		if len(m) < 3 {
+			continue
+		}
+		kind := credentialFieldIdentity(m[1])
+		value := strings.TrimSpace(m[2])
+		if kind == "" || value == "" || looksLikePlaceholder(value) {
+			continue
+		}
+		add(Candidate{
+			Type: EntityTypeCredential,
+			Key:  credentialEntityKey(kind),
+			Properties: map[string]any{
+				kind:     value,
+				"source": "credential_field",
+			},
+		})
+	}
+
+	for _, m := range cookieHeaderRE.FindAllStringSubmatch(result, -1) {
+		if len(m) < 2 {
+			continue
+		}
+		cookie := strings.TrimSpace(m[1])
+		if cookie == "" || looksLikePlaceholder(cookie) {
+			continue
+		}
+		add(Candidate{
+			Type: EntityTypeCredential,
+			Key:  credentialEntityKey("cookie"),
+			Properties: map[string]any{
+				"cookie": cookie,
+				"source": "cookie_header",
 			},
 		})
 	}
@@ -215,12 +256,34 @@ func looksLikePlaceholder(s string) bool {
 	return false
 }
 
-func truncateKey(s string) string {
-	s = strings.ToLower(strings.TrimSpace(s))
-	if len(s) > 32 {
-		return s[:32]
+func credentialFieldIdentity(field string) string {
+	normalized := strings.ToLower(strings.ReplaceAll(strings.TrimSpace(field), "-", "_"))
+	switch normalized {
+	case "access_token", "refresh_token", "token":
+		return "token"
+	case "api_key", "apikey":
+		return "api_key"
+	case "client_secret", "secret":
+		return "secret"
+	case "private_key":
+		return "private"
+	case "authorization", "auth":
+		return "authorization"
+	case "cookie":
+		return "cookie"
+	case "session_id", "session":
+		return "session"
+	default:
+		return ""
 	}
-	return s
+}
+
+func maskCredentialMaterial(result string) string {
+	masked := passwordRE.ReplaceAllString(result, "password=[REDACTED]")
+	masked = authorizationRE.ReplaceAllString(masked, "$1 [REDACTED]")
+	masked = secretFieldRE.ReplaceAllString(masked, "$1=[REDACTED]")
+	masked = cookieHeaderRE.ReplaceAllString(masked, "Cookie: [REDACTED]")
+	return masked
 }
 
 func canonicalHost(h string) string {
